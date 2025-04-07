@@ -11,7 +11,8 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true, useUnifiedTopology: true
 }).then(() => console.log('MongoDB connected'));
 
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./userRoutes');
+
 app.use('/api/user', userRoutes);
 
 app.listen(5000, () => console.log('Server running on port 5000'));
