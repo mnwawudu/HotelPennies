@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const User = require('./UserModel');
-
-
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/auth'); // Make sure this exists
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
+// Register route
 router.post('/register', async (req, res) => {
   const { name, email, password, referredBy } = req.body;
 
@@ -38,6 +38,7 @@ router.post('/register', async (req, res) => {
   res.json({ message: 'User registered', affiliateCode });
 });
 
+// Login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -50,6 +51,7 @@ router.post('/login', async (req, res) => {
   res.json({ token, user });
 });
 
+// Dashboard route
 router.get('/dashboard/:id', async (req, res) => {
   const user = await User.findById(req.params.id);
   res.json({
@@ -58,6 +60,13 @@ router.get('/dashboard/:id', async (req, res) => {
     commissions: user.commissions,
     payouts: user.payouts
   });
+});
+
+// ✅ Referral Count Route (separate from dashboard)
+router.get('/referral-count', authMiddleware, async (req, res) => {
+  const user = await User.findById(req.user.id);
+  const referrals = await User.find({ referredBy: user.affiliateCode });
+  res.json({ count: referrals.length });
 });
 
 module.exports = router;
