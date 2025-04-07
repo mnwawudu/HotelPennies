@@ -1,10 +1,9 @@
-
 const express = require('express');
 const router = express.Router();
 const User = require('./UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const authMiddleware = require('../middleware/auth'); // Make sure this exists
+const authMiddleware = require('./middleware/auth'); // ✅ Corrected path
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
