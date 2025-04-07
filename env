@@ -1,0 +1,2 @@
+MONGO_URI=mongodb+srv://john:MySecurePass123@cluster0.hiwka.mongodb.net/hotelPennies?retryWrites=true&w=majority
+JWT_SECRET=superSecretKey123
