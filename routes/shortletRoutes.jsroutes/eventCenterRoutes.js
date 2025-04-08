@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-const shortlets = [];
+const eventCenters = [];
 
 router.post('/', (req, res) => {
-  const shortlet = req.body;
-  shortlets.push(shortlet);
-  res.status(201).json(shortlet);
+  const eventCenter = req.body;
+  eventCenters.push(eventCenter);
+  res.status(201).json(eventCenter);
 });
 
 router.get('/', (req, res) => {
-  res.json(shortlets);
+  res.json(eventCenters);
 });
 
 module.exports = router;
