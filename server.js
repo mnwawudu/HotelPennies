@@ -15,7 +15,7 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Import routes
-const userRoutes = require('./userRoutes');
+const userRoutes = require('./routes/userRoutes');
 const shortletRoutes = require('./routes/shortletRoutes');
 const eventCenterRoutes = require('./routes/eventCenterRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
