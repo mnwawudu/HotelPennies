@@ -9,11 +9,13 @@ app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'));
+  useUnifiedTopology: true,
+}).then(() => console.log('MongoDB connected'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
-const userRoutes = require('./routes/userRoutes'); // ✅ Corrected path
+const userRoutes = require('./routes/userRoutes'); // ✅ Make sure file is named exactly like this
 
 app.use('/api/user', userRoutes);
 
-app.listen(5000, () => console.log('Server running on port 5000'));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
