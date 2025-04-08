@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-const eventCenters = [];
+const bookings = [];
 
 router.post('/', (req, res) => {
-  const eventCenter = req.body;
-  eventCenters.push(eventCenter);
-  res.status(201).json(eventCenter);
+  const booking = req.body;
+  bookings.push(booking);
+  res.status(201).json(booking);
 });
 
 router.get('/', (req, res) => {
-  res.json(eventCenters);
+  res.json(bookings);
 });
 
 module.exports = router;
