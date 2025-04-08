@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-// Example route to test
+// Example route
 router.get('/', (req, res) => {
-  res.send('Event Center routes are working!');
+  res.send('Event centers route working!');
 });
 
 module.exports = router;
