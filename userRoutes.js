@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../UserModel'); // Corrected path to model
+const User = require('../models/UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const authMiddleware = require('../middleware/auth'); // Corrected path to middleware
+const authMiddleware = require('../middleware/auth');
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -62,7 +62,7 @@ router.get('/dashboard/:id', async (req, res) => {
   });
 });
 
-// Referral Count (protected)
+// Referral Count
 router.get('/referral-count', authMiddleware, async (req, res) => {
   const user = await User.findById(req.user.id);
   const referrals = await User.find({ referredBy: user.affiliateCode });
