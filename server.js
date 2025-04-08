@@ -12,7 +12,7 @@ mongoose.connect(process.env.MONGO_URI, {
   useUnifiedTopology: true
 }).then(() => console.log('MongoDB connected'));
 
-const userRoutes = require('./userRoutes'); // ✅ Corrected path
+const userRoutes = require('./routes/userRoutes'); // ✅ Corrected path
 
 app.use('/api/user', userRoutes);
 
