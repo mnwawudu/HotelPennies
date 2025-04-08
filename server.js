@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
-const userRoutes = require('./userRoutes');
-
+const userRoutes = require('./routes/userRoutes');
  // ✅ Corrected path
 
 app.use(express.json()); // For parsing JSON bodies
