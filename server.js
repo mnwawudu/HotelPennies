@@ -13,7 +13,8 @@ mongoose.connect(process.env.MONGO_URI, {
 }).then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
-const userRoutes = require('./routes/userRoutes'); // ✅ Make sure file is named exactly like this
+const userRoutes = require('./routes/userRoutes');
+ // ✅ Make sure file is named exactly like this
 
 app.use('/api/user', userRoutes);
 
