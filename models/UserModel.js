@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   affiliateCode: String,
   referredBy: String,
   commissions: { type: Number, default: 0 },
-  payouts: { type: Number, default: 0 },
+  payouts: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model('User', userSchema);
