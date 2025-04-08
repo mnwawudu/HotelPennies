@@ -1,17 +1,9 @@
-// routes/eventCenterRoutes.js
 const express = require('express');
 const router = express.Router();
 
-const eventCenters = [];
-
-router.post('/', (req, res) => {
-  const eventCenter = req.body;
-  eventCenters.push(eventCenter);
-  res.status(201).json(eventCenter);
-});
-
+// Example route to test
 router.get('/', (req, res) => {
-  res.json(eventCenters);
+  res.send('Event Center routes are working!');
 });
 
 module.exports = router;
