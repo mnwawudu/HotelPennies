@@ -7,15 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
+  useUnifiedTopology: true
 }).then(() => console.log('MongoDB connected'));
 
-// Use routes from routes/userRoutes.js
-const userRoutes = require('./routes/userRoutes');
+const userRoutes = require('./userRoutes'); // ✅ Corrected path
+
 app.use('/api/user', userRoutes);
 
-// Start the server
 app.listen(5000, () => console.log('Server running on port 5000'));
