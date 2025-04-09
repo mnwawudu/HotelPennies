@@ -1,27 +1,41 @@
 const express = require('express');
 const router = express.Router();
+const Booking = require('./bookingModel');
 
-// In-memory storage (you can connect to DB later)
-let bookings = [];
+router.post('/create', async (req, res) => {
+  try {
+    const {
+      userId,
+      type,
+      propertyId,
+      date,
+      baseCost,
+      rideRequested,
+      pickupLocation
+    } = req.body;
 
-// Create booking
-router.post('/', (req, res) => {
-  const booking = req.body;
-  booking.id = Date.now().toString();
-  bookings.push(booking);
-  res.status(201).json({ message: 'Booking created', booking });
-});
+    const rideCost = rideRequested ? 5000 : 0;
+    const totalCost = baseCost + rideCost;
 
-// Get all bookings
-router.get('/', (req, res) => {
-  res.json(bookings);
-});
+    const booking = new Booking({
+      userId,
+      type,
+      propertyId,
+      date,
+      baseCost,
+      rideRequested,
+      pickupLocation,
+      rideCost,
+      totalCost
+    });
 
-// Get booking by ID
-router.get('/:id', (req, res) => {
-  const booking = bookings.find(b => b.id === req.params.id);
-  if (!booking) return res.status(404).json({ message: 'Booking not found' });
-  res.json(booking);
+    await booking.save();
+
+    res.status(201).json({ message: 'Booking successful', booking });
+  } catch (err) {
+    console.error('Booking error:', err);
+    res.status(500).json({ message: 'Booking failed', error: err.message });
+  }
 });
 
 module.exports = router;
