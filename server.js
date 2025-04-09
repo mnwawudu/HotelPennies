@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,26 +8,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Import routes
+// Routes
 const userRoutes = require('./userRoutes');
 const shortletRoutes = require('./shortletRoutes');
-const bookingRoutes = require('./bookingRoutes');
-const eventCenterRoutes = require('./eventCenterRoutes'); // ✅ NEW
+const advertRoutes = require('./advertRoutes');
+const bookingRoutes = require('./bookingRoutes'); // ✅ NEW
 
-// Use routes
+// Use Routes
 app.use('/api/users', userRoutes);
 app.use('/api/shortlets', shortletRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/event-centers', eventCenterRoutes); // ✅ NEW
+app.use('/api/adverts', advertRoutes);
+app.use('/api/bookings', bookingRoutes); // ✅ NEW
 
-// Start server
+// Start Server
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
