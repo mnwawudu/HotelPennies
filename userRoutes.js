@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('./UserModel'); // ✅ Corrected path
+const User = require('./UserModel'); // Make sure this path is correct
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -8,6 +8,11 @@ const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCas
 
 router.post('/register', async (req, res) => {
   const { name, email, password, referredBy } = req.body;
+
+  // ✅ Validate required fields
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
 
   const existing = await User.findOne({ email });
   if (existing) return res.status(400).json({ message: 'User already exists' });
@@ -38,6 +43,12 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+
+  // ✅ Validate login fields
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
   const user = await User.findOne({ email });
   if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
@@ -49,13 +60,19 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/dashboard/:id', async (req, res) => {
-  const user = await User.findById(req.params.id);
-  res.json({
-    name: user.name,
-    affiliateCode: user.affiliateCode,
-    commissions: user.commissions,
-    payouts: user.payouts
-  });
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({
+      name: user.name,
+      affiliateCode: user.affiliateCode,
+      commissions: user.commissions,
+      payouts: user.payouts
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 module.exports = router;
