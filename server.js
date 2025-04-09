@@ -14,18 +14,15 @@ mongoose.connect(process.env.MONGO_URI, {
 }).then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Import routes
-const userRoutes = require('./userRoutes'); // ✅ From root, not ./routes/
-const shortletRoutes = require('./routes/shortletRoutes');
-const eventCenterRoutes = require('./routes/eventCenterRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
+// Import route files directly from root
+const userRoutes = require('./userRoutes');
+const shortletRoutes = require('./shortletRoutes'); // New shortlet route
 
-// Use routes
+// Mount routes
 app.use('/api/user', userRoutes);
 app.use('/api/shortlets', shortletRoutes);
-app.use('/api/event-centers', eventCenterRoutes);
-app.use('/api/bookings', bookingRoutes);
 
-// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
