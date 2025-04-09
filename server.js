@@ -1,6 +1,7 @@
 const express = require('express');
-const app = express();
-const userRoutes = require('./routes/userRoutes'); // ✅ Correct path
+const app = express();const userRoutes = require('./userRoutes');
+const userRoutes = require('./userRoutes');
+ // ✅ Correct path
 
 app.use(express.json());
 
