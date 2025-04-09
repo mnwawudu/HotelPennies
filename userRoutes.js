@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/UserModel');
+const User = require('./models/UserModel'); // ✅ Corrected path
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
+// Register
 router.post('/register', async (req, res) => {
   const { name, email, password, referredBy } = req.body;
 
@@ -36,6 +37,7 @@ router.post('/register', async (req, res) => {
   res.json({ message: 'User registered', affiliateCode });
 });
 
+// Login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -48,6 +50,7 @@ router.post('/login', async (req, res) => {
   res.json({ token, user });
 });
 
+// Dashboard
 router.get('/dashboard/:id', async (req, res) => {
   const user = await User.findById(req.params.id);
   res.json({
