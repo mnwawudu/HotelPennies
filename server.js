@@ -18,13 +18,15 @@ mongoose.connect(process.env.MONGO_URI, {
 const userRoutes = require('./userRoutes');
 const shortletRoutes = require('./shortletRoutes');
 const advertRoutes = require('./advertRoutes');
-const bookingRoutes = require('./bookingRoutes'); // ✅ NEW: for booking with ride option
+const bookingRoutes = require('./bookingRoutes');
+const paymentRoutes = require('./paymentRoutes'); // ✅ NEW
 
 // Use Routes
 app.use('/api/users', userRoutes);
 app.use('/api/shortlets', shortletRoutes);
 app.use('/api/adverts', advertRoutes);
-app.use('/api/bookings', bookingRoutes); // ✅ New booking endpoint
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/payments', paymentRoutes); // ✅ NEW
 
 // Start Server
 const PORT = process.env.PORT || 10000;
