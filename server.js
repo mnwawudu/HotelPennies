@@ -1,9 +1,10 @@
 const express = require('express');
 const app = express();
-const userRoutes = require('./routes/userRoutes'); // ✅ Load userRoutes from the 'routes' folder
+const userRoutes = require('./routes/userRoutes'); // ✅ Correct path
 
-app.use(express.json()); // Enable JSON body parsing
-app.use('/api/users', userRoutes); // ✅ Mount the user routes
+app.use(express.json());
+
+app.use('/api/users', userRoutes); // All routes under /api/users
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
