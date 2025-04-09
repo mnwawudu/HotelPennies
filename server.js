@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -19,13 +18,13 @@ mongoose.connect(process.env.MONGO_URI, {
 const userRoutes = require('./userRoutes');
 const shortletRoutes = require('./shortletRoutes');
 const advertRoutes = require('./advertRoutes');
-const bookingRoutes = require('./bookingRoutes'); // ✅ NEW
+const bookingRoutes = require('./bookingRoutes'); // ✅ NEW: for booking with ride option
 
 // Use Routes
 app.use('/api/users', userRoutes);
 app.use('/api/shortlets', shortletRoutes);
 app.use('/api/adverts', advertRoutes);
-app.use('/api/bookings', bookingRoutes); // ✅ NEW
+app.use('/api/bookings', bookingRoutes); // ✅ New booking endpoint
 
 // Start Server
 const PORT = process.env.PORT || 10000;
