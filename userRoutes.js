@@ -1,17 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const User = require('./UserModel'); // ✅ Correct path
+const User = require('./UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Helper function to generate affiliate code
-const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
-
-// ✅ Register Route
+// Just logs the incoming data to verify the backend sees it correctly
 router.post('/register', async (req, res) => {
+  console.log('Received body:', req.body); // ✅ LOG INPUT
+
   const { name, email, password, referredBy } = req.body;
 
-  // Validate required fields
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -20,7 +18,7 @@ router.post('/register', async (req, res) => {
   if (existing) return res.status(400).json({ message: 'User already exists' });
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const affiliateCode = generateCode();
+  const affiliateCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const user = new User({
     name,
@@ -41,42 +39,6 @@ router.post('/register', async (req, res) => {
   }
 
   res.json({ message: 'User registered', affiliateCode });
-});
-
-// ✅ Login Route
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  // Validate login fields
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-  res.json({ token, user });
-});
-
-// ✅ Dashboard Route
-router.get('/dashboard/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    res.json({
-      name: user.name,
-      affiliateCode: user.affiliateCode,
-      commissions: user.commissions,
-      payouts: user.payouts
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
 });
 
 module.exports = router;
