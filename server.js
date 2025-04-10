@@ -31,7 +31,7 @@ app.use('/api/adverts', advertRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 
-// ✅ Root route (for testing server status)
+// ✅ Root route to confirm deployment is working
 app.get('/', (req, res) => {
   console.log('Root route hit');
   res.send('Backend is working!');
