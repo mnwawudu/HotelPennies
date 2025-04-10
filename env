@@ -1,2 +1,2 @@
-MONGO_URI=mongodb+srv://mnwawudu:Onwa2022@cluster0.fataimr.mongodb.net/hotelPennies?retryWrites=true&w=majority
-JWT_SECRET=hotelpennies_secret_123
+MONGODB_URI=mongodb+srv://mnwawudu:Onwa2022@cluster0.fataimr.mongodb.net/hotelPennies?retryWrites=true&w=majority
+JWT_SECRET=mySuperSecretKey123
