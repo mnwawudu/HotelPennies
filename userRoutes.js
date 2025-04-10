@@ -1,19 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const User = require('./UserModel');
+const User = require('./UserModel'); // Correct for root-level
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Generate random referral code
+// Generate referral code
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
 // Register
 router.post('/register', async (req, res) => {
-  console.log('Received body:', req.body); // ✅ See this in Render logs
+  console.log('Received body:', req.body);
 
   const { name, email, password, referredBy } = req.body;
 
-  // Validate input
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -35,7 +34,6 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // Handle referral bonus
     if (referredBy) {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
