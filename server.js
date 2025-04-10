@@ -2,8 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const userRoutes = require('./routes/userRoutes'); // Example route import
-// Add your other route imports here
+const userRoutes = require('./userRoutes'); // No folder — root level
 
 dotenv.config();
 
@@ -20,20 +19,18 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 })
 .then(() => console.log('MongoDB connected'))
-.catch((err) => console.log(err));
+.catch((err) => console.log('MongoDB connection error:', err));
 
 // Routes
 app.use('/api/users', userRoutes);
-// Add other route uses here, like:
-// app.use('/api/bookings', bookingRoutes);
 
-// Root route (this is what was missing)
+// Root route
 app.get('/', (req, res) => {
   console.log('Root route hit');
   res.send('Backend is working!');
 });
 
-// Server start
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
