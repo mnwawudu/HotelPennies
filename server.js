@@ -31,6 +31,12 @@ app.use('/api/adverts', advertRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 
+// ✅ Root route (for testing server status)
+app.get('/', (req, res) => {
+  console.log('Root route hit');
+  res.send('Backend is working!');
+});
+
 // ✅ Start server
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
