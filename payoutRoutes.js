@@ -14,22 +14,22 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     const user = await User.findById(req.user.id);
-
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (user.commissions < amount) {
-      return res.status(400).json({ message: 'Insufficient commission balance' });
+      return res.status(400).json({ message: 'Insufficient commission balance for payout' });
     }
 
     const payout = new Payout({
       userId: req.user.id,
       amount,
       status: 'pending',
-      dateRequested: new Date(),
+      createdAt: new Date(),
     });
 
     await payout.save();
 
+    // Deduct payout amount from commissions and increment payouts
     user.commissions -= amount;
     user.payouts += amount;
     await user.save();
@@ -44,9 +44,7 @@ router.post('/', authMiddleware, async (req, res) => {
 // Get all payouts for the logged-in user
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const payouts = await Payout.find({ userId }).sort({ dateRequested: -1 });
-
+    const payouts = await Payout.find({ userId: req.user.id }).sort({ createdAt: -1 });
     res.json({ payouts });
   } catch (err) {
     console.error('Error fetching payouts:', err);
