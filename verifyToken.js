@@ -1,4 +1,4 @@
-// verifyToken.js
+// middleware/verifyToken.js
 const jwt = require('jsonwebtoken');
 
 const verifyToken = (req, res, next) => {
@@ -12,10 +12,10 @@ const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next(); // Allow access to route
+    req.user = { id: decoded.id }; // Attach only user ID to req.user
+    next(); // Move to protected route
   } catch (err) {
-    return res.status(403).json({ message: 'Invalid or expired token.' });
+    return res.status(401).json({ message: 'Invalid or expired token.' });
   }
 };
 
