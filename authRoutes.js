@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('./UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const verifyToken = require('./verifyToken'); // ✅ Import middleware
+const verifyToken = require('./verifyToken');
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -37,6 +37,11 @@ router.post('/register', async (req, res) => {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
         referrer.commissions += 10;
+
+        // Optional: count how many people signed up using this code
+        const referralCount = await User.countDocuments({ referredBy });
+        referrer.referralCount = referralCount;
+
         await referrer.save();
       }
     }
@@ -79,30 +84,4 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Error logging in', details: error.message });
-  }
-});
-
-// ✅ Logout
-router.post('/logout', (req, res) => {
-  res.json({ message: 'Logged out successfully' });
-});
-
-// ✅ Dashboard (Protected)
-router.get('/dashboard', verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    res.json({
-      name: user.name,
-      affiliateCode: user.affiliateCode,
-      commissions: user.commissions,
-      payouts: user.payouts
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-module.exports = router;
+    res.status
