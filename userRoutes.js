@@ -79,3 +79,20 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      affiliateCode: user.affiliateCode,
+      referredBy: user.referredBy,
+      commissions: user.commissions,
+      payouts: user.payouts,
+      referralCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Logout (client should clear token)
+router.post('/logout', (req, res) => {
+  res.json({ message: 'Logout successful' });
+});
+
+module.exports = router;
