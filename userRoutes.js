@@ -1,14 +1,8 @@
 const express = require('express');
-const router = express.Router();
-const User = require('./userModel');
 const jwt = require('jsonwebtoken');
-
-// Generate JWT Token
-const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'mySuperSecretKey123', {
-    expiresIn: '30d',
-  });
-};
+const bcrypt = require('bcryptjs');
+const User = require('../userModel'); // <- fixed path
+const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
@@ -18,22 +12,14 @@ router.post('/register', async (req, res) => {
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
 
-    const newUser = new User({ name, email, password, referredBy });
-    await newUser.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashedPassword, referredBy });
 
-    res.status(201).json({
-      message: 'Registration successful',
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        referralCode: newUser.referralCode,
-        referredBy: newUser.referredBy
-      },
-      token: generateToken(newUser._id),
-    });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(201).json({ token, referralCode: user.referralCode });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -43,23 +29,16 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-    res.status(200).json({
-      message: 'Login successful',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        referralCode: user.referralCode,
-        referredBy: user.referredBy
-      },
-      token: generateToken(user._id),
-    });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({ token, referralCode: user.referralCode });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
