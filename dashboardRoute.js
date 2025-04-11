@@ -1,28 +1,37 @@
 const express = require('express');
-const router = express.Router();
 const jwt = require('jsonwebtoken');
-const User = require('./UserModel'); // ✅ Ensure casing matches filename
-const authMiddleware = require('./authMiddleware');
+const User = require('./UserModel'); // ✅ Correct case
+const router = express.Router();
 
-router.get('/', authMiddleware, async (req, res) => {
+const verifyToken = (req, res, next) => {
+  const bearerHeader = req.headers['authorization'];
+  if (!bearerHeader) return res.status(403).json({ message: 'No token provided' });
+
+  const token = bearerHeader.split(' ')[1];
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ message: 'Invalid token' });
+    req.userId = decoded.id;
+    next();
+  });
+};
+
+router.get('/dashboard', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    const user = await User.findById(req.userId).lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Get referral count
     const referralCount = await User.countDocuments({ referredBy: user.affiliateCode });
 
     res.json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      affiliateCode: user.affiliateCode,
-      referredBy: user.referredBy,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        affiliateCode: user.affiliateCode
+      },
       referralCount
     });
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
