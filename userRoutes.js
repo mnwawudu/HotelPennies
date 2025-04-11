@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require('./UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const verifyToken = require('./verifyToken'); // ✅ Import the middleware
+const verifyToken = require('./verifyToken');
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -27,12 +27,12 @@ router.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       referredBy,
-      affiliateCode
+      affiliateCode,
     });
 
     await user.save();
 
-    // Add commission to referrer
+    // Optional referral logic
     if (referredBy) {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
@@ -65,17 +65,18 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' } // ✅ Optional expiration
+      { expiresIn: '7d' }
     );
 
     res.json({
       message: 'Login successful',
       token,
+      expiresIn: '7d',
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        affiliateCode: user.affiliateCode
+        affiliateCode: user.affiliateCode,
       }
     });
   } catch (error) {
@@ -83,22 +84,23 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ✅ Logout (client should remove token)
+// ✅ Logout (handled on client)
 router.post('/logout', (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
-// ✅ Protected Dashboard route
-router.get('/dashboard/:id', verifyToken, async (req, res) => {
+// ✅ Protected Dashboard Route (auto-detect user from token)
+router.get('/dashboard', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.user.id); // From token
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     res.json({
       name: user.name,
       affiliateCode: user.affiliateCode,
       commissions: user.commissions,
-      payouts: user.payouts
+      payouts: user.payouts,
+      referralCount: user.referralCount || 0,
     });
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
