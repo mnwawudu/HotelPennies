@@ -6,7 +6,8 @@ const dotenv = require('dotenv');
 // Route files
 const userRoutes = require('./userRoutes');
 const dashboardRoutes = require('./dashboardRoute');
-const payoutRoutes = require('./payoutRoutes'); // ✅ Added payout route
+const payoutRoutes = require('./payoutRoutes');
+const bookingRoutes = require('./bookingRoutes'); // ✅ Booking route added
 
 dotenv.config();
 
@@ -29,7 +30,8 @@ mongoose.connect(process.env.MONGO_URI, {
 // Route registrations
 app.use('/api/users', userRoutes);
 app.use('/api', dashboardRoutes);
-app.use('/api/payouts', payoutRoutes); // ✅ Register payout route
+app.use('/api/payouts', payoutRoutes);
+app.use('/api/bookings', bookingRoutes); // ✅ Register booking route
 
 app.get('/', (req, res) => {
   res.send('HotelPennies API is running...');
