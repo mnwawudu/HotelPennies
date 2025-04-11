@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('./UserModel'); // Ensure this matches your actual filename
+const User = require('./models/userModel');
 const authMiddleware = require('./middleware/authMiddleware');
 
 // Register
@@ -22,6 +22,7 @@ router.post('/register', async (req, res) => {
     // Generate affiliate code
     const affiliateCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
+    // Create user
     const user = new User({
       name,
       email,
@@ -44,16 +45,19 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Create token
     const token = jwt.sign({ id: user._id }, 'mySuperSecretKey123', {
       expiresIn: '7d',
     });
@@ -74,12 +78,15 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Dashboard route with referral count
+// Protected Dashboard Route
 router.get('/dashboard', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // Get user and hide password
     const user = await User.findById(userId).select('-password');
+
+    // Count referrals
     const referralCount = await User.countDocuments({ referredBy: user.affiliateCode });
 
     res.json({
