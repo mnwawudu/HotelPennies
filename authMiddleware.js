@@ -9,8 +9,8 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded.user;
-    next(); // Proceed to the next middleware or route
+    req.user = decoded; // ✅ Now req.user.id will work
+    next();
   } catch (error) {
     console.error(error);
     return res.status(401).json({ message: 'Token is not valid' });
