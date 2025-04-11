@@ -4,29 +4,13 @@ const User = require('./UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Generate referral code
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
-// ✅ Middleware to verify JWT
-const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'No token provided' });
-
-  const token = authHeader.split(' ')[1];
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ error: 'Invalid token' });
-
-    req.userId = decoded.id;
-    next();
-  });
-};
-
-// ✅ Register Route
+// ✅ Register
 router.post('/register', async (req, res) => {
-  console.log('✅ Received body:', req.body);
-  const { name, email, password, referredBy = null } = req.body;
+  const { name, email, password, referredBy } = req.body;
 
-  if (!name?.trim() || !email?.trim() || !password?.trim()) {
+  if (!name || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
@@ -42,12 +26,12 @@ router.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       referredBy,
-      affiliateCode,
+      affiliateCode
     });
 
     await user.save();
 
-    // Referral logic
+    // Optional referral bonus
     if (referredBy) {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
@@ -56,14 +40,17 @@ router.post('/register', async (req, res) => {
       }
     }
 
-    res.status(201).json({ message: 'User registered', affiliateCode });
+    res.status(201).json({
+      message: 'Registration successful',
+      affiliateCode
+    });
   } catch (err) {
-    console.error('❌ Registration Error:', err);
+    console.error('Registration error:', err);
     res.status(500).json({ error: 'Server error during registration' });
   }
 });
 
-// ✅ Login Route
+// ✅ Login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -79,7 +66,7 @@ router.post('/login', async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '7d',
+      expiresIn: '7d'
     });
 
     res.json({
@@ -89,33 +76,28 @@ router.post('/login', async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        affiliateCode: user.affiliateCode,
-      },
+        affiliateCode: user.affiliateCode
+      }
     });
-  } catch (error) {
-    console.error('❌ Login error:', error);
+  } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Server error during login' });
   }
 });
 
-// ✅ Protected Dashboard Route
-router.get('/dashboard/:id', verifyToken, async (req, res) => {
+// ✅ Dashboard
+router.get('/dashboard/:id', async (req, res) => {
   try {
-    if (req.userId !== req.params.id) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     res.json({
       name: user.name,
       affiliateCode: user.affiliateCode,
       commissions: user.commissions,
-      payouts: user.payouts,
+      payouts: user.payouts
     });
   } catch (err) {
-    console.error('❌ Dashboard error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
