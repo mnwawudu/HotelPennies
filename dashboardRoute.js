@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const User = require('./userModel');
 
-// Temporary test middleware – replace with real auth later
+// Simulated auth middleware for testing
 const authenticateUser = (req, res, next) => {
   req.user = { email: req.query.email };
-  console.log('✅ Dashboard route hit. Email:', req.user.email); // 👈 for debug
+  console.log('✅ Dashboard route hit. Email:', req.user.email); // For debug
   next();
 };
 
@@ -17,7 +17,9 @@ router.get('/dashboard', authenticateUser, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const referralCount = await User.countDocuments({ referredBy: user.affiliateCode });
+    const referralCount = await User.countDocuments({
+      referredBy: user.affiliateCode,
+    });
 
     res.json({
       name: user.name,
