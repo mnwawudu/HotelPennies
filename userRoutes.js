@@ -1,18 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const User = require('./UserModel'); // Root-level model path
+const User = require('./UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
-// ✅ Register Route
 router.post('/register', async (req, res) => {
-  console.log('📥 Received body:', req.body); // <-- This will show in Render logs
+  console.log('✅ Received body:', req.body);
 
-  const { name, email, password, referredBy } = req.body;
+  const { name, email, password, referredBy = null } = req.body;
 
-  if (!name || !email || !password) {
+  // Trim to avoid whitespace errors
+  if (!name?.trim() || !email?.trim() || !password?.trim()) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // Referral bonus
+    // Handle referral logic
     if (referredBy) {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
@@ -43,50 +43,9 @@ router.post('/register', async (req, res) => {
     }
 
     res.status(201).json({ message: 'User registered', affiliateCode });
-  } catch (error) {
-    console.error('❌ Registration error:', error);
-    res.status(500).json({ error: 'Server error during registration' });
-  }
-});
-
-// ✅ Login Route
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
-  }
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    res.json({ token, user });
-  } catch (error) {
-    console.error('❌ Login error:', error);
-    res.status(500).json({ error: 'Server error during login' });
-  }
-});
-
-// ✅ Dashboard Route
-router.get('/dashboard/:id', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    res.json({
-      name: user.name,
-      affiliateCode: user.affiliateCode,
-      commissions: user.commissions,
-      payouts: user.payouts
-    });
   } catch (err) {
-    console.error('❌ Dashboard error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('❌ Registration Error:', err);
+    res.status(500).json({ error: 'Server error during registration' });
   }
 });
 
