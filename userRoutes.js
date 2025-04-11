@@ -1,19 +1,18 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const User = require("./userModel");
+const path = require("path");
+const User = require(path.join(__dirname, "userModel"));
 
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "mySuperSecretKey123";
 const JWT_EXPIRATION = "7d";
 
-// Generate JWT Token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
 };
 
-// Middleware to protect routes
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -31,7 +30,7 @@ const authenticate = (req, res, next) => {
   }
 };
 
-// Register
+// Register route
 router.post("/register", async (req, res) => {
   try {
     const { email, password, referralCode } = req.body;
@@ -73,7 +72,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login
+// Login route
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -115,7 +114,7 @@ router.get("/profile", authenticate, async (req, res) => {
   }
 });
 
-// Logout (optional - frontend should discard the token)
+// Logout route
 router.post("/logout", (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
