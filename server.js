@@ -8,6 +8,7 @@ const userRoutes = require('./userRoutes');
 const dashboardRoutes = require('./dashboardRoute');
 const payoutRoutes = require('./payoutRoutes');
 const bookingRoutes = require('./bookingRoutes'); // ✅ Booking route added
+const advertRoutes = require('./advertRoutes'); // ✅ Advert route added
 
 dotenv.config();
 
@@ -31,7 +32,8 @@ mongoose.connect(process.env.MONGO_URI, {
 app.use('/api/users', userRoutes);
 app.use('/api', dashboardRoutes);
 app.use('/api/payouts', payoutRoutes);
-app.use('/api/bookings', bookingRoutes); // ✅ Register booking route
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/adverts', advertRoutes); // ✅ Register advert route
 
 app.get('/', (req, res) => {
   res.send('HotelPennies API is running...');
