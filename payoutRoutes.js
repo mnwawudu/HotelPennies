@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('./userModel'); // ✅ Correct path if userModel.js is at root
-const authMiddleware = require('./middleware/authMiddleware'); // Adjust if different
+const authMiddleware = require('./authMiddleware'); // Adjusted path
 
 // Payout route - user must be authenticated
 router.post('/', authMiddleware, async (req, res) => {
