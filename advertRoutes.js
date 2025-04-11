@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Advert = require('./advertModel'); // Make sure this path is correct
 
-// Create a new advert
+// Create advert
 router.post('/create', async (req, res) => {
   try {
     const { title, description, imageUrl, link } = req.body;
