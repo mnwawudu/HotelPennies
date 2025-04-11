@@ -1,98 +1,85 @@
 const express = require('express');
 const router = express.Router();
+const User = require('./UserModel'); // ✅ Corrected casing
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('./userModel');
-const authMiddleware = require('./middleware/authMiddleware');
 
-// Register new user
+const JWT_SECRET = process.env.JWT_SECRET || 'mySuperSecretKey123';
+
+// Register route
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, referredBy } = req.body;
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'User already exists' });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
 
-    const affiliateCode = Math.random().toString(36).substring(2, 8);
     const hashedPassword = await bcrypt.hash(password, 10);
+    const affiliateCode = Math.random().toString(36).substr(2, 8);
 
-    const user = await User.create({
+    const newUser = new User({
       name,
       email,
       password: hashedPassword,
-      referredBy: referredBy || null,
+      referredBy,
       affiliateCode
     });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    await newUser.save();
+
+    const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      affiliateCode: user.affiliateCode,
-      referredBy: user.referredBy,
+      message: 'User registered successfully',
       token,
-      expiresIn: '7d'
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        affiliateCode: newUser.affiliateCode,
+        referredBy: newUser.referredBy,
+        commissions: newUser.commissions,
+        payouts: newUser.payouts
+      }
     });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Login
+// Login route
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user) return res.status(400).json({ error: 'Invalid email or password' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!isMatch) return res.status(400).json({ error: 'Invalid email or password' });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      affiliateCode: user.affiliateCode,
-      referredBy: user.referredBy,
+      message: 'Login successful',
       token,
-      expiresIn: '7d'
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        affiliateCode: user.affiliateCode,
+        referredBy: user.referredBy,
+        commissions: user.commissions,
+        payouts: user.payouts
+      }
     });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
-});
-
-// Get dashboard data (protected)
-router.get('/dashboard', authMiddleware, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    const referralCount = await User.countDocuments({ referredBy: user.affiliateCode });
-
-    res.json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      affiliateCode: user.affiliateCode,
-      referredBy: user.referredBy,
-      commissions: user.commissions,
-      payouts: user.payouts,
-      referralCount
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Logout (client should clear token)
-router.post('/logout', (req, res) => {
-  res.json({ message: 'Logout successful' });
 });
 
 module.exports = router;
