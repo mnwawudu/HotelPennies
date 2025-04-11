@@ -18,6 +18,7 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // ✅ Route imports
+const authRoutes = require('./authRoutes'); // 🔥 Add this line
 const userRoutes = require('./userRoutes');
 const shortletRoutes = require('./shortletRoutes');
 const advertRoutes = require('./advertRoutes');
@@ -25,6 +26,7 @@ const bookingRoutes = require('./bookingRoutes');
 const paymentRoutes = require('./paymentRoutes');
 
 // ✅ Mount routes
+app.use('/api/auth', authRoutes); // 🔥 Mount it here
 app.use('/api/users', userRoutes);
 app.use('/api/shortlets', shortletRoutes);
 app.use('/api/adverts', advertRoutes);
