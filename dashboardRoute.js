@@ -1,25 +1,18 @@
+// dashboardRoute.js
 const express = require('express');
 const router = express.Router();
-const User = require('./userModel');
+const User = require('./userModel'); // stays in root
+const authenticateToken = require('./authMiddleware'); // also in root
 
-// Simulated auth middleware for testing
-const authenticateUser = (req, res, next) => {
-  req.user = { email: req.query.email };
-  console.log('✅ Dashboard route hit. Email:', req.user.email); // For debug
-  next();
-};
-
-router.get('/dashboard', authenticateUser, async (req, res) => {
+router.get('/api/dashboard', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.user.email });
+    const user = await User.findById(req.user.userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const referralCount = await User.countDocuments({
-      referredBy: user.affiliateCode,
-    });
+    const referralCount = await User.countDocuments({ referredBy: user.affiliateCode });
 
     res.json({
       name: user.name,
@@ -30,7 +23,7 @@ router.get('/dashboard', authenticateUser, async (req, res) => {
       referralCount,
     });
   } catch (error) {
-    console.error('❌ Dashboard error:', error);
+    console.error('Dashboard error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
