@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('./UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const verifyToken = require('./verifyToken'); // ✅ Import the middleware
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -31,7 +32,7 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // Optional referral bonus
+    // Add commission to referrer
     if (referredBy) {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
@@ -40,12 +41,8 @@ router.post('/register', async (req, res) => {
       }
     }
 
-    res.status(201).json({
-      message: 'Registration successful',
-      affiliateCode
-    });
-  } catch (err) {
-    console.error('Registration error:', err);
+    res.status(201).json({ message: 'User registered', affiliateCode });
+  } catch (error) {
     res.status(500).json({ error: 'Server error during registration' });
   }
 });
@@ -65,9 +62,11 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '7d'
-    });
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' } // ✅ Optional expiration
+    );
 
     res.json({
       message: 'Login successful',
@@ -79,14 +78,18 @@ router.post('/login', async (req, res) => {
         affiliateCode: user.affiliateCode
       }
     });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Server error during login' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error logging in', details: error.message });
   }
 });
 
-// ✅ Dashboard
-router.get('/dashboard/:id', async (req, res) => {
+// ✅ Logout (client should remove token)
+router.post('/logout', (req, res) => {
+  res.json({ message: 'Logged out successfully' });
+});
+
+// ✅ Protected Dashboard route
+router.get('/dashboard/:id', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
