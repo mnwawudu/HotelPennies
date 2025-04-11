@@ -1,33 +1,42 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('./middleware/auth'); // adjust path if needed
 const Payout = require('./models/payoutModel');
+const authMiddleware = require('./middleware/auth');
 
-// ✅ Set minimum payout amount (₦5000)
-const MIN_PAYOUT_AMOUNT = 5000;
-
-// 🚀 Create a payout request
+// Create a new payout request
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { amount } = req.body;
 
-    // ✅ Check if amount is at least ₦5000
-    if (amount < MIN_PAYOUT_AMOUNT) {
-      return res.status(400).json({ message: `Minimum payout amount is ₦${MIN_PAYOUT_AMOUNT}` });
+    if (amount < 5000) {
+      return res.status(400).json({ message: 'Minimum payout amount is ₦5000' });
     }
 
-    const newPayout = new Payout({
+    const payout = new Payout({
       userId: req.user.id,
       amount,
       status: 'pending',
-      dateRequested: new Date()
+      dateRequested: new Date(),
     });
 
-    await newPayout.save();
-    res.status(201).json(newPayout);
+    const savedPayout = await payout.save();
+    res.status(201).json(savedPayout);
   } catch (err) {
-    console.error('Payout creation error:', err);
+    console.error('Error creating payout:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// Get all payouts for the logged-in user
+router.get('/', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const payouts = await Payout.find({ userId }).sort({ dateRequested: -1 });
+
+    res.json({ payouts });
+  } catch (err) {
+    console.error('Error fetching payouts:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
