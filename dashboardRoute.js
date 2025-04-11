@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const User = require('./userModel'); // Ensure this matches the actual filename
+const User = require('./userModel');
 
-// Middleware to simulate authentication (replace with real auth later)
+// Temporary test middleware – replace with real auth later
 const authenticateUser = (req, res, next) => {
-  // Example: In real setup, you'd extract user from token here
-  req.user = { email: req.query.email }; // Temporary solution for testing
+  req.user = { email: req.query.email };
+  console.log('✅ Dashboard route hit. Email:', req.user.email); // 👈 for debug
   next();
 };
 
-router.get('/api/dashboard', authenticateUser, async (req, res) => {
+router.get('/dashboard', authenticateUser, async (req, res) => {
   try {
     const user = await User.findOne({ email: req.user.email });
 
@@ -28,7 +28,7 @@ router.get('/api/dashboard', authenticateUser, async (req, res) => {
       referralCount,
     });
   } catch (error) {
-    console.error('Dashboard error:', error);
+    console.error('❌ Dashboard error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
