@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const userRoutes = require('./userRoutes');
+const dashboardRoute = require('./dashboardRoute'); // ✅ Add dashboard route
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ mongoose.connect(process.env.MONGO_URI, {
 });
 
 app.use('/api/users', userRoutes);
+app.use('/api/dashboard', dashboardRoute); // ✅ Register dashboard route
 
 app.get('/', (req, res) => {
   res.send('HotelPennies API is running...');
