@@ -8,7 +8,8 @@ const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCas
 
 // ✅ Register Route
 router.post('/register', async (req, res) => {
-  console.log('Received body:', req.body);
+  console.log('📥 Received body:', req.body); // <-- This will show in Render logs
+
   const { name, email, password, referredBy } = req.body;
 
   if (!name || !email || !password) {
@@ -32,7 +33,7 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // Handle referral
+    // Referral bonus
     if (referredBy) {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
@@ -43,7 +44,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({ message: 'User registered', affiliateCode });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('❌ Registration error:', error);
     res.status(500).json({ error: 'Server error during registration' });
   }
 });
@@ -66,7 +67,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.json({ token, user });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Login error:', error);
     res.status(500).json({ error: 'Server error during login' });
   }
 });
@@ -84,6 +85,7 @@ router.get('/dashboard/:id', async (req, res) => {
       payouts: user.payouts
     });
   } catch (err) {
+    console.error('❌ Dashboard error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
