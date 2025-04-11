@@ -6,12 +6,11 @@ const jwt = require('jsonwebtoken');
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
+// ✅ REGISTER
 router.post('/register', async (req, res) => {
   console.log('✅ Received body:', req.body);
-
   const { name, email, password, referredBy = null } = req.body;
 
-  // Trim to avoid whitespace errors
   if (!name?.trim() || !email?.trim() || !password?.trim()) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -33,7 +32,7 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // Handle referral logic
+    // Referral logic
     if (referredBy) {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
@@ -46,6 +45,38 @@ router.post('/register', async (req, res) => {
   } catch (err) {
     console.error('❌ Registration Error:', err);
     res.status(500).json({ error: 'Server error during registration' });
+  }
+});
+
+// ✅ LOGIN
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email?.trim() || !password?.trim()) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        affiliateCode: user.affiliateCode
+      }
+    });
+  } catch (err) {
+    console.error('❌ Login Error:', err);
+    res.status(500).json({ error: 'Server error during login' });
   }
 });
 
