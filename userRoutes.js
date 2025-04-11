@@ -1,84 +1,73 @@
 const express = require('express');
-const router = express.Router();
-const User = require('./UserModel'); // ✅ Corrected casing
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('./userModel');
+const router = express.Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mySuperSecretKey123';
-
-// Register route
+// Registration Route
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, referredBy } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already registered' });
+      return res.status(400).json({ message: 'Email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const affiliateCode = Math.random().toString(36).substr(2, 8);
+    const affiliateCode = Math.random().toString(36).substring(2, 10);
 
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
-      referredBy,
-      affiliateCode
+      affiliateCode,
+      referredBy: referredBy || null,
     });
 
-    await newUser.save();
-
-    const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, { expiresIn: '7d' });
+    const savedUser = await newUser.save();
+    const { password: _, ...userData } = savedUser.toObject();
 
     res.status(201).json({
       message: 'User registered successfully',
-      token,
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        affiliateCode: newUser.affiliateCode,
-        referredBy: newUser.referredBy,
-        commissions: newUser.commissions,
-        payouts: newUser.payouts
-      }
+      user: userData
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Something went wrong during registration.' });
   }
 });
 
-// Login route
+// Login Route
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: 'Invalid email or password' });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: 'Invalid email or password' });
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
+
+    const { password: _, ...userData } = user.toObject();
 
     res.json({
       message: 'Login successful',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        affiliateCode: user.affiliateCode,
-        referredBy: user.referredBy,
-        commissions: user.commissions,
-        payouts: user.payouts
-      }
+      expiresIn: '7d',
+      user: userData
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Something went wrong during login.' });
   }
 });
 
