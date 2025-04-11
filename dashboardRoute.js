@@ -1,10 +1,28 @@
-// dashboardRoute.js
 const express = require('express');
 const router = express.Router();
-const User = require('./userModel'); // stays in root
-const authenticateToken = require('./authMiddleware'); // also in root
+const User = require('./userModel');
+const jwt = require('jsonwebtoken');
 
-router.get('/api/dashboard', authenticateToken, async (req, res) => {
+// Middleware to verify token
+const authenticateUser = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized: No token' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+router.get('/dashboard', authenticateUser, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
 
