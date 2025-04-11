@@ -32,12 +32,11 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // Add commission and referral count to referrer
+    // Add commission to referrer
     if (referredBy) {
       const referrer = await User.findOne({ affiliateCode: referredBy });
       if (referrer) {
         referrer.commissions += 10;
-        referrer.referralCount = (referrer.referralCount || 0) + 1;
         await referrer.save();
       }
     }
@@ -61,4 +60,16 @@ router.post('/login', async (req, res) => {
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials
+    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id:
