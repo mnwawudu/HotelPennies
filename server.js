@@ -34,11 +34,13 @@ const app = express();
 app.disable('x-powered-by');
 
 // --- Webhook (raw body) BEFORE JSON body parsing ---
-app.use(
-  '/api/webhooks/paystack',
-  express.raw({ type: '*/*' }),
-  require('./routes/paystackWebhook')
-);
+const webhookAbsPath = require('path').join(__dirname, 'routes', 'paystackWebhook.js');
+const fs = require('fs');
+console.log('🔎 Checking webhook file:', webhookAbsPath, 'exists?', fs.existsSync(webhookAbsPath));
+
+const paystackWebhook = require(webhookAbsPath); // absolute path with .js
+app.use('/api/webhooks/paystack', express.raw({ type: '*/*' }), paystackWebhook);
+
 
 // --- CORS (env allow-list + sensible defaults) ---
 const defaultOrigins = [
