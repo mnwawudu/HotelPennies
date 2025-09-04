@@ -1,0 +1,6 @@
+webhooks/paystack                1
+/api/webhooks/paystack           1
+transferRef                     18
+transfer_code                   13
+x-paystack-signature             1
+PAYSTACK_SECRET_KEY             40

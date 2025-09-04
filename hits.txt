@@ -1,0 +1,70 @@
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\server.js:22: app.use('/api/webhooks/paystack', express.raw({ type: '*/*' }), require('./routes/paystackWebhook'));
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\controllers\featureListingController.js:40: Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\models\payoutModel.js:47: transferRef: { type: String },     // provider reference / RRN
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\models\payoutModel.js:85: payoutSchema.index({ transferRef: 1 }, { unique: false, sparse: true });
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\models\vendorModel.js:34: providerRef: { type: String, default: null }, // e.g., Paystack transfer reference/transfer_code
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminDashboardRoutes.js:397: const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminDashboardRoutes.js:476: transfer_code: init.data.transfer_code,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminDashboardRoutes.js:699: return res.status(500).json({ message: 'Paystack not configured (PAYSTACK_SECRET_KEY missing)' });
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminDashboardRoutes.js:705: // If already has a transferRef, do not re-initiate; just keep processing
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminDashboardRoutes.js:706: if (!doc.transferRef) {
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminDashboardRoutes.js:734: doc.transferRef = tx?.initiated?.reference || tx?.initiated?.transfer_code || doc.transferRef;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminDashboardRoutes.js:877: if (!payout.transferRef) {
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminDashboardRoutes.js:893: payout.transferRef = tx?.initiated?.reference || tx?.initiated?.transfer_code || payout.transferRef;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminPayoutRoutes.js:158: *      -> Promise<{ transfer_code?: string, reference: string }>
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminPayoutRoutes.js:209: payoutDoc.transferRef = payoutDoc.transferRef || `TRF_FAKE_${payoutDoc._id}`;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminPayoutRoutes.js:221: transferRef: payoutDoc.transferRef,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminPayoutRoutes.js:244: // Accept either transfer_code or reference from the service
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminPayoutRoutes.js:245: const transferRef = tx.transfer_code || tx.reference;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminPayoutRoutes.js:248: payoutDoc.transferRef = transferRef;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\adminPayoutRoutes.js:263: transferRef,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:38: const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || '';
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:163: if (!PAYSTACK_SECRET_KEY || !reference) return null;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:167: { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:177: headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:186: { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:470: if (!process.env.PAYSTACK_SECRET_KEY) {
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:471: refund.details = 'PAYSTACK_SECRET_KEY missing; skipped refund.';
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:575: if (!process.env.PAYSTACK_SECRET_KEY) {
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\bookingCancelRoutes.js:576: refund.details = 'PAYSTACK_SECRET_KEY missing; skipped refund.';
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\chopsBookingRoutes.js:99: headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\eventCenterBookingRoutes.js:17: const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\eventCenterBookingRoutes.js:70: headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\featureListingRoutes.js:159: headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\giftRoutes.js:186: headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\giftRoutes.js:230: { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\guestCancelRoutes.js:16: const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || '';
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\guestCancelRoutes.js:20: if (!PAYSTACK_SECRET_KEY || !reference) return null;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\guestCancelRoutes.js:24: { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paymentRoutes.js:11: const HAS_PAYSTACK = !!process.env.PAYSTACK_SECRET_KEY;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paymentRoutes.js:41: Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paymentRoutes.js:70: headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackRoutes.js:15: const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackRoutes.js:93: const transfer_code = init?.data?.transfer_code;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackRoutes.js:95: transfer_code,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackRoutes.js:160: Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`, // store securely
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackwebhook.js:11: const isTestKey = () => /^sk_test_/i.test(String(process.env.PAYSTACK_SECRET_KEY || ''));
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackwebhook.js:14: /** HMAC validation against RAW body (sha512 with PAYSTACK_SECRET_KEY) */
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackwebhook.js:51: const sig = req.headers['x-paystack-signature'];
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackwebhook.js:52: if (!isValidSignature(req.body, sig, process.env.PAYSTACK_SECRET_KEY)) {
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackwebhook.js:70: const transferCode = data.transfer_code || data.transferCode || null;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackwebhook.js:75: if (transferCode) or.push({ transferRef: transferCode });
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\paystackwebhook.js:109: paystackLast: { event, at: new Date(), transfer_code: transferCode, reference }
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\publicFeaturedRoutes.js:109: Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\restaurantBookingRoutes.js:219: { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\shortletBookingRoutes.js:42: headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\TourGuideBookingRoutes.js:22: const secretKey = process.env.PAYSTACK_SECRET_KEY;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\userDashboard.js:19: const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\userDashboard.js:301: throw new Error('Paystack not configured (PAYSTACK_SECRET_KEY missing)');
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\userDashboard.js:327: throw new Error('Paystack not configured (PAYSTACK_SECRET_KEY missing)');
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\userDashboard.js:413: .select('amount currency status transferRef createdAt provider method')
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\userDashboard.js:423: transferRef: p.transferRef || null,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\userDashboard.js:594: .select('amount currency status transferRef createdAt provider method')
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\userDashboard.js:606: transferRef: p.transferRef || null,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\userDashboard.js:624: transferRef: p.transferRef || null,
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\vendordashboard.js:773: const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\vendordashboard.js:786: { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\routes\vendordashboard.js:1002: const ref = data.reference || data.transfer_code;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\services\payments\paystack.js:4: const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\services\payments\paystack.js:7: return { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' };
+C:\Users\hp\Documents\HotelPennies\HotelPennies-backend\services\payments\paystack.js:30: return { reference: data.reference || data.transfer_code || reference };
