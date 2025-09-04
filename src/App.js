@@ -8,6 +8,9 @@ import 'slick-carousel/slick/slick-theme.css';
 import Header from './components/Header';
 import Toast from './components/Toast';
 
+// ⬇️ Add this import
+import DownloadAppPrompt from './components/DownloadAppPrompt';
+
 // Public pages
 import Home from './pages/Home';
 import AuthPage from './pages/AuthPage';
@@ -121,6 +124,15 @@ function App() {
   return (
     <Router>
       <Toast />
+
+      {/* ⬇️ App download / PWA prompt (mobile-only) */}
+      <DownloadAppPrompt
+        playUrl="#"
+        appStoreUrl="#"
+        delayMs={5000}
+        remindDays={7}
+        neverDays={180}
+      />
 
       <Routes>
         {/* Public */}
