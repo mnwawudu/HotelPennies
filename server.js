@@ -1,4 +1,5 @@
-// server.js — production-ready (case-safe + rate-limit v6 style)
+// server.js — production-ready, robust to express-rate-limit issues
+// ---------------------------------------------------------------
 require('dotenv').config();
 
 const express = require('express');
@@ -6,9 +7,20 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit'); // ✅ v6 style require
 const path = require('path');
 const fs = require('fs');
+
+// --- Safe import for express-rate-limit (v6, v7, or missing) ---
+let rateLimit;
+try {
+  const erl = require('express-rate-limit');
+  rateLimit = erl?.rateLimit || erl; // v7={ rateLimit }, v6=fn
+  if (typeof rateLimit !== 'function') throw new Error('export shape unexpected');
+  console.log('✅ express-rate-limit loaded');
+} catch (e) {
+  console.warn('⚠️ express-rate-limit not available; using a no-op limiter:', e?.message || e);
+  rateLimit = () => (req, res, next) => next();
+}
 
 const configService = require('./services/configService');
 
@@ -22,18 +34,11 @@ const app = express();
 app.disable('x-powered-by');
 
 // --- Webhook (raw body) BEFORE JSON body parsing ---
-try {
-  // ✅ match the actual filename you have in Git: routes/paystackwebhook.js
-  const paystackWebhook = require('./routes/paystackwebhook');
-  app.use(
-    '/api/webhooks/paystack',
-    express.raw({ type: '*/*' }),
-    paystackWebhook
-  );
-  console.log('✅ Paystack webhook mounted at /api/webhooks/paystack');
-} catch (e) {
-  console.warn('⚠️ Paystack webhook route not found or failed to load:', e?.message || e);
-}
+app.use(
+  '/api/webhooks/paystack',
+  express.raw({ type: '*/*' }),
+  require('./routes/paystackWebhook')
+);
 
 // --- CORS (env allow-list + sensible defaults) ---
 const defaultOrigins = [
@@ -41,7 +46,7 @@ const defaultOrigins = [
   'https://hotelpennies.com',
   'https://www.hotelpennies.com',
   'https://hotelpennies-frontend.onrender.com',
-  // backend URL (harmless to allow for tools)
+  // backend URL is harmless to allow from browsers:
   'https://hotelpennies-4.onrender.com',
 ];
 
@@ -72,6 +77,7 @@ app.use(helmet({
 }));
 app.use(compression());
 
+// Use safe limiter (no-op if not installed)
 const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 1000 });
 app.use('/api', apiLimiter);
 
@@ -142,7 +148,6 @@ const bookingCancelRoutes = require('./routes/bookingCancelRoutes');
 const authPasswordRoutes = require('./routes/authPasswordRoutes');
 const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
 
-// Additional route files
 const myOrdersRoutes = require('./routes/myOrdersRoutes');
 const adminAuditRoutes = require('./routes/adminAuditRoutes');
 const adminLedgerRoutes = require('./routes/adminLedgerRoutes');
