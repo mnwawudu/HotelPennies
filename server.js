@@ -1,4 +1,4 @@
-// server.js — production-ready 
+// server.js — production-ready
 require('dotenv').config();
 
 const express = require('express');
@@ -6,11 +6,50 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 
 const configService = require('./services/configService');
+
+// --- Rate limiter import with robust fallback (v6/v7/absent) ---
+let rateLimit;
+try {
+  // Try to load express-rate-limit (handles v6 CJS and v7 ESM named export)
+  const mod = require('express-rate-limit');
+  rateLimit = mod?.rateLimit || mod?.default?.rateLimit || mod;
+  if (typeof rateLimit !== 'function') throw new Error('rateLimit export is not a function');
+  console.log('🛡️ express-rate-limit loaded successfully.');
+} catch (e) {
+  console.warn('⚠️ express-rate-limit unavailable or incompatible, using minimal fallback:', e.message);
+  // Minimal in-memory limiter (reset each process restart)
+  rateLimit = function fallbackLimiter(opts = {}) {
+    const windowMs = opts.windowMs ?? 15 * 60 * 1000; // 15 min
+    const max = opts.max ?? 1000; // requests per window
+    const buckets = new Map(); // ip -> { count, start }
+
+    return (req, res, next) => {
+      const ip =
+        req.ip ||
+        (req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim()) ||
+        req.connection?.remoteAddress ||
+        'unknown';
+
+      const now = Date.now();
+      const rec = buckets.get(ip);
+
+      if (!rec || now - rec.start > windowMs) {
+        buckets.set(ip, { count: 1, start: now });
+        return next();
+      }
+
+      rec.count += 1;
+      if (rec.count > max) {
+        return res.status(429).json({ message: 'Too many requests. Please try again later.' });
+      }
+      return next();
+    };
+  };
+}
 
 // Polyfill fetch for Node < 18
 const major = parseInt(process.versions.node.split('.')[0], 10);
@@ -33,7 +72,9 @@ const defaultOrigins = [
   'http://localhost:3000',
   'https://hotelpennies.com',
   'https://www.hotelpennies.com',
+  // Render static site default; keep both to be safe
   'https://hotelpennies-frontend.onrender.com',
+  'https://hotelpennies-5.onrender.com',
   // backend URL is harmless to allow from browsers:
   'https://hotelpennies-4.onrender.com',
 ];
@@ -65,6 +106,7 @@ app.use(helmet({
 }));
 app.use(compression());
 
+// API rate limit (real lib or fallback, either way this works)
 const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 1000 });
 app.use('/api', apiLimiter);
 
