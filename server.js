@@ -10,6 +10,29 @@ const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 
+// Optional startup checks (enabled when RENDER_DEBUG=1 on Render)
+if (process.env.RENDER_DEBUG) {
+  const reqs = [
+    'adminAnalyticsRoutes','adminAuditRoutes','adminAuthRoutes','adminDashboardRoutes',
+    'adminFeatureRoutes','adminLedgerRoutes','adminPayoutRoutes','adminSettingsRoutes',
+    'adminUserRoutes','adminVendorApprovalRoutes','advertRoutes','authPasswordRoutes',
+    'authRoutes','blogRoutes','bookingCancelRoutes','chopRoutes','chopsBookingRoutes',
+    'cityCruisePriceRoutes','cloudinaryRoutes','cruiseInquiryRoutes','cruiseRoutes',
+    'deleteUser','eventCenterBookingRoutes','eventCenterRoutes','featureListingRoutes',
+    'featurePricingRoutes','giftRoutes','guestCancelRoutes','hotelBookingRoutes',
+    'hotelPublicTopRoutes','hotelRoomRoutes','hotelRoutes','login','myOrdersRoutes',
+    'paymentRoutes','payoutRequestRoutes','paystackRoutes','pickupDeliveryRoutes',
+    'publicFeaturedRoutes','register','restaurantBookingRoutes','restaurantMenuRoutes',
+    'restaurantRoutes','reviewRoutes','searchRoutes','shortletBookingRoutes','shortletRoutes',
+    'tourGuideBookingRoutes','tourGuideRoutes','userDashboard','userRegister',
+    'vendorDashboard','vendorProfileUpdate','vendorServiceRoutes','verifyEmail','verifyStatus'
+  ];
+  for (const r of reqs) {
+    const p = path.join(__dirname, 'routes', `${r}.js`);
+    console.log('🔎 Route check:', p, 'exists?', fs.existsSync(p));
+  }
+}
+
 // --- Safe import for express-rate-limit (v6, v7, or missing) ---
 let rateLimit;
 try {
@@ -34,13 +57,11 @@ const app = express();
 app.disable('x-powered-by');
 
 // --- Webhook (raw body) BEFORE JSON body parsing ---
-const webhookAbsPath = require('path').join(__dirname, 'routes', 'paystackWebhook.js');
-const fs = require('fs');
+const webhookAbsPath = path.join(__dirname, 'routes', 'paystackWebhook.js');
 console.log('🔎 Checking webhook file:', webhookAbsPath, 'exists?', fs.existsSync(webhookAbsPath));
 
 const paystackWebhook = require(webhookAbsPath); // absolute path with .js
 app.use('/api/webhooks/paystack', express.raw({ type: '*/*' }), paystackWebhook);
-
 
 // --- CORS (env allow-list + sensible defaults) ---
 const defaultOrigins = [
