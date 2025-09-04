@@ -1,0 +1,78 @@
+.add-hotel-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  z-index: 999;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 24px;
+  color: black;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+input, textarea {
+  display: block;
+  width: 100%;
+  margin: 0.75rem 0;
+  padding: 0.65rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.btn.navy {
+  background-color: #001f5c;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.btn.navy:hover {
+  background-color: #003080;
+}
+
+.no-scroll-overlay {
+  overflow: hidden;
+}
+.add-hotel-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh; /* ✅ Limit modal height */
+  overflow-y: auto;  /* ✅ Scrolls only the modal content if it overflows */
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  z-index: 999;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+@media (max-height: 500px) {
+  .add-hotel-form {
+    top: 48%;
+    transform: translate(-50%, -48%);
+    padding: 1.2rem;
+  }
+}

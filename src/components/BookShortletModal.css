@@ -1,0 +1,183 @@
+/* ===== ORIGINAL (kept) ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.modal h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.modal form input,
+.modal form select {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.modal-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.modal-action-buttons button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.modal-action-buttons .bg-gray-500 {
+  background-color: #6b7280;
+}
+
+.modal-action-buttons .bg-blue-900 {
+  background-color: #1e3a8a;
+}
+
+.payment-method-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.payment-method-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.payment-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.paystack-button,
+.flutterwave-button {
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+}
+
+.paystack-button {
+  background-color: #0aa5ff;
+}
+
+.flutterwave-button {
+  background-color: #fcbf49;
+}
+
+.payment-modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* ===== PATCHES (to ensure FULL overlay & stop flips) ===== */
+
+/* Cover the entire viewport and sit above everything */
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2147483000 !important;
+}
+
+/* Center the modal using the overlay's flex;
+   keep it relative so it doesn’t “slide” within another fixed context */
+.modal-overlay .modal {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  display: block !important;
+  width: min(600px, 92vw);
+  direction: ltr !important;
+  writing-mode: horizontal-tb !important;
+  z-index: 2147483001 !important;
+}
+
+/* Ensure vertical layout stays normal even if a global style flips it */
+.modal-overlay .modal form,
+.modal-overlay .modal .payment-buttons {
+  display: flex;
+  flex-direction: column !important;
+}
+
+/* Keep the payment chooser fully overlayed and scrollable on short screens */
+.payment-method-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2147483100 !important;
+}
+.payment-method-modal {
+  position: relative !important;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Optional: lock background scroll while modal is open (modern browsers) */
+body:has(.modal-overlay) {
+  overflow: hidden;
+}

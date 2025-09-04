@@ -1,0 +1,120 @@
+.hotels-page-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.hotels-page-container h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.hotels-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+/* Card Styling */
+.hotel-card {
+  width: 280px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.hotel-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.hotel-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-bottom: 1px solid #eee;
+}
+
+.hotel-info {
+  padding: 1rem;
+}
+
+.hotel-info h4 {
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem;
+}
+
+.hotel-info p {
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* HotelPage Wrapper */
+.hotel-page {
+  padding: 2rem;
+}
+
+/* Hotel List Grid */
+.hotel-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+/* Responsive Grid Fix */
+.hotel-list-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .hotel-list-container {
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: 768px) {
+  .hotel-list-container {
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 0.5rem;
+  }
+
+  .hotel-card {
+    width: 90%; /* ✅ Full width on small screens */
+    max-width: 400px;
+  }
+}
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.pagination-controls button {
+  padding: 6px 12px;
+  font-size: 14px;
+  background-color: #003366;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination-controls button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}

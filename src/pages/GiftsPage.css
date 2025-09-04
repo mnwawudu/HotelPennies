@@ -1,0 +1,141 @@
+.gifts-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gifts-heading {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+.gifts-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.gifts-page-container {
+  padding-top: 6rem;       /* Space under header */
+  padding-bottom: 5rem;    /* Space above footer */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.gifts-page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.gifts-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  justify-content: space-between;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.pagination-controls button {
+  padding: 6px 12px;
+  font-size: 14px;
+  background-color: #003366;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination-controls button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+
+/* ---------------------------------------------------------
+   Gift Detail – tidy, non-stretched carousel (scoped)
+   Add class "gift-detail" on the GiftsDetail outer container:
+   <div class="hotel-detail-container gift-detail">
+   --------------------------------------------------------- */
+
+.gift-detail .room-image-container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.gift-detail .room-carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f7f7f7;
+  aspect-ratio: 16 / 9;      /* keeps a neat, consistent height */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+@supports not (aspect-ratio: 16/9) {
+  .gift-detail .room-carousel-wrapper {
+    height: clamp(260px, 42vw, 520px); /* fallback for very old browsers */
+  }
+}
+
+.gift-detail .room-carousel {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gift-detail .room-carousel img,
+.gift-detail .room-img-left {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;         /* crop nicely instead of stretching */
+  object-position: center;
+  scroll-snap-align: start;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.gift-detail .room-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.gift-detail .scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 20px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.gift-detail .scroll-btn.left  { left: 8px; }
+.gift-detail .scroll-btn.right { right: 8px; }
+.gift-detail .scroll-btn:hover { background: rgba(0, 0, 0, 0.72); }
+
+@media (max-width: 640px) {
+  .gift-detail .room-image-container { max-width: 100%; }
+  .gift-detail .room-carousel-wrapper { aspect-ratio: 4 / 3; } /* a little taller on mobile */
+}

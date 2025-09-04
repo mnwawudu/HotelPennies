@@ -1,0 +1,131 @@
+/* ShortletCard.css */
+
+.shortlet-wrapper {
+  width: 48%;
+  margin-bottom: 2rem;
+}
+
+.shortlet-card {
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.shortlet-image-wrapper {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+}
+
+.shortlet-image-main {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.shortlet-details {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.shortlet-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.2rem;
+}
+
+.shortlet-price {
+  font-size: 1rem;
+  margin: 0.2rem 0;
+}
+
+.price-original {
+  text-decoration: line-through;
+  color: gray;
+  margin-right: 0.5rem;
+}
+
+.price-promo {
+  color: #001f4d;
+  font-weight: 600;
+}
+
+.navy-text {
+  color: #001f4d;
+  font-weight: 600;
+}
+
+.shortlet-address,
+.shortlet-city-state,
+.shortlet-complimentary,
+.shortlet-description {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.shortlet-complimentary {
+  font-weight: 500;
+}
+
+.shortlet-user-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  justify-content: flex-start;
+  padding-left: 0.3rem;
+  padding-bottom: 0.5rem;
+}
+
+.shortlet-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  padding-left: 0.3rem;
+  justify-content: flex-start;
+}
+
+.button-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem 0 1rem;
+}
+
+.navy-button {
+  background-color: #001f4d;
+  color: white;
+  padding: 0.3rem 0.9rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.navy-button:hover {
+  background-color: #003366;
+}
+
+.small {
+  font-size: 0.8rem;
+}
+.align-left {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+}
+/* Spacing for View More and Book Now buttons */
+.spaced-buttons button {
+  margin-right: 10px;
+}

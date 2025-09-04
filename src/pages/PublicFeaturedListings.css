@@ -1,0 +1,119 @@
+/* ✅ Page container */
+.admin-page {
+  padding: 2rem;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+}
+
+/* ✅ Each category section */
+.section {
+  margin-bottom: 3rem;
+}
+
+/* ✅ Category heading */
+.section h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #1a1a1a;
+  border-left: 4px solid #004080;
+  padding-left: 0.75rem;
+}
+
+/* ✅ Horizontal scroll layout for multiple cards */
+.card-grid.one-row {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+/* ✅ Card wrapper for scroll + animation */
+.card-wrapper {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  min-width: 280px;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+
+  /* ✅ Animation setup */
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+/* ✅ Card hover effect */
+.card-wrapper:hover {
+  transform: scale(1.02);
+}
+
+/* ✅ Fade-in animation keyframes */
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.public-featured-page {
+  padding: 2rem;
+  background-color: #f9f9f9;
+}
+
+.slider-section {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.slider-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 1rem;
+  scroll-snap-type: x mandatory;
+  padding: 0.5rem 2rem;
+}
+
+.slider-item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  min-width: 280px;
+}
+
+.slider-controls {
+  position: absolute;
+  top: 40%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.arrow-btn {
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  font-size: 2rem;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  border-radius: 50%;
+  pointer-events: auto;
+  transition: background 0.2s ease;
+}
+
+.arrow-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+.shortlet-list-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  scroll-snap-type: x mandatory;
+}
+
+.shortlet-list-scroll::-webkit-scrollbar {
+  display: none;
+}

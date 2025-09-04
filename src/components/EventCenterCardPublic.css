@@ -1,0 +1,203 @@
+.shortlet-card-public {
+  width: 23%;
+  background: #f9f9f9;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.3s ease;
+}
+
+.shortlet-card-public:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.card-image-container {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.shortlet-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.city-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #007bff;
+  color: white;
+  padding: 3px 8px;
+  font-size: 12px;
+  border-radius: 5px;
+  z-index: 1;
+}
+
+.shortlet-info {
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.shortlet-title {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.shortlet-tagline {
+  font-size: 12px;
+  color: #555;
+  margin: 0;
+}
+
+.shortlet-location {
+  font-size: 11px;
+  color: #777;
+  margin: 0;
+}
+
+.shortlet-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.shortlet-price-group {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.actual-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 12px;
+}
+
+.promo-price {
+  font-weight: bold;
+  color: #000;
+  font-size: 12px;
+}
+
+.shortlet-rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: #999;
+}
+
+.star {
+  color: #ccc;
+  font-size: 12px;
+}
+
+.star.filled {
+  color: gold;
+}
+
+.view-details-btn {
+  margin-top: 8px;
+  padding: 4px 8px;
+  font-size: 10px;
+  background-color: #003366;
+  color: white;
+  border-radius: 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ✅ Responsive behavior */
+@media (max-width: 1200px) {
+  .shortlet-card-public {
+    width: 23%;
+  }
+}
+
+@media (max-width: 992px) {
+  .shortlet-card-public {
+    width: 31%;
+  }
+}
+
+@media (max-width: 768px) {
+  .shortlet-card-public {
+    width: 48%;
+  }
+}
+
+@media (max-width: 500px) {
+  .shortlet-card-public {
+    width: 100%;
+  }
+}
+/* Make the pill text readable & immune to global link styles */
+.event-center-card-public .ec-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  min-height: 32px;
+  border-radius: 8px;
+  background: #0a3d62;
+  color: #fff;
+  -webkit-text-fill-color: #fff; /* Safari */
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  border: 0;
+  cursor: pointer;
+}
+
+/* In case a parent collapsed fonts */
+.event-center-card-public .shortlet-info {
+  font-size: 14px;
+}
+
+/* Smaller pill */
+.event-center-card-public .ec-view-btn {
+  padding: 4px 10px;     /* was 8px 12px */
+  min-height: 26px;      /* was 32px */
+  font-size: 12px;       /* was 13px */
+  border-radius: 6px;    /* was 8px */
+}
+/* Make pill size to its text (not full card width) */
+.event-center-card-public .ec-view-btn {
+  display: inline-flex;         /* keep pill inline */
+  align-self: flex-start;       /* <-- key: stop flex stretching */
+  padding: 4px 8px;             /* smaller, tighter pill */
+  min-height: 24px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: #0a3d62;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}

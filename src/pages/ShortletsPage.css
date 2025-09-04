@@ -1,0 +1,50 @@
+/* ✅ ShortletsPage.css */
+.shortlets-page {
+  padding: 20px;
+}
+
+.shortlets-page h2 {
+  margin-bottom: 20px;
+}
+
+.shortlet-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.error-msg {
+  color: red;
+  padding: 10px 0;
+}
+/* ✅ ShortletsPage.css */
+
+.shortlet-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 10px;
+}
+
+.pagination {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.pagination-btn {
+  margin: 0 5px;
+  padding: 6px 12px;
+  font-size: 14px;
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination-btn.active {
+  background-color: #003366;
+  color: white;
+  border-color: #003366;
+}

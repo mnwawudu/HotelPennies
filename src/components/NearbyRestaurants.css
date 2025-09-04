@@ -1,0 +1,73 @@
+.nearby-restaurants-wrapper {
+  margin-top: 2rem;
+  padding: 0 1rem;
+}
+
+.nearby-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.carousel-wrapper {
+  position: relative;
+}
+
+.scrollable-container {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.5rem;
+}
+
+.scrollable-container > * {
+  scroll-snap-align: start;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  z-index: 1;
+  border-radius: 4px;
+}
+
+.scroll-btn.left {
+  left: 0;
+}
+
+.scroll-btn.right {
+  right: 0;
+}
+
+.loading-text,
+.no-results-text {
+  padding: 1rem;
+  color: #888;
+}
+
+/* 👇 This makes 1 card appear per screen on mobile */
+@media (max-width: 768px) {
+  .scrollable-container > * {
+    flex: 0 0 100%;
+    min-width: 100%;
+  }
+}
+
+/* 👇 On desktop, maintain the 4-in-row layout */
+@media (min-width: 769px) {
+  .scrollable-container > * {
+    flex: 0 0 23%;
+    min-width: 250px;
+  }
+}

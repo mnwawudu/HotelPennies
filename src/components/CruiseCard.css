@@ -1,0 +1,122 @@
+.cruise-card {
+  width: 100%;
+  max-width: 360px;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+  margin: 1rem auto;
+}
+
+.cruise-card:hover {
+  transform: translateY(-2px);
+}
+
+.cruise-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 1px solid #eee;
+}
+
+.cruise-info {
+  padding: 1rem;
+}
+
+.cruise-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+}
+
+.cruise-city {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.cruise-note {
+  font-size: 0.85rem;
+  color: #b30000;
+  font-style: italic;
+}
+
+.cruise-rating {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #333;
+}
+
+.book-now-btn {
+  background-color: #003366;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-top: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.book-now-btn:hover {
+  background-color: #002244;
+}
+
+/* ✅ Admin Action Buttons */
+.admin-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.admin-btn {
+  padding: 0.4rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: white;
+}
+
+.edit-btn {
+  background-color: #1976d2;
+}
+
+.delete-btn {
+  background-color: #d32f2f;
+}
+
+.upload-btn {
+  background-color: #388e3c;
+}
+
+.calendar-btn {
+  background-color: #fbc02d;
+  color: #000;
+}
+
+/* ✅ Grid support for outer container if needed */
+.cruise-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.2rem;
+  padding: 1rem 0;
+}
+
+/* Responsive tweaks */
+@media (min-width: 768px) {
+  .cruise-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cruise-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

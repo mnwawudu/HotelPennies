@@ -1,0 +1,63 @@
+.nearby-hotels-container {
+  margin-top: 2rem;
+  padding: 0 1rem;
+}
+
+.nearby-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.carousel-wrapper {
+  position: relative;
+}
+
+.scrollable-container {
+  display: flex;
+  gap: 1rem;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding-bottom: 0.5rem;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  z-index: 1;
+  border-radius: 4px;
+}
+
+.scroll-btn.left {
+  left: 0;
+}
+
+.scroll-btn.right {
+  right: 0;
+}
+
+.nearby-loading,
+.nearby-empty {
+  padding: 1rem;
+  color: #888;
+}
+
+@media (max-width: 768px) {
+  .scrollable-container > * {
+    flex: 0 0 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  .scrollable-container > * {
+    flex: 0 0 23%;
+  }
+}

@@ -1,0 +1,66 @@
+.city-cruise-container {
+  padding: 2rem 1rem; /* top-bottom 2rem, left-right 1rem */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+
+.city-cruise-container h2 {
+  margin-bottom: 0.5rem;
+}
+
+.intro-text {
+  margin-bottom: 1rem;
+  max-width: 800px;
+}
+
+.cruise-points {
+  margin-bottom: 1rem;
+  padding-left: 1.2rem;
+  max-width: 800px;
+}
+
+.cruise-points li {
+  margin-bottom: 0.4rem;
+}
+
+.city-cruise-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  justify-content: center;
+  padding-top: 2rem;
+}
+
+
+/* CruiseCard responsiveness assumed to be styled internally.
+   If needed, a basic wrapper could look like this: */
+.cruise-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease-in-out;
+}
+
+.cruise-card:hover {
+  transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+  .city-cruise-container {
+    padding: 1rem;
+  }
+
+  .cruise-points {
+    padding-left: 1rem;
+  }
+
+  .intro-text,
+  .cruise-points {
+    max-width: 100%;
+  }
+}
+

@@ -1,0 +1,184 @@
+/* Minimal, valid CSS for User Dashboard (no JS in here!) */
+
+/* Layout bits used by dashboard */
+.tab-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin: 4px 0 12px;
+}
+.tab {
+  background: #0a2a66;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab.active { background: #061a3f; }
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.sub-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fdfdfd;
+}
+
+.table-wrapper { overflow-x: auto; }
+.nice-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
+.nice-table th, .nice-table td { padding: 10px 12px; border-bottom: 1px solid #eee; text-align: left; font-size: .95rem; }
+.nice-table thead th { background: #fafafa; font-weight: 600; }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; line-height: 18px; border: 1px solid transparent; }
+.badge.paid { background: #eaf7ee; border-color: #d2ebd8; color: #10692c; }
+.badge.failed { background: #ffe9e9; border-color: #ffd0d0; color: #a10000; }
+.badge.pending { background: #fff7e6; border-color: #ffe0a8; color: #8a5b00; }
+
+.green-button { padding: .5rem 1rem; background: green; color: #fff; border: 0; border-radius: 4px; cursor: pointer; }
+.cancel-button { background: #ccc; color: #000; padding: .5rem 1rem; border: 0; border-radius: 4px; cursor: pointer; }
+button.secondary { background: #f1f1f1; color: #333; border: 1px solid #e3e3e3; border-radius: 6px; padding: .45rem .75rem; cursor: pointer; }
+button.tiny { background: #f1f1f1; color: #333; border: 1px solid #e3e3e3; border-radius: 6px; padding: .3rem .5rem; font-size: .85rem; cursor: pointer; }
+
+.info-banner { background: #eef6ff; border: 1px solid #cfe7ff; color: #084b8a; padding: 8px 10px; border-radius: 8px; }
+.hint { color: #777; }
+
+/* Payout modal (existing) */
+.payout-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  display: flex; justify-content: center; align-items: center; z-index: 1100;
+}
+.payout-modal { background: #fff; padding: 2rem; border-radius: 8px; width: 90%; max-width: 400px; position: relative; }
+.modal-close { position: absolute; top: 10px; right: 15px; border: none; background: none; font-size: 20px; cursor: pointer; }
+.payout-input { width: 100%; padding: .6rem; margin: 1rem 0; border: 1px solid #ddd; border-radius: 6px; }
+.modal-actions { display: flex; justify-content: space-between; }
+.error-text { color: #c70000; margin-bottom: .5rem; }
+.success-text { color: #0d8a36; margin-bottom: .5rem; }
+
+/* Bottom-sheet (no-jump add-account form) */
+.hp-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: flex-end;        /* slide up from bottom */
+  justify-content: center;
+  z-index: 1200;
+}
+.hp-sheet {
+  background: #fff;
+  width: 100%;
+  max-width: 640px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  max-height: 85vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 -8px 24px rgba(0,0,0,.16);
+}
+.hp-sheet-header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+}
+.hp-sheet-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.hp-sheet-close {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.hp-sheet-body {
+  padding: 14px 16px 18px;
+}
+
+/* Stabilize dynamic message areas */
+.account-form .hint,
+.account-form .error-text,
+.account-form .success-text {
+  display: block;
+  min-height: 1.25rem;
+  line-height: 1.25rem;
+}
+.namecheck-slot { display: inline-block; min-width: 7ch; }
+
+/* General image stability inside cards */
+.card img { display: block; width: 100%; height: auto; }
+
+/* Reduce smooth scroll jank */
+html { scroll-behavior: auto; }
+/* === UserDashboard – Bottom-sheet form (mobile tidy) === */
+@media (max-width: 600px) {
+  /* Bottom sheet container comfort */
+  .hp-sheet {
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 14px 14px 0 0;
+  }
+  .hp-sheet-body {
+    padding: 16px;
+  }
+
+  /* Form grid becomes single column with healthy spacing */
+  .account-form .account-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;                 /* <-- key: vertical separation between fields */
+  }
+
+  /* Inputs/selects should span full width and be finger-friendly */
+  .account-form input,
+  .account-form select {
+    width: 100%;
+    height: 44px;
+  }
+
+  /* Safety net: if your grid gets overridden, still add space between Bank and Account No. */
+  .account-form select + input,
+  .account-form input + input {
+    margin-top: 12px !important;
+  }
+
+  /* Name-check/secondary actions stay tidy on one line or wrap gracefully */
+  .account-form .namecheck-slot {
+    margin-left: 8px;
+    font-size: 12px;
+  }
+
+  /* Save/Cancel buttons wrap nicely on small screens */
+  .account-form .btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .account-form .btns button {
+    flex: 1 1 48%;
+    min-width: 140px;
+  }
+}

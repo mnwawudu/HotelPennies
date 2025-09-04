@@ -1,0 +1,51 @@
+/* About.css */
+
+.static-page-container {
+  padding: 2rem;
+  max-width: 90%;
+  width: 900px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', sans-serif;
+  color: #222;
+}
+
+.static-page-container h1 {
+  font-size: 20px;
+  margin-bottom: 1rem;
+}
+
+.static-page-container h2 {
+  font-size: 18px;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.static-page-container p {
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+.static-page-container ul {
+  padding-left: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.static-page-container ul li {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .static-page-container {
+    width: 95%;
+    padding: 1.5rem 1rem;
+  }
+
+  .static-page-container h1 {
+    font-size: 18px;
+  }
+
+  .static-page-container h2 {
+    font-size: 16px;
+  }
+}

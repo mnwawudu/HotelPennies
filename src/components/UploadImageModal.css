@@ -1,0 +1,117 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background-color: #fff;
+  max-width: 500px;
+  width: 90%;
+  border-radius: 8px;
+  padding: 24px;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: red;
+}
+
+.upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.upload-button {
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  color: #333;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.image-preview {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.image-preview.selected {
+  border-color: navy;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ccc;
+  border: none;
+  color: white;
+  font-size: 14px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.done-button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.done-button {
+  padding: 8px 16px;
+  background-color: #1d3557;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}

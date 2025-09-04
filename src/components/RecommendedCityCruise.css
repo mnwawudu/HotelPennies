@@ -1,0 +1,14 @@
+.recommended-cruise-section {
+  margin-top: 2rem;
+  padding: 0 1rem;
+  text-align: left;
+}
+
+.cruise-card {
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin: 0 0.5rem;
+  text-align: left;
+}

@@ -1,0 +1,15 @@
+/* Business search input */
+.business-search {
+  margin: 1.5rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.business-search input {
+  width: 80%;
+  max-width: 500px;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}

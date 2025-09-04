@@ -1,0 +1,103 @@
+.book-gift-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.book-gift-modal-box {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.book-gift-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 1.6rem;
+  color: #333;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.book-gift-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.book-gift-input:focus {
+  border-color: #004080;
+}
+
+.book-gift-button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.book-gift-button.submit {
+  background-color: #00264d;
+  color: #fff;
+  border: none;
+}
+
+.book-gift-button.submit:hover {
+  background-color: #004080;
+}
+
+.book-gift-button.paystack {
+  background-color: #0aa5ff;
+  color: white;
+  border: none;
+}
+
+.book-gift-button.paystack:hover {
+  background-color: #007acc;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 500px) {
+  .book-gift-modal-box {
+    padding: 1.5rem;
+    width: 95%;
+  }
+
+  .book-gift-button {
+    font-size: 0.95rem;
+  }
+
+  .book-gift-modal-close {
+    font-size: 1.4rem;
+  }
+}

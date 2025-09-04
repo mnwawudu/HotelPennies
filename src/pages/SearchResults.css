@@ -1,0 +1,93 @@
+/* SearchResults.css */
+
+.search-results {
+  padding: 4rem 1rem 5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.search-results h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.search-section {
+  margin-bottom: 4rem;
+}
+
+.search-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+/* Reusable 4-column card grid */
+.search-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  justify-content: flex-start; /* ✅ align cards to the left */
+}
+
+
+.search-card-grid > * {
+  flex: 0 1 23%;
+  box-sizing: border-box;
+}
+
+/* Responsive layout */
+@media (max-width: 1024px) {
+  .search-card-grid > * {
+    flex: 0 1 31%;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-card-grid > * {
+    flex: 0 1 48%;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-card-grid > * {
+    flex: 0 1 100%;
+  }
+}
+
+/* Pagination controls */
+.pagination {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-count {
+  font-weight: 500;
+  margin: 0 0.5rem;
+}
+
+.text-gray-500 {
+  color: #666;
+  font-size: 1rem;
+  text-align: center;
+  margin-top: 2rem;
+}

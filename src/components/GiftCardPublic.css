@@ -1,0 +1,213 @@
+.gift-card-public {
+  width: 23%;
+  background: #f9f9f9;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  min-height: 260px; /* force tighter card height */
+  max-height: 260px; /* 🔥 prevent cards from growing */
+  transition: box-shadow 0.3s ease;
+  text-decoration: none;
+}
+
+
+
+.gift-card-public:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.card-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3; /* ✅ Better than fixed height — works on all screens */
+  overflow: hidden;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.gift-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ✅ Maintain aspect ratio, fill */
+  border-radius: 8px;
+}
+
+
+.promo-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #ff4081;
+  color: white;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  z-index: 1;
+}
+
+.gift-info {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* tightened spacing */
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.gift-title {
+  text-align: left; /* ✅ force left alignment */
+}
+
+
+.gift-title {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.gift-complimentary {
+  font-size: 11px !important;
+  color: #555 !important;
+  font-family: inherit !important;
+  margin: 0;
+}
+
+.delivery-badge {
+  font-size: 11px;
+  color: #555;
+  margin: 0;
+}
+
+.gift-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0; /* 🔥 remove extra vertical space */
+}
+
+
+.gift-price-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.promo-price {
+  font-weight: bold;
+  color: #000;
+  font-size: 12px;
+}
+
+.actual-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 12px;
+}
+
+.view-details-btn {
+  margin-top: 4px;
+  padding: 3px 7px;
+  font-size: 10px;
+  background-color: #003366;
+  color: white;
+  border-radius: 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive Grid Like ShortletCardPublic */
+@media (max-width: 1200px) {
+  .gift-card-public {
+    width: 23%;
+  }
+}
+
+@media (max-width: 992px) {
+  .gift-card-public {
+    width: 31%;
+  }
+}
+
+@media (max-width: 768px) {
+  .gift-card-public {
+    width: 48%;
+  }
+}
+
+@media (max-width: 500px) {
+  .gift-card-public {
+    width: 100%;
+  }
+}
+/* --- GiftCardPublic-only fixes (no impact on other cards) --- */
+
+/* Give each card breathing room between rows */
+.gift-card-public {
+  margin-bottom: 32px;            /* adjust to taste (e.g., 36–48px) */
+  height: auto;                   /* avoid forced heights */
+  overflow: visible;              /* prevent clipping */
+  box-sizing: border-box;
+}
+
+/* Make the whole link act as the card container with a vertical layout */
+.gift-card-public .gift-link-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  overflow: visible;              /* keep the bottom button visible */
+}
+
+/* Keep image height consistent; avoids content pushing the button off */
+.gift-card-public .card-image-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+.gift-card-public .gift-image {
+  width: 100%;
+  display: block;
+  aspect-ratio: 16 / 9;           /* consistent media height */
+  object-fit: cover;
+}
+
+/* Body grows; button can stick to the bottom */
+.gift-card-public .gift-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 12px 14px;
+  flex: 1 1 auto;                 /* important: lets the footer sit at the bottom */
+  min-height: 1px;                /* Safari flex quirk */
+  box-sizing: border-box;
+}
+
+/* Anchor “View Details” to the card bottom without absolute positioning */
+.gift-card-public .view-details-btn {
+  margin-top: auto;               /* pushes it down */
+}
+
+/* Optional: a touch more row spacing on small screens */
+@media (max-width: 600px) {
+  .gift-card-public { margin-bottom: 40px; }
+  .gift-card-public .gift-image { aspect-ratio: 4 / 3; }
+}

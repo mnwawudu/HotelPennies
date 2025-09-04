@@ -1,0 +1,121 @@
+/* ===========================
+   ManageShortlets.css
+   =========================== */
+
+.manage-shortlets {
+  padding: 20px;
+}
+
+/* Header row */
+.shortlet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.shortlet-header h2 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.shortlet-header button {
+  padding: 10px 20px;
+  background-color: navy;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.shortlet-header button:hover {
+  background-color: #001f4d;
+}
+
+/* ===== Card grid ===== */
+.shortlet-grid {
+  display: flex;
+  flex-wrap: wrap;            /* allow multiple per row */
+  gap: 20px;                  /* spacing between cards */
+  justify-content: flex-start;/* align to the left */
+}
+
+/* Each shortlet card container */
+.shortlet-block {
+  flex: 0 0 calc(33.333% - 20px); /* 3 per row on desktop */
+  max-width: calc(33.333% - 20px);
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Image sizing for neat rows */
+.shortlet-block img,
+.manage-shortlets .shortlet-image {
+  width: 100%;
+  height: 200px;           /* uniform height */
+  object-fit: cover;       /* crop nicely */
+  border-radius: 8px;
+  display: block;
+}
+
+/* Content spacing inside card */
+.shortlet-block h3,
+.shortlet-block h4 {
+  margin: 6px 0 4px;
+}
+
+.shortlet-block p {
+  margin: 4px 0;
+}
+
+/* Actions pinned near bottom */
+.shortlet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+  margin-top: auto;
+}
+
+.shortlet-actions button {
+  background-color: navy;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.shortlet-actions .btn-danger {
+  background-color: crimson;
+}
+
+/* ===== Responsive ===== */
+/* Tablet: 2 per row */
+@media (max-width: 992px) {
+  .shortlet-block {
+    flex: 0 0 calc(50% - 20px);
+    max-width: calc(50% - 20px);
+  }
+}
+
+/* Mobile: 1 per row */
+@media (max-width: 600px) {
+  .shortlet-block {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .shortlet-block img,
+  .manage-shortlets .shortlet-image {
+    height: 180px;
+  }
+}

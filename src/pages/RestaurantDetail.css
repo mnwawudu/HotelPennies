@@ -1,0 +1,174 @@
+.restaurant-detail-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.restaurant-header-text h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: navy;
+}
+
+.restaurant-full-address {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+.restaurant-carousel-wrapper {
+  position: relative;
+  overflow-x: hidden; /* ✅ Fix peeking images */
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.restaurant-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 10px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.restaurant-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-image-wrapper {
+  flex-shrink: 0;
+  height: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.carousel-image-wrapper img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* ✅ MOBILE: 1 image full screen with snap */
+@media (max-width: 768px) {
+  .restaurant-carousel {
+    scroll-snap-type: x mandatory;
+  }
+
+  .carousel-image-wrapper {
+    flex: 0 0 100%;
+    max-width: 100%;
+    scroll-snap-align: center;
+  }
+
+  .carousel-image-wrapper img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* ✅ TABLET: 2 images per row */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .carousel-image-wrapper {
+    width: 48%;
+  }
+}
+
+/* ✅ DESKTOP: 4 images per row, no overlap */
+@media (min-width: 1025px) {
+  .carousel-image-wrapper {
+    flex-basis: calc(25% - 7.5px);
+  }
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  z-index: 1;
+  border-radius: 50%;
+}
+
+.scroll-btn.left {
+  left: 10px;
+}
+
+.scroll-btn.right {
+  right: 10px;
+}
+
+.restaurant-terms-box {
+  background: #f9f9f9;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+}
+
+.restaurant-terms-list {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.menu-section {
+  margin: 2rem 0;
+}
+
+.menu-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+
+
+.menu-card-wrapper {
+  width: 23%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  position: relative;
+}
+
+@media (max-width: 1024px) {
+  .menu-card-wrapper {
+    width: 48%;
+  }
+}
+
+@media (max-width: 600px) {
+  .menu-card-wrapper {
+    width: 100%;
+  }
+}
+
+.menu-img-container {
+  width: 100%;
+  height: 180px;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.menu-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

@@ -1,0 +1,85 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  width: 400px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.modal h3 {
+  margin-bottom: 10px;
+}
+
+.modal input,
+.modal textarea {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 7px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.modal button {
+  background: navy;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.modal .close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.image-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.img-box {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.img-box .remove {
+  position: absolute;
+  top: -5px;
+  right: 2px;
+  color: red;
+  font-weight: bold;
+  cursor: pointer;
+  background: white;
+  border-radius: 50%;
+  padding: 0 5px;
+  font-size: 14px;
+}

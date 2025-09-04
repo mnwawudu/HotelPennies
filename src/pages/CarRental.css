@@ -1,0 +1,36 @@
+.car-rental-container {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', sans-serif;
+  color: #222;
+  line-height: 1.6;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+}
+
+.car-rental-container h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #0a2a66;
+}
+
+.car-rental-container h3 {
+  font-size: 1.3rem;
+  margin-top: 2rem;
+  color: #003366;
+}
+
+.car-rental-container ul,
+.car-rental-container ol {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.car-rental-container li {
+  margin-bottom: 0.5rem;
+}
+
+.car-rental-container p {
+  margin: 1rem 0;
+}

@@ -1,0 +1,81 @@
+.room-card {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  width: 100%;
+}
+
+.room-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  background-color: #f1f1f1;
+}
+
+.room-details {
+  margin-top: 14px;
+}
+
+.room-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.room-price {
+  font-size: 16px;
+  color: green;
+  font-weight: 600;
+}
+
+.room-specs,
+.room-tags,
+.room-desc {
+  font-size: 14px;
+  margin: 4px 0;
+  color: #444;
+}
+
+.room-buttons {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-view,
+.btn-book {
+  padding: 6px 14px;
+  background-color: navy;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-view:hover,
+.btn-book:hover {
+  background-color: #001f4d;
+}
+.room-price {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Adds clear space between old and new prices */
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.95rem;
+}
+
+.promo-price {
+  color: #1b1f3b;
+  font-weight: bold;
+  font-size: 1.05rem;
+}

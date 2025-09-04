@@ -1,0 +1,44 @@
+/* src/pages/ManagementServices.css */
+
+.static-page-container {
+  padding: 2rem;
+  max-width: 90%;
+  width: 900px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+.static-page-container h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.static-page-container h2 {
+  font-size: 18px;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.static-page-container p,
+.static-page-container ul {
+  font-size: 16px;
+  margin-bottom: 1rem;
+}
+
+.static-page-container ul {
+  padding-left: 1.5rem;
+}
+
+.static-page-container li {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .static-page-container {
+    padding: 1rem;
+    width: 100%;
+  }
+}

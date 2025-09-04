@@ -1,0 +1,148 @@
+.review-section {
+  background-color: transparent !important; /* Remove white bg */
+  box-shadow: none !important;              /* Remove any shadow */
+  border: none !important;                  /* Remove border if any */
+  padding: 0 !important;                    /* Remove padding */
+  margin-top: 0.5rem !important;            /* Same spacing as others */
+}
+
+
+.review-item {
+  background: #fafafa; /* Softer than white */
+  padding: 0.6rem 0.9rem; /* Less padding = less thickness */
+  margin-bottom: 0.6rem;
+  border-radius: 6px;
+  box-shadow: none;
+  border: 1px solid #f0f0f0; /* Very light border for gentle separation */
+  font-size: 13px;
+  color: #333;
+}
+
+
+.review-header {
+  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: navy;
+}
+
+.review-section-title {
+  margin: 0;
+  font-size: 1.3rem !important;
+}
+
+.average-rating {
+  background: #f2f2f2;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.review-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.drop-review {
+  margin-top: 0.5rem;
+}
+
+.navy-button {
+  background-color: navy;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 7px;
+  width: auto;
+  min-width: 100px;
+  max-width: 180px;
+}
+
+.navy-button:hover {
+  background-color: #000066;
+}
+
+.success-text {
+  color: green;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* Review Modal */
+.review-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.review-modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.review-form label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.review-form select,
+.review-form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  margin-top: 4px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.submit-btn {
+  background-color: navy;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
+.review-section {
+  padding: 1rem;
+  background-color: #f9f9f9;
+  max-width: 1200px;
+  margin: 2rem auto;
+  border-radius: 8px;
+}
+
+.review-card {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+  margin-bottom: 1rem;
+}

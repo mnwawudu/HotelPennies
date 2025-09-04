@@ -1,0 +1,51 @@
+.add-service-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  width: 90%;
+  max-width: 450px;
+}
+
+.add-service-modal h2 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.add-service-modal form {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-service-modal input {
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.add-service-modal button {
+  padding: 0.6rem;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.add-service-modal .submit-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.add-service-modal .cancel-btn {
+  background-color: #ccc;
+  color: #333;
+}

@@ -1,0 +1,81 @@
+.book-chops-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-chops-modal-box {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  animation: popIn 0.25s ease;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.book-chops-modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  font-size: 1.25rem;
+  color: #666;
+  cursor: pointer;
+}
+.book-chops-modal-close:hover {
+  color: #000;
+}
+
+.book-chops-input {
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.book-chops-button {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.book-chops-button.submit {
+  background-color: #4f46e5;
+  color: white;
+}
+.book-chops-button.submit:hover {
+  background-color: #4338ca;
+}
+
+.book-chops-button.paystack {
+  background-color: navy;
+  color: white;
+}
+.book-chops-button.paystack:hover {
+  opacity: 0.9;
+}
+
+.book-chops-button.flutterwave {
+  background-color: #ffeb99;
+  color: black;
+}
+.book-chops-button.flutterwave:hover {
+  opacity: 0.9;
+}

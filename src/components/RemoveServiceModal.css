@@ -1,0 +1,52 @@
+.remove-service-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  width: 90%;
+  max-width: 450px;
+}
+
+.remove-service-modal h2 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.remove-service-modal ul {
+  list-style: none;
+  padding: 0;
+}
+
+.remove-service-modal li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.remove-service-modal button {
+  padding: 0.4rem 0.7rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.remove-service-modal .remove-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.remove-service-modal .close-btn {
+  margin-top: 1rem;
+  background-color: #ccc;
+  color: #333;
+  width: 100%;
+}

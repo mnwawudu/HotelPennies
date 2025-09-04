@@ -1,0 +1,93 @@
+.admin-featured h2 { margin-bottom: 12px; }
+
+.feature-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+  gap: 12px; margin-bottom: 14px;
+}
+.feature-cards .stat {
+  background: #fff; border-radius: 12px; padding: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.feature-cards .label { color: #6b7280; font-size: 12px; display:block; }
+.feature-cards .value { font-size: 20px; font-weight: 700; }
+
+.feature-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; }
+.feature-filters { display:flex; gap:8px; align-items:center; }
+.feature-filters select, .feature-filters input {
+  padding: 8px 10px; border:1px solid #e5e7eb; border-radius:8px;
+}
+.feature-filters button, .feature-toolbar .primary {
+  padding: 8px 12px; border:0; border-radius:8px; background:#0f172a; color:#fff;
+}
+
+.feature-create {
+  display:grid; grid-template-columns: repeat(6,minmax(120px,1fr));
+  gap:8px; background:#fff; padding:10px; border-radius:12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 12px;
+}
+.feature-create input, .feature-create select {
+  padding: 8px 10px; border:1px solid #e5e7eb; border-radius:8px;
+}
+.feature-create .primary { grid-column: span 1; }
+
+.feature-table-wrap { background:#fff; border-radius:12px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.feature-table { width:100%; border-collapse: collapse; }
+.feature-table th, .feature-table td { padding:10px 12px; border-bottom: 1px solid #f1f5f9; }
+.feature-table thead th { background:#0f172a; color:#fff; font-weight:600; }
+.feature-table .item-cell { display:flex; gap:10px; align-items:center; }
+.feature-table .item-cell img { width:44px; height:44px; object-fit:cover; border-radius:6px; }
+.feature-table .item-cell .name { font-weight:600; }
+.feature-table .item-cell .sub { color:#6b7280; font-size:12px; }
+.actions { display:flex; gap:6px; }
+.actions button { border:0; border-radius:6px; padding:6px 8px; background:#e5e7eb; }
+.actions .danger { background:#fca5a5; }
+.actions .muted { background:#e2e8f0; }
+
+/* ---------- Pricing panel ---------- */
+.pricing-panel {
+  margin-top: 24px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.pricing-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pricing-head h3 { margin: 0; }
+
+.pricing-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.pricing-form select,
+.pricing-form input {
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pricing-table th,
+.pricing-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.pricing-table tr.missing td {
+  color: #6b7280;
+  font-style: italic;
+}

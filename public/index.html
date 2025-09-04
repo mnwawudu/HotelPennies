@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="HotelPennies: Seamless booking for Hotels, Events, Chops, and more." />
+    <!-- ❌ removed the old logo192 link that 404'd -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>HotelPennies</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+
+    <!-- GA4 (placeholder) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- Favicons bundle -->
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
+    <link rel="mask-icon" href="%PUBLIC_URL%/safari-pinned-tab.svg" color="#0a3d62" />
+    <meta name="msapplication-TileColor" content="#0a3d62" />
+    <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
+
+    <!-- 🔒 Kill dev overlays that force scrollTo(0,0) -->
+    <style>
+      #webpack-dev-server-client-overlay,
+      #react-error-overlay,
+      #react-refresh-overlay,
+      iframe[id*="webpack-dev-server-client-overlay"],
+      iframe[title="Webpack Dev Server Client Overlay"] {
+        display:none!important; visibility:hidden!important; pointer-events:none!important;
+      }
+      html, body { scroll-behavior:auto !important; }
+    </style>
+    <script>
+      (function () {
+        // disable browser scroll restoration
+        try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e){}
+
+        // remove any dev overlays if injected
+        function nuke() {
+          var ids = ['webpack-dev-server-client-overlay','react-error-overlay','react-refresh-overlay'];
+          ids.forEach(function(id){
+            var el = document.getElementById(id);
+            if (el) { el.style.display='none'; try{ el.remove(); }catch(e){} }
+          });
+          Array.from(document.querySelectorAll('iframe')).forEach(function(f){
+            var sig=(f.id||'')+' '+(f.title||'');
+            if (/overlay|webpack/i.test(sig)) { try{ f.remove(); }catch(e){ f.style.display='none'; } }
+          });
+        }
+        try { new MutationObserver(nuke).observe(document.documentElement,{childList:true,subtree:true}); } catch(e){}
+        nuke();
+      })();
+    </script>
+  </head>
+
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+    <!-- Paystack SDK -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+  </body>
+</html>

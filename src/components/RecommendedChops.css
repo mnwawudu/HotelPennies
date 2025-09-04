@@ -1,0 +1,71 @@
+.recommended-chops-section {
+  margin-top: 3rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: navy;
+  text-align: left;
+}
+ 
+.carousel-wrapper {
+  position: relative;
+}
+
+.scrollable-container {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 0.5rem;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  font-size: 2rem;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.scroll-btn.left {
+  left: -10px;
+}
+
+.scroll-btn.right {
+  right: -10px;
+}
+
+/* Mobile: show 1 card fully per screen */
+@media (max-width: 768px) {
+  .scrollable-container {
+    scroll-snap-type: x mandatory;
+  }
+
+  .scrollable-container > * {
+    scroll-snap-align: center;
+    flex: 0 0 100%;
+  }
+}
+
+/* Desktop: show up to 4 per row */
+@media (min-width: 769px) {
+  .scrollable-container > * {
+    flex: 0 0 23%;
+  }
+}

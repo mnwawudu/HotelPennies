@@ -1,0 +1,104 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.modal-container h3 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.modal-container input,
+.modal-container textarea,
+.modal-container select {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.submit-btn {
+  background-color: navy;
+  color: white;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background-color: #ccc;
+  color: black;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.flutterwave-btn {
+  background-color: #fff7cc;
+  color: #000;
+  border: 1px solid #ffd700;
+}
+
+.flutterwave-btn:hover {
+  background-color: #ffef99;
+}
+.flutterwave-btn {
+  background-color: #fff7cc !important;
+  color: #000 !important;
+  border: 1px solid #ffd700 !important;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.flutterwave-btn:hover {
+  background-color: #ffef99 !important;
+}
+.payment-options {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: space-between;
+}
+
+.pay-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  background-color: #0a3d62;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.flutterwave-btn {
+  background-color: #e91e63;
+}

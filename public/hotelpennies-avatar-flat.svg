@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" width="200" height="80">
+  <defs><style>
+    .txt { fill: #0a3d62; font: 800 56px 'DejaVu Sans', Arial, Helvetica, sans-serif; letter-spacing: 1px; }
+  </style></defs>
+  <text class="txt" x="0" y="60">Hp</text>
+</svg>

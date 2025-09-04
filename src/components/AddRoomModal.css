@@ -1,0 +1,122 @@
+/* AddRoomModal.css */
+
+.add-room-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.add-room-modal {
+  position: relative;
+  background: white;
+  width: 540px;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.add-room-modal h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.add-room-modal label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.add-room-modal input,
+.add-room-modal textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.add-room-modal textarea {
+  resize: vertical;
+}
+
+.add-room-modal .button-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.add-room-modal .button-primary {
+  background-color: #0d3b66;
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.add-room-modal .button-primary:hover {
+  background-color: #002c53;
+}
+
+.add-room-modal .button-secondary {
+  background-color: #e2e2e2;
+  color: #333;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.add-room-modal .close-button {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #bbb;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.promo-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  color: green;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.calendar-close {
+  right: 20px !important; /* or 25px depending on how far you want it */
+  top: 10px !important;
+}

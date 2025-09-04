@@ -1,0 +1,82 @@
+.feature-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.feature-modal {
+  background: white;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+}
+
+.feature-modal h3 {
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  color: #004080;
+}
+
+.feature-modal label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.feature-modal select,
+.feature-modal textarea {
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.modal-buttons {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.modal-buttons .cancel {
+  background: #ccc;
+  color: #333;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-buttons .submit {
+  background: #007bff;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.success {
+  color: green;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}

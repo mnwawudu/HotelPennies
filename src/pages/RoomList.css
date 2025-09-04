@@ -1,0 +1,53 @@
+
+
+.room-cards-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.room-block-group {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fff;
+}
+
+.room-card-wrapper {
+  margin-bottom: 0; /* keep card flush */
+}
+
+
+.room-action-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0 32px;
+  padding-left: 4px;
+}
+
+/* Base style */
+.btn-action {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* Navy blue for all except delete */
+.btn-action:not(.btn-delete) {
+  background-color: #1d3557;
+}
+
+.btn-action:not(.btn-delete):hover {
+  background-color: #16324c;
+}/* Red for delete */
+.btn-action.btn-delete {
+  background-color: #d32f2f;
+}
+
+.btn-action.btn-delete:hover {
+  background-color: #b71c1c;
+}

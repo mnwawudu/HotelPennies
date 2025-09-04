@@ -1,0 +1,168 @@
+
+.shortlet-card-public {
+  width: 23%;
+  background: #f9f9f9;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.3s ease;
+}
+
+.hotel-card-public:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.card-image-container {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.hotel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.city-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #007bff;
+  color: white;
+  padding: 3px 8px;
+  font-size: 12px;
+  border-radius: 5px;
+  z-index: 1;
+}
+
+.hotel-info {
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.shortlet-title {
+  font-size: 13px; /* ✅ Matches ShortletCardPublic exactly */
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+  line-height: 1.3;
+}
+
+
+
+.hotel-tagline {
+  font-size: 12px;
+  color: #555;
+  margin: 0;
+}
+
+.hotel-location {
+  font-size: 11px;
+  color: #777;
+  margin: 0;
+}
+
+.hotel-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.hotel-price-group {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.actual-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 12px;
+}
+
+.promo-price {
+  font-size: 12px !important;
+  font-weight: bold !important;
+  color: #000 !important;
+}
+
+
+.hotel-rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: #999;
+}
+
+.star {
+  color: #ccc;
+  font-size: 12px;
+}
+
+.star.filled {
+  color: gold;
+}
+
+.view-details-btn {
+  margin-top: 8px;
+  padding: 4px 8px;
+  font-size: 10px;
+  background-color: #003366;
+  color: white;
+  border-radius: 5px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+  .hotel-card-public {
+    width: 23%;
+  }
+}
+
+@media (max-width: 992px) {
+  .hotel-card-public {
+    width: 31%;
+  }
+}
+
+@media (max-width: 768px) {
+  .hotel-card-public {
+    width: 48%;
+  }
+}
+
+@media (max-width: 500px) {
+  .hotel-card-public {
+    width: 100%;
+  }
+}
+.shortlet-card-public .shortlet-title {
+  font-size: 13px !important;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}

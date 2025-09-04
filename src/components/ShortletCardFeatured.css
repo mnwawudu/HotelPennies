@@ -1,0 +1,60 @@
+.shortlet-card-featured {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+  margin: 0 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+
+.shortlet-featured-image-container {
+  width: 100%;
+  height: 170px;
+  overflow: hidden;
+}
+
+.shortlet-featured-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shortlet-featured-info {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 0.3rem;
+  background-color: #fafafa;
+}
+
+.shortlet-featured-title,
+.shortlet-featured-location,
+.shortlet-featured-price,
+.shortlet-featured-rating {
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.shortlet-featured-rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.featured-card-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-start; /* or center */
+  align-items: stretch;
+}
+
+.slick-track {
+  display: flex !important;
+}

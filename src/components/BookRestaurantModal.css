@@ -1,0 +1,105 @@
+/* === Full-screen overlay, above any header === */
+.modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 16px 32px; /* pull content down a bit from top */
+  z-index: 2147483647 !important;
+}
+
+/* === Modal container === */
+.modal-container {
+  background: #fff;
+  width: 90%;
+  max-width: 520px;
+  border-radius: 12px;
+  padding: 24px 24px 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  position: relative;
+  max-height: calc(100vh - 96px); /* matches backdrop padding */
+  overflow-y: auto;
+}
+
+/* Close button */
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Form layout */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-form input,
+.modal-form textarea,
+.modal-form .date-picker-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+/* Actions & buttons */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.submit-btn {
+  background: #0a3d62;
+  color: #fff;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.submit-btn:hover { background: #06527a; }
+.submit-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+/* Payment options section */
+.payment-options h4 { margin: 0 0 8px; }
+
+/* DatePicker popper should appear above the modal container */
+.react-datepicker-popper {
+  z-index: 2147483600 !important;
+}
+
+/* Lock background scroll while open (supported in modern browsers) */
+body:has(.modal-backdrop) { overflow: hidden; }
+
+/* --- Safety kill-switch for any old Flutterwave UI still in the bundle --- */
+.flutterwave-button,
+button.flutterwave-button,
+[data-gateway="flutterwave"] {
+  display: none !important;
+}
+
+/* If a legacy Flutterwave button is injected globally, hide it too */
+#flwpug_getpaid,
+[id^="flwpug_"],
+[id*="flutterwave"],
+[class*="flutterwave"],
+[onclick*="FlutterwaveCheckout"] {
+  display: none !important;
+}
+/* Hide the restaurant modal while Paystack is open */
+.modal-backdrop.hidden-during-paystack {
+  display: none !important;
+}

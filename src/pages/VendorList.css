@@ -1,0 +1,148 @@
+/* ===== VendorList (scoped) ===== */
+
+.vendor-list-page {
+  padding: 1.5rem;
+}
+
+.vendor-list-page h2 {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a; /* slate-900 */
+}
+
+.vendor-list-page .loading,
+.vendor-list-page .error {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  display: inline-block;
+}
+
+.vendor-list-page .loading {
+  background: #eff6ff;   /* blue-50 */
+  color: #1d4ed8;        /* blue-700 */
+  border: 1px solid #bfdbfe; /* blue-200 */
+}
+
+.vendor-list-page .error {
+  background: #fef2f2;   /* red-50 */
+  color: #b91c1c;        /* red-700 */
+  border: 1px solid #fecaca; /* red-200 */
+}
+
+/* ----- Table ----- */
+
+.vendor-list-page table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden; /* rounds header corners */
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+}
+
+.vendor-list-page thead th {
+  font-weight: 600;
+  text-align: left;
+  font-size: 0.9rem;
+  padding: 0.9rem 1rem;
+  background: #f8fafc;   /* slate-50 */
+  color: #0f172a;        /* slate-900 */
+  border-bottom: 1px solid #e5e7eb; /* slate-200 */
+  white-space: nowrap;
+}
+
+.vendor-list-page tbody td {
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  color: #0f172a; /* slate-900 */
+  border-bottom: 1px solid #f1f5f9; /* slate-100 */
+  vertical-align: middle;
+}
+
+.vendor-list-page tbody tr:hover {
+  background: #f8fafc; /* subtle row hover */
+}
+
+/* ----- Badges (KYC) ----- */
+
+.vendor-list-page .badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.6;
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+.vendor-list-page .badge.pending {
+  background: #fff7e6;  /* orange-50 */
+  color: #ad6800;       /* orange-700 */
+  border-color: #ffe58f;/* orange-200 */
+}
+
+.vendor-list-page .badge.approved {
+  background: #f6ffed;  /* green-50 */
+  color: #237804;       /* green-800 */
+  border-color: #b7eb8f;/* green-200 */
+}
+
+.vendor-list-page .badge.rejected {
+  background: #fff1f0;  /* red-50 */
+  color: #a8071a;       /* red-800 */
+  border-color: #ffa39e;/* red-200 */
+}
+
+/* ----- Action buttons ----- */
+
+.vendor-list-page .btn-approve,
+.vendor-list-page .btn-reject {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.06s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 2px rgba(2, 6, 23, 0.05);
+}
+
+.vendor-list-page .btn-approve {
+  background: #0f766e; /* teal-700 */
+  color: #fff;
+}
+
+.vendor-list-page .btn-approve:hover { transform: translateY(-1px); }
+.vendor-list-page .btn-approve:active { transform: translateY(0); }
+
+.vendor-list-page .btn-reject {
+  background: #b91c1c; /* red-700 */
+  color: #fff;
+}
+
+.vendor-list-page .btn-reject:hover { transform: translateY(-1px); }
+.vendor-list-page .btn-reject:active { transform: translateY(0); }
+
+.vendor-list-page .btn-approve[disabled],
+.vendor-list-page .btn-reject[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ----- Compact controls on narrow screens ----- */
+
+@media (max-width: 900px) {
+  .vendor-list-page table {
+    display: block;
+    overflow-x: auto;     /* allow horizontal scroll instead of breaking layout */
+    white-space: nowrap;
+  }
+  .vendor-list-page thead th,
+  .vendor-list-page tbody td {
+    padding: 0.75rem 0.85rem;
+  }
+}

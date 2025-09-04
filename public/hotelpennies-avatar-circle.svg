@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <style>
+      .bg { fill: #0a3d62; }
+      .txt { fill: #ffffff; font: 700 64px 'DejaVu Sans', Arial, Helvetica, sans-serif; }
+    </style>
+  </defs>
+  <circle class="bg" cx="60" cy="60" r="54"/>
+  <text class="txt" x="60" y="78" text-anchor="middle">Hp</text>
+</svg>

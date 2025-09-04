@@ -1,0 +1,41 @@
+.faq-page-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  color: #222;
+}
+
+.faq-page-container h1 {
+  font-size: 20px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.faq-page-container h2 {
+  font-size: 18px;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.faq-page-container p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.faq-page-container ul {
+  padding-left: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.faq-page-container ul li {
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .faq-page-container {
+    padding: 1rem;
+  }
+}

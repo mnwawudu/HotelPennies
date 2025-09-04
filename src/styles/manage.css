@@ -1,0 +1,47 @@
+/* ✅ src/styles/manage.css */
+.manage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.manage-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.manage-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.manage-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.manage-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.manage-card-body {
+  padding: 1rem;
+}
+
+.manage-card-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1rem 1rem 1rem;
+}
+
+.manage-card-actions button {
+  font-size: 0.9rem;
+}

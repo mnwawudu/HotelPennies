@@ -1,0 +1,36 @@
+/* AddRoomModal.css or shared form modal CSS */
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+  gap: 8px;
+}
+
+.checkbox-row input[type='checkbox'] {
+  margin: 0;
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+.checkbox-row label {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Optional card styling for centered title and prices */
+.gift-card h4 {
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.gift-card .promo-price,
+.gift-card .price-row {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+}

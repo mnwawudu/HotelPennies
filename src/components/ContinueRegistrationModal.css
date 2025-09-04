@@ -1,0 +1,94 @@
+.modal-overlay {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.modal-content.custom-modal {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  border: 1px solid #e0e0e0;
+}
+
+.modal-content h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  color: #002f5f;
+}
+
+.modal-content p {
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+  color: #444;
+}
+
+.upload-group {
+  margin-bottom: 1.2rem;
+}
+
+.upload-group label {
+  font-weight: bold;
+  color: #002f5f;
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+}
+
+.upload-group input[type="file"] {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fafafa;
+  font-size: 0.9rem;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-buttons .submit-btn {
+  background-color: #002f5f;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.modal-buttons .submit-btn:hover {
+  background-color: #004080;
+}
+
+.modal-buttons .cancel-btn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.modal-buttons .cancel-btn:hover {
+  background-color: #ddd;
+}
+
+.error-text {
+  color: crimson;
+  font-weight: 500;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  text-align: left;
+}

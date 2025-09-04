@@ -1,0 +1,68 @@
+/* DeleteModal.css */
+
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.delete-modal-box {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.delete-modal-box h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.delete-modal-box p {
+  margin-bottom: 1.5rem;
+}
+
+.delete-modal-box .button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.delete-modal-box button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.delete-modal-box .btn-cancel {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.delete-modal-box .btn-delete {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

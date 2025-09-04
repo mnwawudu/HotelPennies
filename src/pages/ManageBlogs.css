@@ -1,0 +1,151 @@
+.manage-blogs {
+  display: grid;
+  gap: 16px;
+}
+
+/* not stretched; centered but compact */
+.add-blog-btn {
+  display: inline-block;
+  margin: 0 auto 8px;
+  padding: 8px 14px;
+  background: #0a3d62;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.admin-blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.admin-blog-card {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  min-height: 320px;
+}
+
+.blog-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.blog-title {
+  margin: 4px 0 6px;
+  font-size: 16px;
+}
+
+.blog-snippet {
+  color: #555;
+  font-size: 14px;
+}
+
+/* navy blue read more */
+.read-more-btn {
+  margin-top: 10px;
+  width: fit-content;
+  padding: 6px 10px;
+  background: #0a3d62;
+  color: #fff;
+  border: 1px solid #0a3d62;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-blog-actions {
+  margin-top: auto; /* pins actions to card bottom */
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-primary { background:#0a3d62; color:#fff; }
+.btn-danger  { background:#b20000; color:#fff; }
+
+/* Modal basics (works with your existing modal styles) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+}
+
+.edit-blog-modal {
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  width: min(920px, 96vw);
+  max-height: 92vh;
+  overflow: auto;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  font-size: 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.navy-btn {
+  background: #0a3d62;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* image preview styles already referenced by your modal */
+.edit-image-preview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.image-wrapper {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: none;
+  background: #b20000;
+  color: #fff;
+  line-height: 20px;
+  cursor: pointer;
+}

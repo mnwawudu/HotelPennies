@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .a { fill: #0a3d62; }
+      .b { fill: #ffffff; font: 700 240px "Arial", "Helvetica", sans-serif; letter-spacing: 2px; }
+    </style>
+  </defs>
+  <circle class="a" cx="256" cy="256" r="256"/>
+  <!-- Centered "Hp" -->
+  <text class="b" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle">Hp</text>
+</svg>

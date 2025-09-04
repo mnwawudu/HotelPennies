@@ -1,0 +1,151 @@
+/* src/pages/GiftsDetail.css */
+
+.gift-detail-container {
+  max-width: 900px;
+  margin: 2rem auto 4rem auto;
+  padding: 0 1rem;
+}
+
+.gift-detail-container h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.gift-detail-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.gift-image-carousel {
+  flex: 1 1 320px;
+  max-width: 400px;
+  position: relative;
+}
+
+.image-strip {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+.image-strip::-webkit-scrollbar {
+  height: 8px;
+}
+
+.image-strip::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.gift-img {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 380px;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 8px;
+  user-select: none;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #222;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.8rem;
+  font-size: 1.3rem;
+  cursor: pointer;
+  border-radius: 4px;
+  user-select: none;
+  opacity: 0.75;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.scroll-btn:hover {
+  opacity: 1;
+}
+
+.scroll-btn.left {
+  left: -10px;
+}
+
+.scroll-btn.right {
+  right: -10px;
+}
+
+.gift-info {
+  flex: 1 1 320px;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gift-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.original-price {
+  font-weight: 400;
+  color: #888;
+  text-decoration: line-through;
+  margin-left: 0.8rem;
+  font-size: 1rem;
+}
+
+.gift-complimentary {
+  font-size: 1rem;
+  color: #4caf50;
+}
+
+.gift-description {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+.gift-review-section {
+  margin-top: 3rem;
+}
+.gift-booking {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.2rem;
+}
+
+.qty-label {
+  font-size: 0.9rem;
+}
+
+.qty-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.book-now-btn {
+  padding: 6px 12px;
+  background-color: #0b3d91;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.book-now-btn:hover {
+  background-color: #072e6a;
+}

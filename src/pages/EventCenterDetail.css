@@ -1,0 +1,157 @@
+/* 1. CONTAINER PADDING */
+.event-center-detail-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem; /* push content in from the edge */
+}
+
+/* 2. ADDRESS SECTION */
+.event-header-text {
+  margin-bottom: 1.5rem;
+}
+
+.event-header-text h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: navy;
+}
+
+.event-header-text p {
+  font-size: 1rem;
+  color: #555;
+}
+
+/* 3. CAROUSEL SPACING */
+.event-carousel-wrapper {
+  margin: 2rem 0; /* space above and below carousel */
+}
+
+/* 4. TERMS & CONDITIONS BOX */
+.event-terms-box {
+  background: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin: 2rem 0; /* space before and after the box */
+}
+
+.event-terms-box h4 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.event-terms-box ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.event-terms-box ul li {
+  margin-bottom: 0.75rem; /* more breathing space between items */
+  color: #444;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* 5. MAP SECTION (optional breathing room) */
+.map-section {
+  margin: 3rem 0;
+}
+.event-carousel-wrapper {
+  position: relative;
+  margin: 2rem 0;
+  overflow: hidden;
+  padding: 0 1rem;
+}
+
+.event-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 1rem;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE/Edge */
+}
+
+.event-carousel::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.event-carousel img {
+  flex: 0 0 calc(25% - 1rem); /* 4 images in a row, accounting for gap */
+  height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.scroll-btn.left {
+  left: 5px;
+}
+
+.scroll-btn.right {
+  right: 5px;
+}
+@media (max-width: 768px) {
+  .event-carousel img {
+    flex: 0 0 48%;
+  }
+}
+
+@media (max-width: 480px) {
+  .event-carousel img {
+    flex: 0 0 95%;
+  }
+}
+.book-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.book-now-btn {
+  background-color: navy;
+  color: white;
+  font-size: 1.1rem;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s ease;
+}
+
+.book-now-btn:hover {
+  background-color: #001f4d;
+}
+.breadcrumbs {
+  font-size: 0.9rem;
+  color: #666;
+  padding: 1rem 1rem 0;
+}
+
+.breadcrumbs a {
+  color: #0a3d62;
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumbs .current {
+  color: #999;
+}

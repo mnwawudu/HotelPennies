@@ -1,0 +1,30 @@
+/* src/components/HotelCard.css */
+.hotel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.hotel-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+}
+
+.hotel-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hotel-name {
+  font-size: 18px;
+  font-weight: bold;
+}

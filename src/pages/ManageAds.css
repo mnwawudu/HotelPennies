@@ -1,0 +1,52 @@
+.ad-image-wrapper {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  margin-bottom: 1rem;
+}
+
+.ad-image-wrapper img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.image-placeholder {
+  color: gray;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.ad-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.edit-btn,
+.upload-btn,
+.disable-btn {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.upload-btn {
+  background-color: #ffc107;
+  color: black;
+}
+
+.disable-btn {
+  background-color: crimson;
+  color: white;
+}

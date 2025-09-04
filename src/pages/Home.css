@@ -1,0 +1,630 @@
+/* ✅ Section Headings Centered */
+.explore-section h3,
+.featured-section h3,
+.popular-section h3 {
+  text-align: center;
+  font-size: 1.4rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* ✅ Grid Layout: 4 in a row with more spacing */
+.explore-grid,
+.featured-grid,
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem; /* Increased gap */
+  margin: 2rem auto;
+  padding: 0 2rem;
+  max-width: 1200px;
+}
+
+/* ✅ Cards with Text Overlay */
+.explore-card,
+.featured-card,
+.city-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.explore-card img,
+.featured-card img,
+.city-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+}
+
+.explore-card:hover,
+.featured-card:hover,
+.city-card:hover {
+  transform: translateY(-4px);
+}
+
+.explore-card p,
+.featured-card p,
+.city-card p {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.6rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  font-size: 1rem;
+}
+/* ✅ Hero Section Fix */
+.hero-section {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat; /* 🔥 Prevents tiling */
+  height: 420px; /* Fixed height for full display */
+  color: #fff;
+  text-align: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 1000px;
+  width: 90%;
+}
+
+.hero-overlay h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.hero-overlay p {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: #eee;
+}
+/* ✅ Why Choose HotelPennies Section */
+.why-section {
+  background-color: #f9f9f9;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.why-section h3 {
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #004080;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+
+.why-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 2rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.why-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.why-card .icon {
+  font-size: 2rem;
+  margin-bottom: 0.8rem;
+  color: #004080;
+}
+
+.why-card h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #222;
+}
+
+.why-card p {
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.4;
+}
+
+/* ✅ Hotels in Nigeria text section */
+.nigeria-hotels {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: #ffffff;
+}
+
+.nigeria-hotels h4 {
+  font-size: 1.4rem;
+  color: #004080;
+  margin-bottom: 0.5rem;
+}
+
+.nigeria-hotels p {
+  font-size: 1rem;
+  color: #555;
+}
+/* ✅ Hotels in Nigeria Section */
+.hotels-nigeria-section {
+  padding: 2rem 1rem;
+  text-align: center;
+  background-color: #fff;
+}
+
+.hotels-nigeria-section h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.hotels-nigeria-section p {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 1.5rem;
+}
+
+.hotels-nigeria-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.2rem;
+  max-width: 960px;
+  margin: auto;
+}
+
+.nigeria-card {
+  background: #f8fbff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: 0.2s ease-in-out;
+}
+
+.nigeria-card:hover {
+  background: #eaf4ff;
+  cursor: pointer;
+}
+
+.nigeria-card h4 {
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+  color: #004080;
+}
+
+.nigeria-card p {
+  font-size: 0.9rem;
+  color: #333;
+}
+/* ✅ Travel Blog Section */
+.blog-section {
+  padding: 2rem 1rem;
+  text-align: center;
+  background-color: #f8f9fa;
+}
+
+.blog-section h3 {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  color: #222;
+}
+
+.blog-carousel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.blog-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+  text-align: left;
+}
+
+.blog-card:hover {
+  transform: translateY(-4px);
+}
+
+.blog-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.blog-text {
+  padding: 0.8rem;
+}
+
+.blog-text h4 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #004080;
+}
+
+.blog-text p {
+  font-size: 0.9rem;
+  color: #444;
+  margin-bottom: 0.6rem;
+}
+
+.blog-text a {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  background-color: #00bfff; /* Sky blue */
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.blog-text a:hover {
+  background-color: #009acd; /* Darker sky blue on hover */
+}
+
+.featured-subsection {
+  margin-bottom: 2rem;
+}
+
+.featured-subsection h4 {
+  margin: 0 0 1rem 0;
+  padding-left: 1rem;
+  font-size: 1.1rem;
+  color: #222;
+}
+
+.featured-grid {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-left: 1rem;
+  gap: 1rem;
+}
+
+.featured-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.featured-grid::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 10px;
+}
+
+/* ✅ Slick Carousel Fixes */
+.custom-slider .slick-slide {
+  display: flex !important;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.custom-slider .slick-list {
+  margin: 0 -8px;
+}
+
+.custom-slider .slick-prev,
+.custom-slider .slick-next {
+  z-index: 2;
+}
+
+.custom-slider .slick-prev:before,
+.custom-slider .slick-next:before {
+  color: #333;
+  font-size: 24px;
+}
+.shortlets-featured-container {
+  margin-top: 2rem;
+}
+
+.shortlets-scroll-wrapper {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 1rem;
+}
+
+.shortlets-scroll-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+.shortlets-scroll-wrapper::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 10px;
+}
+.shortlets-scroll-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.hero-section {
+  background-size: cover;
+  background-position: center;
+  padding: 1rem 1rem; /* was 2rem or more */
+  color: white;
+  position: relative;
+  text-align: center;
+}
+
+.hero-overlay {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem 0.5rem;
+}
+
+.hero-text h1 {
+  font-size: 1.2rem;
+  margin-bottom: 0.4rem;
+  line-height: 1.4;
+}
+
+.hero-text p {
+  font-size: 0.9rem;
+  margin-bottom: 0.7rem;
+}
+
+.searchbar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+  z-index: 5;
+  position: relative;
+}
+
+@media screen and (max-width: 768px) {
+  .searchbar-wrapper {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .searchbar-wrapper {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.8rem !important;
+  }
+
+  .hero-text h1 {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .hero-text p {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+}
+/* Force AdBanner height reduction only on small screens */
+@media (max-width: 768px) {
+  .ad-banner-container {
+    height: 150px !important; /* or lower if needed */
+    overflow: hidden;
+  }
+
+  .ad-banner-container img,
+  .ad-card {
+    height: 150px !important;
+    object-fit: cover;
+  }
+
+  .ad-card .ad-content {
+    font-size: 0.85rem;
+    padding: 0.3rem;
+  }
+}
+@media (max-width: 768px) {
+  .hero-section {
+    padding-bottom: 0.2rem !important;
+  }
+
+  .searchbar-wrapper {
+    margin-top: 0.1rem !important;
+    margin-bottom: 0.1rem !important;
+  }
+
+  .ad-banner-container {
+    margin-bottom: 0rem !important;
+  }
+}
+/* ✅ Mobile-only spacing fix for AdBanner */
+@media (max-width: 768px) {
+  .ad-banner-container {
+    margin-top: 0.3rem;
+  }
+}
+/* lift searchbar slightly inside hero for better spacing */
+.lift-a-bit { margin-top: -10px; }
+@media (max-width: 767px) { .lift-a-bit { margin-top: 6px; } }
+
+/* Trending grid — same card rhythm as your other grids */
+.trending-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 1024px) { .trending-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px)  { .trending-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px)  { .trending-grid { grid-template-columns: 1fr; } }
+
+/* Hide-only utility (keeps for screen-readers/SEO) */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* --- TOP HOTELS / HOTELS IN NIGERIA RAIL --- */
+
+/* Section + title spacing */
+.hotels-nigeria-section,
+.hotels-in-nigeria-section {
+  padding: 16px 0;
+}
+.hotels-nigeria-section h3,
+.hotels-in-nigeria-section h2 {
+  margin: 0 0 14px;      /* space title away from cards */
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+/* ===== Desktop & large (>=1024px): 4-up grid, no horizontal scroll ===== */
+@media (min-width: 1024px) {
+  .hotels-nigeria-grid,
+  .hotel-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(260px, 1fr));
+    gap: 16px;
+    overflow-x: hidden;     /* kill rail scrollbar on desktop */
+    grid-auto-flow: row;    /* ensure wrapping rows */
+    grid-auto-columns: unset;
+    scroll-snap-type: none;
+  }
+}
+
+/* ===== Tablet (768–1023px): 3-up grid, no horizontal scroll ===== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hotels-nigeria-grid,
+  .hotel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 14px;
+    overflow-x: hidden;
+    grid-auto-flow: row;
+    grid-auto-columns: unset;
+  }
+}
+
+/* ===== Mobile (<=767px): horizontal rail with snap ===== */
+@media (max-width: 767px) {
+  .hotels-nigeria-grid,
+  .hotel-grid {
+    display: grid;
+    grid-auto-flow: column;         /* side-by-side cards */
+    grid-auto-columns: 82%;         /* card width in the rail */
+    gap: 10px;
+    overflow-x: auto;               /* enable horizontal scroll */
+    padding: 2px 0 12px;
+    margin: 0 -8px;                 /* edge-to-edge look */
+    padding-left: 8px;
+    scroll-snap-type: x mandatory;
+  }
+  .hotels-nigeria-grid > *,
+  .hotel-grid > * {
+    scroll-snap-align: start;
+  }
+}
+
+/* Make sure each card fills its grid column */
+.hotels-nigeria-grid > *,
+.hotel-grid > *,
+.hotel-wrapper,
+.nigeria-card {
+  width: 100%;
+}
+
+/* Optional: subtle horizontal scrollbar on mobile */
+.hotels-nigeria-grid::-webkit-scrollbar,
+.hotel-grid::-webkit-scrollbar { height: 8px; }
+.hotels-nigeria-grid::-webkit-scrollbar-thumb,
+.hotel-grid::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+/* ==== Top/Trending Hotels rail — anti-squeeze fix ==== */
+/* Desktop & tablet: flexible grid that auto-fits cards, no horizontal scroll */
+@media (min-width: 768px) {
+  .hotels-nigeria-grid,
+  .hotel-grid {
+    display: grid;
+    /* Each card won't go below 280px; columns auto-fit the space */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+    overflow-x: hidden;
+    align-items: stretch;
+  }
+
+  /* Let items shrink cleanly inside their grid tracks */
+  .hotels-nigeria-grid > *,
+  .hotel-grid > * {
+    min-width: 0;
+  }
+
+  /* Ensure wrappers don't impose smaller max-widths */
+  .hotel-wrapper,
+  .nigeria-card {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Mobile: keep the horizontal rail we already set up */
+@media (max-width: 767px) {
+  .hotels-nigeria-grid,
+  .hotel-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 82%;
+    gap: 10px;
+    overflow-x: auto;
+    margin: 0 -8px;
+    padding: 2px 0 12px 8px;
+    scroll-snap-type: x mandatory;
+  }
+  .hotels-nigeria-grid > *,
+  .hotel-grid > * { scroll-snap-align: start; }
+}
+/* Gently lift the SearchBar above the bottom edge of the hero */
+.hero-section .hero-overlay {
+  /* give the hero some breathing room at the bottom */
+  padding-bottom: 56px;
+}
+
+.hero-section .hero-overlay .searchbar-wrapper {
+  /* nudge the bar upward a bit */
+  transform: translateY(-12px);
+}
+
+/* Slightly stronger lift on larger screens */
+@media (min-width: 1024px) {
+  .hero-section .hero-overlay {
+    padding-bottom: 72px;
+  }
+  .hero-section .hero-overlay .searchbar-wrapper {
+    transform: translateY(-16px);
+  }
+}
+
+/* Keep mobile clean and centered (no lift) */
+@media (max-width: 767px) {
+  .hero-section .hero-overlay {
+    padding-bottom: 40px; /* just some breathing room */
+  }
+  .hero-section .hero-overlay .searchbar-wrapper {
+    transform: none;
+  }
+}

@@ -1,0 +1,123 @@
+.chops-detail-container {
+  max-width: 900px;
+  margin: 4rem auto 3rem;
+  padding: 0 1rem;
+}
+
+.chops-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.chops-carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.chops-carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+  scroll-behavior: smooth;
+  padding: 1rem;
+}
+
+.chops-img {
+  width: 220px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+  font-size: 20px;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.scroll-btn.left {
+  left: 5px;
+}
+
+.scroll-btn.right {
+  right: 5px;
+}
+
+.chops-info {
+  padding: 1rem 1.5rem;
+}
+
+.chops-name {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.chops-desc {
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+.chops-complimentary {
+  color: #0a0;
+  margin-bottom: 0.5rem;
+}
+
+.chops-price {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.active-price {
+  color: green;
+  font-weight: 600;
+}
+
+.original-price {
+  margin-left: 10px;
+  text-decoration: line-through;
+  color: #999;
+}
+
+.chops-delivery.green {
+  color: green;
+}
+
+.chops-delivery.gray {
+  color: #444;
+}
+
+.chops-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 1rem 0;
+}
+
+.chops-total {
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.bulk-discount {
+  color: #d63384;
+}
+
+.chops-book-btn {
+  background: navy;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  margin-top: 1rem;
+  cursor: pointer;
+}

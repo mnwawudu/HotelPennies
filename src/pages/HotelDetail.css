@@ -1,0 +1,367 @@
+.hotel-detail-container {
+  padding: 2rem;
+}
+
+.hotel-header-text {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.hotel-full-address {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+/* Carousel */
+.hotel-carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.hotel-carousel {
+  display: flex;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.hotel-carousel img {
+  flex: 0 0 auto;
+  width: 25%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-right: 10px;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  text-align: center;
+  color: black;
+}
+
+.scroll-btn.left {
+  left: 10px;
+}
+
+.scroll-btn.right {
+  right: 10px;
+}
+
+/* Amenities */
+.hotel-section {
+  margin: 0.5rem 0 !important;
+}
+
+.amenities-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.amenity {
+  background-color: #eee;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+/* Room Section Embedded Layout */
+.room-section-main {
+  margin: 0.3rem 0 !important;
+  padding: 0 1rem;
+  width: 100%;
+}
+
+.room-section-main h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.room-card-wrapper {
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+
+/* ROOM CARD PATCH: Make room cards embedded like other sections */
+.room-card-wrapper {
+  margin-bottom: 1rem;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.room-card-long {
+  display: flex;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+
+
+/* Room Image Side */
+.room-image-container {
+  flex: 0 0 50%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.room-carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.room-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+}
+
+
+.room-img-left {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.discount-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+  background-color: #ff4d94;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+/* Room Info Side */
+.room-info-right {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.room-info-right h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.room-price {
+  font-size: 1rem;
+  color: navy;
+  margin: 0.3rem 0;
+  font-weight: 600;
+}
+
+.room-description {
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+.complimentary-text {
+  font-size: 0.85rem;
+  color: #777;
+  margin: 0.5rem 0;
+}
+
+.choose-room-btn {
+  background: none;
+  border: 1.5px solid navy;
+  color: navy;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+
+.choose-room-btn:hover {
+  background: navy;
+  color: white;
+}
+
+/* Sidebar (if used) */
+.sidebar-widget h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.sidebar-widget {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .room-card-long {
+    flex-direction: column;
+  }
+
+  .room-image-container,
+  .room-info-right {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .hotel-carousel img {
+    width: 80%;
+  }
+
+  .scroll-btn {
+    top: 35%;
+  }
+}
+
+/* Terms Box */
+.hotel-terms-box {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+
+.hotel-terms-box h4 {
+  font-size: 1.2rem;
+  color: navy;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.hotel-terms-list {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.hotel-terms-list li {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+/* Nearby Sections Layout */
+.hotel-detail-container > div {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.nearby-hotels-section,
+.nearby-restaurants-section,
+.recommended-chops-section,
+.review-section-wrapper {
+  width: 100%;
+  margin: 0.3rem 0 !important;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+.nearby-hotels-section h3,
+.nearby-restaurants-section h3,
+.recommended-chops-section h3,
+.review-section-wrapper h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .carousel-wrapper > * {
+    flex: 0 0 23%;
+  }
+}
+/* Mobile carousel improvements */
+.room-carousel,
+.hotel-carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.room-carousel img,
+.hotel-carousel img {
+  scroll-snap-align: center;
+  flex: 0 0 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+@media (min-width: 768px) {
+  .room-carousel img {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    scroll-snap-align: start;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .scroll-btn {
+    display: none;
+  }
+
+  .room-carousel,
+  .hotel-carousel {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .room-carousel img,
+  .hotel-carousel img {
+    scroll-snap-align: center;
+    flex: 0 0 100%;
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  html {
+    overflow-x: hidden;
+  }
+}
+@media (min-width: 768px) {
+  .hotel-carousel img {
+    flex: 0 0 25%;
+    max-width: 25%;
+    height: 220px;
+    margin-right: 10px;
+    border-radius: 10px;
+    scroll-snap-align: start;
+  }
+}
