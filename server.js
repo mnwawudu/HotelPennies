@@ -1,4 +1,4 @@
-// server.js — production-ready, robust to express-rate-limit issues
+// server.js — production-ready with hardening + require diagnostics
 // ---------------------------------------------------------------
 require('dotenv').config();
 
@@ -10,7 +10,21 @@ const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 
-// Optional startup checks (enabled when RENDER_DEBUG=1 on Render)
+// Helper: require with explicit diagnostics (which file failed)
+const R = (p) => {
+  try {
+    const m = require(p);
+    console.log('✅ required:', p);
+    return m;
+  } catch (e) {
+    console.error('❌ require failed:', p);
+    console.error(e && e.stack ? e.stack : e);
+    // Fail fast with non-zero exit so Render logs show the culprit
+    process.exit(1);
+  }
+};
+
+// Optional startup checks (enable via RENDER_DEBUG=1)
 if (process.env.RENDER_DEBUG) {
   const reqs = [
     'adminAnalyticsRoutes','adminAuditRoutes','adminAuthRoutes','adminDashboardRoutes',
@@ -45,12 +59,13 @@ try {
   rateLimit = () => (req, res, next) => next();
 }
 
-const configService = require('./services/configService');
+// Use safe require for local modules too (catches case/paths)
+const configService = R('./services/configService');
 
 // Polyfill fetch for Node < 18
 const major = parseInt(process.versions.node.split('.')[0], 10);
 if (major < 18) {
-  require('./polyfills/fetch');
+  R('./polyfills/fetch');
 }
 
 const app = express();
@@ -59,8 +74,7 @@ app.disable('x-powered-by');
 // --- Webhook (raw body) BEFORE JSON body parsing ---
 const webhookAbsPath = path.join(__dirname, 'routes', 'paystackWebhook.js');
 console.log('🔎 Checking webhook file:', webhookAbsPath, 'exists?', fs.existsSync(webhookAbsPath));
-
-const paystackWebhook = require(webhookAbsPath); // absolute path with .js
+const paystackWebhook = R(webhookAbsPath); // absolute path with .js
 app.use('/api/webhooks/paystack', express.raw({ type: '*/*' }), paystackWebhook);
 
 // --- CORS (env allow-list + sensible defaults) ---
@@ -122,64 +136,64 @@ mongoose.connect(process.env.MONGO_URI, {
   }
 }).catch(err => console.error('❌ MongoDB connection error:', err));
 
-// --- Route imports ---
-const authRoutes = require('./routes/authRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
-const vendorProfileUpdateRoutes = require('./routes/vendorProfileUpdate');
-const shortletRoutes = require('./routes/shortletRoutes');
-const hotelRoutes = require('./routes/hotelRoutes');
-const restaurantRoutes = require('./routes/restaurantRoutes');
-const restaurantMenuRoutes = require('./routes/restaurantMenuRoutes');
-const eventCenterRoutes = require('./routes/eventCenterRoutes');
-const tourGuideRoutes = require('./routes/tourGuideRoutes');
-const tourGuideBookingRoutes = require('./routes/tourGuideBookingRoutes');
-const advertRoutes = require('./routes/advertRoutes');
-const registerRoutes = require('./routes/register');
-const loginRoutes = require('./routes/login');
-const userRegisterRoutes = require('./routes/userRegister');
-const userDashboardRoutes = require('./routes/userDashboard');
-const adminPayoutRoutes = require('./routes/adminPayoutRoutes');
-const verifyEmailRoutes = require('./routes/verifyEmail');
-const vendorDashboardRoutes = require('./routes/vendorDashboard');
-const deleteUserRoute = require('./routes/deleteUser');
-const verifyStatusRoutes = require('./routes/verifyStatus');
-const featurePricingRoutes = require('./routes/featurePricingRoutes');
-const featureListingRoutes = require('./routes/featureListingRoutes');
-const pickupDeliveryRoutes = require('./routes/pickupDeliveryRoutes');
-const adminAuthRoutes = require('./routes/adminAuthRoutes');
-const adminDashboardRoutes = require('./routes/adminDashboardRoutes');
-const cloudinaryRoutes = require('./routes/cloudinaryRoutes');
-const hotelRoomRoutes = require('./routes/hotelRoomRoutes');
-const vendorServiceRoutes = require('./routes/vendorServiceRoutes');
-const chopRoutes = require('./routes/chopRoutes');
-const chopsBookingRoutes = require('./routes/chopsBookingRoutes');
-const giftRoutes = require('./routes/giftRoutes');
-const cruiseRoutes = require('./routes/cruiseRoutes');
-const cityCruisePriceRoutes = require('./routes/cityCruisePriceRoutes');
-const blogRoutes = require('./routes/blogRoutes');
-const reviewRoutes = require('./routes/reviewRoutes');
-const hotelBookingRoutes = require('./routes/hotelBookingRoutes');
-const shortletBookingRoutes = require('./routes/shortletBookingRoutes');
-const paystackRoutes = require('./routes/paystackRoutes');
-const restaurantBookingRoutes = require('./routes/restaurantBookingRoutes');
-const eventCenterBookingRoutes = require('./routes/eventCenterBookingRoutes');
-const publicFeaturedRoutes = require('./routes/publicFeaturedRoutes');
-const searchRoutes = require('./routes/searchRoutes');
-const cruiseInquiryRoutes = require('./routes/cruiseInquiryRoutes');
-const payoutRequestRoutes = require('./routes/payoutRequestRoutes');
-const bookingCancelRoutes = require('./routes/bookingCancelRoutes');
-const authPasswordRoutes = require('./routes/authPasswordRoutes');
-const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
+// --- Route imports (ALL via R to surface any remaining case/path issues) ---
+const authRoutes = R('./routes/authRoutes');
+const paymentRoutes = R('./routes/paymentRoutes');
+const vendorProfileUpdateRoutes = R('./routes/vendorProfileUpdate');
+const shortletRoutes = R('./routes/shortletRoutes');
+const hotelRoutes = R('./routes/hotelRoutes');
+const restaurantRoutes = R('./routes/restaurantRoutes');
+const restaurantMenuRoutes = R('./routes/restaurantMenuRoutes');
+const eventCenterRoutes = R('./routes/eventCenterRoutes');
+const tourGuideRoutes = R('./routes/tourGuideRoutes');
+const tourGuideBookingRoutes = R('./routes/tourGuideBookingRoutes');
+const advertRoutes = R('./routes/advertRoutes');
+const registerRoutes = R('./routes/register');
+const loginRoutes = R('./routes/login');
+const userRegisterRoutes = R('./routes/userRegister');
+const userDashboardRoutes = R('./routes/userDashboard');
+const adminPayoutRoutes = R('./routes/adminPayoutRoutes');
+const verifyEmailRoutes = R('./routes/verifyEmail');
+const vendorDashboardRoutes = R('./routes/vendorDashboard');
+const deleteUserRoute = R('./routes/deleteUser');
+const verifyStatusRoutes = R('./routes/verifyStatus');
+const featurePricingRoutes = R('./routes/featurePricingRoutes');
+const featureListingRoutes = R('./routes/featureListingRoutes');
+const pickupDeliveryRoutes = R('./routes/pickupDeliveryRoutes');
+const adminAuthRoutes = R('./routes/adminAuthRoutes');
+const adminDashboardRoutes = R('./routes/adminDashboardRoutes');
+const cloudinaryRoutes = R('./routes/cloudinaryRoutes');
+const hotelRoomRoutes = R('./routes/hotelRoomRoutes');
+const vendorServiceRoutes = R('./routes/vendorServiceRoutes');
+const chopRoutes = R('./routes/chopRoutes');
+const chopsBookingRoutes = R('./routes/chopsBookingRoutes');
+const giftRoutes = R('./routes/giftRoutes');
+const cruiseRoutes = R('./routes/cruiseRoutes');
+const cityCruisePriceRoutes = R('./routes/cityCruisePriceRoutes');
+const blogRoutes = R('./routes/blogRoutes');
+const reviewRoutes = R('./routes/reviewRoutes');
+const hotelBookingRoutes = R('./routes/hotelBookingRoutes');
+const shortletBookingRoutes = R('./routes/shortletBookingRoutes');
+const paystackRoutes = R('./routes/paystackRoutes');
+const restaurantBookingRoutes = R('./routes/restaurantBookingRoutes');
+const eventCenterBookingRoutes = R('./routes/eventCenterBookingRoutes');
+const publicFeaturedRoutes = R('./routes/publicFeaturedRoutes');
+const searchRoutes = R('./routes/searchRoutes');
+const cruiseInquiryRoutes = R('./routes/cruiseInquiryRoutes');
+const payoutRequestRoutes = R('./routes/payoutRequestRoutes');
+const bookingCancelRoutes = R('./routes/bookingCancelRoutes');
+const authPasswordRoutes = R('./routes/authPasswordRoutes');
+const adminSettingsRoutes = R('./routes/adminSettingsRoutes');
 
-const myOrdersRoutes = require('./routes/myOrdersRoutes');
-const adminAuditRoutes = require('./routes/adminAuditRoutes');
-const adminLedgerRoutes = require('./routes/adminLedgerRoutes');
-const guestCancelRoutes = require('./routes/guestCancelRoutes');
-const adminFeatureRoutes = require('./routes/adminFeatureRoutes');
-const adminVendorApprovalRoutes = require('./routes/adminVendorApprovalRoutes');
-const adminUserRoutes = require('./routes/adminUserRoutes');
-const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
-const hotelPublicTopRoutes = require('./routes/hotelPublicTopRoutes');
+const myOrdersRoutes = R('./routes/myOrdersRoutes');
+const adminAuditRoutes = R('./routes/adminAuditRoutes');
+const adminLedgerRoutes = R('./routes/adminLedgerRoutes');
+const guestCancelRoutes = R('./routes/guestCancelRoutes');
+const adminFeatureRoutes = R('./routes/adminFeatureRoutes');
+const adminVendorApprovalRoutes = R('./routes/adminVendorApprovalRoutes');
+const adminUserRoutes = R('./routes/adminUserRoutes');
+const adminAnalyticsRoutes = R('./routes/adminAnalyticsRoutes');
+const hotelPublicTopRoutes = R('./routes/hotelPublicTopRoutes');
 
 // --- Route mounts ---
 app.use('/api/payments', paymentRoutes);
