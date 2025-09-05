@@ -1,10 +1,10 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const FeatureListing = require('../models/featureListingModel');
-const auth = require('../middleware/Auth');
+const auth = require('../middleware/auth');
 const axios = require('axios');
 
-// ✅ MODELS
+// âœ… MODELS
 const Hotel = require('../models/hotelModel');
 const Shortlet = require('../models/shortletModel');
 const Restaurant = require('../models/restaurantModel');
@@ -13,7 +13,7 @@ const TourGuide = require('../models/tourGuideModel');
 const Chop = require('../models/chopModel');
 const Gift = require('../models/giftModel');
 
-// ✅ Create unpaid feature listing
+// âœ… Create unpaid feature listing
 router.post('/', auth, async (req, res) => {
   try {
     if (req.user.role !== 'vendor') {
@@ -37,7 +37,7 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// ✅ Convert duration string to days
+// âœ… Convert duration string to days
 const getFeatureDuration = (duration) => ({
   '7d': 7,
   '1m': 30,
@@ -45,7 +45,7 @@ const getFeatureDuration = (duration) => ({
   '1y': 365,
 }[duration] || 7);
 
-// ✅ Normalize resource type
+// âœ… Normalize resource type
 const normalizeResourceType = (pathLabel) => {
   const map = {
     shortlets: 'shortlet',
@@ -60,7 +60,7 @@ const normalizeResourceType = (pathLabel) => {
   return map[pathLabel] || 'room';
 };
 
-// ✅ Unified handler for saving paid feature
+// âœ… Unified handler for saving paid feature
 const handleFeatureListing = async (resourceId, vendorId, featureType, durationDays, res, resourceType = 'room') => {
   const now = new Date();
 
@@ -83,7 +83,7 @@ const handleFeatureListing = async (resourceId, vendorId, featureType, durationD
       });
     }
 
-    // ✅ Always ensure resourceId and resourceType are updated
+    // âœ… Always ensure resourceId and resourceType are updated
     feature.resourceId = resourceId;
     feature.resourceType = resourceType;
     feature.isPaid = true;
@@ -97,7 +97,7 @@ const handleFeatureListing = async (resourceId, vendorId, featureType, durationD
   }
 };
 
-// ✅ Add Paystack route
+// âœ… Add Paystack route
 const addPaystackRoute = (pathLabel) => {
   router.post(`/paystack/${pathLabel}/verify/:reference`, auth, async (req, res) => {
     const { reference } = req.params;
@@ -125,7 +125,7 @@ const addPaystackRoute = (pathLabel) => {
   });
 };
 
-// ✅ Add Flutterwave route
+// âœ… Add Flutterwave route
 const addFlutterwaveRoute = (pathLabel) => {
   router.post(`/flutterwave/${pathLabel}/verify/:transactionId`, auth, async (req, res) => {
     const { transactionId } = req.params;
@@ -156,7 +156,7 @@ const addFlutterwaveRoute = (pathLabel) => {
   });
 };
 
-// ✅ Register routes for each service type
+// âœ… Register routes for each service type
 [
   'shortlets',
   'restaurants',
@@ -170,11 +170,11 @@ const addFlutterwaveRoute = (pathLabel) => {
   addFlutterwaveRoute(type);
 });
 
-// ✅ Add legacy support for 'room'
+// âœ… Add legacy support for 'room'
 addPaystackRoute('room');
 addFlutterwaveRoute('room');
 
-// ✅ PUBLIC ROUTE for fetching featured listings
+// âœ… PUBLIC ROUTE for fetching featured listings
 router.get('/public', async (req, res) => {
   try {
     const now = new Date();
@@ -200,10 +200,10 @@ router.get('/public', async (req, res) => {
       const type = feature.resourceType || 'room';
       const itemId = feature.resourceId || feature.roomId;
 
-      console.log(`🟡 Processing feature _id: ${feature._id}, resourceType: ${type}, resourceId: ${itemId}`);
+      console.log(`ðŸŸ¡ Processing feature _id: ${feature._id}, resourceType: ${type}, resourceId: ${itemId}`);
 
       if (!itemId) {
-        console.warn(`⚠️ Missing resourceId and roomId for feature with _id: ${feature._id}`);
+        console.warn(`âš ï¸ Missing resourceId and roomId for feature with _id: ${feature._id}`);
         continue;
       }
 
@@ -245,7 +245,7 @@ router.get('/public', async (req, res) => {
 
       const item = await model.findById(itemId);
       if (!item) {
-        console.warn(`⚠️ No item found in ${type} for ID: ${itemId}`);
+        console.warn(`âš ï¸ No item found in ${type} for ID: ${itemId}`);
         continue;
       }
 
@@ -258,9 +258,10 @@ router.get('/public', async (req, res) => {
 
     res.status(200).json(response);
   } catch (err) {
-    console.error('❌ Failed to fetch public featured listings:', err);
+    console.error('âŒ Failed to fetch public featured listings:', err);
     res.status(500).json({ message: 'Failed to fetch featured listings', error: err.message });
   }
 });
 
 module.exports = router;
+

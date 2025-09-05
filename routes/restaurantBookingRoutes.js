@@ -1,4 +1,4 @@
-// ✅ routes/restaurantBookingRoutes.js
+﻿// âœ… routes/restaurantBookingRoutes.js
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
@@ -8,10 +8,10 @@ const Vendor = require('../models/vendorModel');
 const Ledger = require('../models/ledgerModel');
 const auth = require('../middleware/auth');
 
-// 📧 ADDED: booking confirmation email
+// ðŸ“§ ADDED: booking confirmation email
 const sendBookingEmails = require('../utils/sendBookingEmails');
 
-// ✅ Ledger
+// âœ… Ledger
 const { recordBookingLedger, releasePendingForBooking } = require('../services/ledgerService');
 
 // Create a new restaurant booking (pre-verify path; no payouts here)
@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
       paymentReference,
       paymentProvider,
       paymentStatus = 'pending',
-      notes, // ✅ FIX: accept notes on pre-verify path too
+      notes, // âœ… FIX: accept notes on pre-verify path too
     } = req.body;
 
     if (!fullName || !email || !phone || !restaurantId || !bookingType || !totalPrice) {
@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
       paymentStatus,
       paymentReference,
       paymentProvider,
-      notes, // ✅ FIX: persist notes if your schema supports it
+      notes, // âœ… FIX: persist notes if your schema supports it
     });
 
     await newBooking.save();
@@ -151,7 +151,7 @@ router.patch('/:id/cancel', async (req, res) => {
         }
       }
     } catch (e) {
-      console.warn('⚠️ [restaurant/cancel] Vendor reversal posting failed (soft):', e.message);
+      console.warn('âš ï¸ [restaurant/cancel] Vendor reversal posting failed (soft):', e.message);
     }
 
     booking.canceled = true;
@@ -185,7 +185,7 @@ router.patch('/:id/payment-status', auth, async (req, res) => {
   }
 });
 
-// ✅ Save booking AFTER payment is verified (+ credit vendor 85% as PENDING)
+// âœ… Save booking AFTER payment is verified (+ credit vendor 85% as PENDING)
 router.post('/verified', async (req, res) => {
   try {
     const {
@@ -202,7 +202,7 @@ router.post('/verified', async (req, res) => {
       totalPrice,
       paymentReference,
       paymentProvider,
-      notes, // ✅ FIX: accept notes here as well
+      notes, // âœ… FIX: accept notes here as well
     } = req.body;
 
     if (
@@ -249,11 +249,11 @@ router.post('/verified', async (req, res) => {
       paymentStatus: 'paid',
       paymentReference,
       paymentProvider,
-      notes, // ✅ FIX: persist notes post-verify too
+      notes, // âœ… FIX: persist notes post-verify too
     });
     await newBooking.save();
 
-    // 📧 ADDED: Send booking confirmation email (user + BCC vendor/admin)
+    // ðŸ“§ ADDED: Send booking confirmation email (user + BCC vendor/admin)
     try {
       let vendorEmail = null;
       let restName = 'Restaurant';
@@ -267,7 +267,7 @@ router.post('/verified', async (req, res) => {
       } catch { /* ignore vendor lookup errors for email */ }
 
       await sendBookingEmails({
-        // ✅ FIX: be compatible with either signature of the helper
+        // âœ… FIX: be compatible with either signature of the helper
         to: email,                // some versions expect "to"
         userEmail: email,         // some expect "userEmail"
         bcc: vendorEmail || undefined,
@@ -282,22 +282,22 @@ router.post('/verified', async (req, res) => {
         amount: totalPrice,
         reservationTime, // util will include when supported
         paymentReference,
-        notes,           // ✅ FIX: include notes in the email body
+        notes,           // âœ… FIX: include notes in the email body
       });
     } catch (e) {
-      console.warn('⚠️ sendBookingEmails(restaurant):', e?.message || e);
+      console.warn('âš ï¸ sendBookingEmails(restaurant):', e?.message || e);
     }
 
-    // 🏦 Credit Vendor 85% as PENDING (legacy)
+    // ðŸ¦ Credit Vendor 85% as PENDING (legacy)
     try {
       const restaurant = await Restaurant.findById(restaurantId).select('vendorId name').exec();
       const vendorId = restaurant?.vendorId;
       if (!vendorId) {
-        console.warn('⚠️ No vendorId on Restaurant; vendor payout skipped.');
+        console.warn('âš ï¸ No vendorId on Restaurant; vendor payout skipped.');
       } else {
         const vendor = await Vendor.findById(vendorId).exec();
         if (!vendor) {
-          console.warn('⚠️ Vendor not found for Restaurant.vendorId:', String(vendorId));
+          console.warn('âš ï¸ Vendor not found for Restaurant.vendorId:', String(vendorId));
         } else {
           const vendorShare = Math.round(Number(totalPrice) * 0.85);
           vendor.payoutHistory = vendor.payoutHistory || [];
@@ -308,14 +308,14 @@ router.post('/verified', async (req, res) => {
             date: new Date(),
           });
           await vendor.save();
-          console.log(`🏦 Vendor credited (pending) ${vendor.email} +${vendorShare}`);
+          console.log(`ðŸ¦ Vendor credited (pending) ${vendor.email} +${vendorShare}`);
         }
       }
     } catch (payoutErr) {
-      console.warn('⚠️ Vendor payout failed:', payoutErr?.message || payoutErr);
+      console.warn('âš ï¸ Vendor payout failed:', payoutErr?.message || payoutErr);
     }
 
-    // 🧾 Ledger (85/15, no cashback/commission)
+    // ðŸ§¾ Ledger (85/15, no cashback/commission)
     try {
       const restForLedger = await Restaurant.findById(restaurantId).select('vendorId').lean();
       if (restForLedger?.vendorId) {
@@ -331,12 +331,12 @@ router.post('/verified', async (req, res) => {
           },
           { category: 'restaurant' }
         );
-        console.log('🧾 Ledger rows recorded for restaurant booking:', String(newBooking._id));
+        console.log('ðŸ§¾ Ledger rows recorded for restaurant booking:', String(newBooking._id));
       } else {
-        console.warn('⚠️ No vendorId found for restaurant; ledger skipped.');
+        console.warn('âš ï¸ No vendorId found for restaurant; ledger skipped.');
       }
     } catch (e) {
-      console.error('⚠️ recordBookingLedger failed (booking continues):', e.message);
+      console.error('âš ï¸ recordBookingLedger failed (booking continues):', e.message);
     }
 
     res.status(201).json({ message: 'Booking saved after payment verification', booking: newBooking });
@@ -360,7 +360,7 @@ router.post('/:id/check-in', auth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// Mark check-out and release pending → available
+// Mark check-out and release pending â†’ available
 router.post('/:id/check-out', auth, async (req, res) => {
   const b = await RestaurantBooking.findById(req.params.id);
   if (!b) return res.status(404).json({ message: 'Booking not found' });
@@ -376,3 +376,4 @@ router.post('/:id/check-out', auth, async (req, res) => {
 });
 
 module.exports = router;
+

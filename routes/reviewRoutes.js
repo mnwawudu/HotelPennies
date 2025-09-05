@@ -1,4 +1,4 @@
-// routes/reviewRoutes.js
+﻿// routes/reviewRoutes.js
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -9,7 +9,7 @@ const Shortlet = require('../models/shortletModel');
 const Hotel = require('../models/hotelModel');
 const HotelRoom = require('../models/hotelRoomModel');
 
-// 🔻 Add your other listing models (adjust paths/names if different)
+// ðŸ”» Add your other listing models (adjust paths/names if different)
 const Restaurant   = require('../models/restaurantModel');     // e.g. Restaurant
 const Gift         = require('../models/giftModel');           // e.g. Gift
 const EventCenter  = require('../models/eventCenterModel');    // e.g. EventCenter
@@ -45,7 +45,7 @@ const normalizeType = (t) => {
   return TYPE_ALIASES[k] || k;
 };
 
-// Map normalized type → Model
+// Map normalized type â†’ Model
 const MODEL_BY_TYPE = {
   hotel: Hotel,
   shortlet: Shortlet,
@@ -61,7 +61,7 @@ const MODEL_BY_TYPE = {
 
 const ALLOWED_TYPES = Object.keys(MODEL_BY_TYPE);
 
-// ✅ Helper: Add review and update average rating WITHOUT triggering full doc validation
+// âœ… Helper: Add review and update average rating WITHOUT triggering full doc validation
 const handleReview = async (Model, itemId, { user, userName, rating, comment }) => {
   // Load only what we need (avoid validating unrelated required fields on save)
   const item = await Model.findById(itemId).select('reviews averageRating');
@@ -105,7 +105,7 @@ const handleReview = async (Model, itemId, { user, userName, rating, comment }) 
   return fresh;
 };
 
-// 📌 POST /api/reviews/:type/:id
+// ðŸ“Œ POST /api/reviews/:type/:id
 router.post('/:type/:id', auth, async (req, res) => {
   try {
     const type = normalizeType(req.params.type);
@@ -133,7 +133,7 @@ router.post('/:type/:id', auth, async (req, res) => {
   }
 });
 
-// 📌 GET /api/reviews/:type/:id
+// ðŸ“Œ GET /api/reviews/:type/:id
 router.get('/:type/:id', async (req, res) => {
   try {
     const type = normalizeType(req.params.type);
@@ -158,3 +158,4 @@ router.get('/:type/:id', async (req, res) => {
 });
 
 module.exports = router;
+

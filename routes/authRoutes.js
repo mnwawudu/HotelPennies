@@ -1,4 +1,4 @@
-const express = require('express'); 
+﻿const express = require('express'); 
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -13,7 +13,7 @@ const sendSecurityEmail = require('../utils/sendSecurityEmail');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-/* ───────────────────────────── Helpers ───────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const isStrong = (pwd = '') =>
   pwd.length >= 8 && /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /[0-9]/.test(pwd);
 
@@ -21,7 +21,7 @@ const forgotLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 const resetLimiter  = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 const changeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 
-/* ───────────────────────── Email/Password Login ──────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Email/Password Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -61,7 +61,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    console.log('✅ Login successful:', {
+    console.log('âœ… Login successful:', {
       email: user.email,
       role,
       id: user._id,
@@ -69,14 +69,14 @@ router.post('/login', async (req, res) => {
 
     res.json({ token });
   } catch (err) {
-    console.error('❌ Login error:', err);
+    console.error('âŒ Login error:', err);
     res.status(500).json({ message: 'Server error during login' });
   }
 });
 
-/* ───────────────────────────── Google Login ──────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Google Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 router.post('/auth/google', async (req, res) => {
-  // ✅ NEW: safely accept optional state/city (won’t affect existing flows)
+  // âœ… NEW: safely accept optional state/city (wonâ€™t affect existing flows)
   const { token, referralCode, state, city } = req.body || {};
 
   try {
@@ -110,11 +110,11 @@ router.post('/auth/google', async (req, res) => {
       user = new User({
         name: name || email.split('@')[0],
         email,
-        // Pre-save hook will hash — placeholder only
+        // Pre-save hook will hash â€” placeholder only
         password: googleId,
         phone: '',
         address: '',
-        // ✅ NEW (optional capture; harmless if empty)
+        // âœ… NEW (optional capture; harmless if empty)
         state: String(state || '').trim(),
         city:  String(city  || '').trim(),
 
@@ -139,13 +139,13 @@ router.post('/auth/google', async (req, res) => {
 
     return res.json({ token: jwtToken });
   } catch (error) {
-    console.error('❌ Google auth error:', error);
+    console.error('âŒ Google auth error:', error);
     return res.status(401).json({ message: 'Google login failed' });
   }
 });
 
 
-/* ─────────────── Change Password (logged-in user/vendor) ─────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Change Password (logged-in user/vendor) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 router.put('/change-password', authMiddleware, changeLimiter, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
@@ -177,18 +177,18 @@ router.put('/change-password', authMiddleware, changeLimiter, async (req, res) =
         subject: 'Your HotelPennies password was changed',
         text: 'If you did not perform this change, please reset your password immediately.',
         html: `<p>Your password was just changed.</p>
-               <p>If this wasn’t you, <a href="${process.env.FRONTEND_URL}/forgot-password">reset it now</a>.</p>`,
+               <p>If this wasnâ€™t you, <a href="${process.env.FRONTEND_URL}/forgot-password">reset it now</a>.</p>`,
       });
     } catch (_) {}
 
     res.json({ message: 'Password changed successfully' });
   } catch (err) {
-    console.error('❌ Error changing password:', err);
+    console.error('âŒ Error changing password:', err);
     res.status(500).json({ message: 'Server error changing password' });
   }
 });
 
-/* ───────────────────────── Forgot Password ───────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Forgot Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 router.post('/forgot-password', forgotLimiter, async (req, res) => {
   try {
     const { email } = req.body || {};
@@ -227,12 +227,12 @@ router.post('/forgot-password', forgotLimiter, async (req, res) => {
 
     return res.status(200).json(generic);
   } catch (err) {
-    console.error('❌ [forgot-password] error:', err);
+    console.error('âŒ [forgot-password] error:', err);
     return res.status(200).json({ message: 'If the email exists, you will get instructions.' });
   }
 });
 
-/* ────────────────────────── Reset Password ───────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Reset Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 router.post('/reset-password', resetLimiter, async (req, res) => {
   try {
     const { email, token, newPassword } = req.body || {};
@@ -271,18 +271,18 @@ router.post('/reset-password', resetLimiter, async (req, res) => {
         subject: 'Your HotelPennies password was reset',
         text: 'If you did not request this reset, please contact support.',
         html: `<p>Your password was just reset.</p>
-               <p>If this wasn’t you, please contact support immediately.</p>`,
+               <p>If this wasnâ€™t you, please contact support immediately.</p>`,
       });
     } catch (_) {}
 
     res.json({ message: 'Password reset successful. Please sign in.' });
   } catch (err) {
-    console.error('❌ [reset-password] error:', err);
+    console.error('âŒ [reset-password] error:', err);
     res.status(500).json({ message: 'Could not reset password' });
   }
 });
 
-/* ──────────────── NEW: Cross-collection phone availability ─────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ NEW: Cross-collection phone availability â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 router.get('/phone-available', async (req, res) => {
   try {
     const phone = String(req.query.phone || '').trim();
@@ -293,12 +293,12 @@ router.get('/phone-available', async (req, res) => {
     ]);
     return res.json({ available: !u && !v });
   } catch (err) {
-    console.error('❌ [phone-available] error:', err);
+    console.error('âŒ [phone-available] error:', err);
     return res.status(500).json({ available: false });
   }
 });
 
-/* ──────────────── NEW: Verification status for waiting tab ─────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ NEW: Verification status for waiting tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 router.get('/verification-status', async (req, res) => {
   try {
     const email = String(req.query.email || '').trim().toLowerCase();
@@ -313,9 +313,10 @@ router.get('/verification-status', async (req, res) => {
     if (vendor) return res.json({ verified: !!vendor.isEmailVerified, role: 'vendor' });
     return res.json({ verified: false });
   } catch (err) {
-    console.error('❌ [verification-status] error:', err);
+    console.error('âŒ [verification-status] error:', err);
     return res.status(500).json({ verified: false });
   }
 });
 
 module.exports = router;
+

@@ -1,4 +1,4 @@
-// routes/cloudinaryRoutes.js
+﻿// routes/cloudinaryRoutes.js
 const express = require('express');
 const multer = require('multer');
 const auth = require('../middleware/auth');
@@ -28,7 +28,7 @@ const uploadBuffer = (buffer) =>
       },
       (err, result) => {
         if (err) return reject(err);
-        return resolve(result.secure_url); // 🔑 always return HTTPS URL
+        return resolve(result.secure_url); // ðŸ”‘ always return HTTPS URL
       }
     );
     stream.end(buffer);
@@ -43,12 +43,13 @@ router.post('/upload', auth, upload.array('files', 10), async (req, res) => {
     // Upload each file.buffer and collect secure URLs
     const urls = await Promise.all(req.files.map((f) => uploadBuffer(f.buffer)));
 
-    console.log('✅ Uploaded URLs:', urls);
-    res.json({ urls }); // 🔑 matches UploadImageModal expectation
+    console.log('âœ… Uploaded URLs:', urls);
+    res.json({ urls }); // ðŸ”‘ matches UploadImageModal expectation
   } catch (err) {
-    console.error('❌ Cloudinary upload failed:', err);
+    console.error('âŒ Cloudinary upload failed:', err);
     res.status(500).json({ error: 'Upload failed' });
   }
 });
 
 module.exports = router;
+

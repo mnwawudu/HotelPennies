@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const User = require('../models/userModel');
 const auth = require('../middleware/auth');
@@ -13,3 +13,4 @@ router.delete('/delete', auth, async (req, res) => {
 });
 
 module.exports = router;
+

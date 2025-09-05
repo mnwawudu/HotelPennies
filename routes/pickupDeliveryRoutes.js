@@ -1,10 +1,10 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const PickupDeliveryOption = require('../models/pickupDeliveryModel');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 
-// ✅ Normalize state names
+// âœ… Normalize state names
 const normalizeState = (input) => {
   const map = {
     'imo': 'imo',
@@ -24,7 +24,7 @@ const normalizeState = (input) => {
   return map[input.trim().toLowerCase()] || input.trim().toLowerCase();
 };
 
-// ✅ PUBLIC - Allow public to view delivery states
+// âœ… PUBLIC - Allow public to view delivery states
 router.get('/', async (req, res) => {
   try {
     const options = await PickupDeliveryOption.find({ isActive: true });
@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ PUBLIC: Check delivery availability (case-insensitive matching)
+// âœ… PUBLIC: Check delivery availability (case-insensitive matching)
 router.get('/check-availability/:state/:businessType', async (req, res) => {
   try {
     const rawState = req.params.state;
@@ -50,12 +50,12 @@ router.get('/check-availability/:state/:businessType', async (req, res) => {
 
     res.json({ available: !!available });
   } catch (err) {
-    console.error('❌ Availability check error:', err);
+    console.error('âŒ Availability check error:', err);
     res.status(500).json({ error: 'Failed to check delivery availability' });
   }
 });
 
-// ✅ PUBLIC: Fetch state-specific delivery options
+// âœ… PUBLIC: Fetch state-specific delivery options
 router.get('/state/:state/:businessType', async (req, res) => {
   try {
     const rawState = req.params.state;
@@ -74,7 +74,7 @@ router.get('/state/:state/:businessType', async (req, res) => {
   }
 });
 
-// ✅ Admin: Fetch all active options for dashboard
+// âœ… Admin: Fetch all active options for dashboard
 router.get('/all', auth, adminOnly, async (req, res) => {
   try {
     const options = await PickupDeliveryOption.find({ isActive: true }).sort({ fromZone: 1, toZone: 1, price: 1 });
@@ -84,7 +84,7 @@ router.get('/all', auth, adminOnly, async (req, res) => {
   }
 });
 
-// ✅ PUBLIC: Get by type and businessType
+// âœ… PUBLIC: Get by type and businessType
 router.get('/:type/:businessType', async (req, res) => {
   try {
     const options = await PickupDeliveryOption.find({
@@ -99,7 +99,7 @@ router.get('/:type/:businessType', async (req, res) => {
   }
 });
 
-// ✅ Admin: Add new delivery option
+// âœ… Admin: Add new delivery option
 router.post('/', auth, adminOnly, async (req, res) => {
   const { type, businessType, state, fromZone, toZone, title, description, price } = req.body;
 
@@ -148,7 +148,7 @@ router.post('/', auth, adminOnly, async (req, res) => {
   }
 });
 
-// ✅ Admin: Update delivery option
+// âœ… Admin: Update delivery option
 router.put('/:id', auth, adminOnly, async (req, res) => {
   const { type, businessType, state, fromZone, toZone, title, description, price } = req.body;
 
@@ -180,7 +180,7 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
   }
 });
 
-// ✅ Admin: Delete delivery option
+// âœ… Admin: Delete delivery option
 router.delete('/:id', auth, adminOnly, async (req, res) => {
   try {
     await PickupDeliveryOption.findByIdAndDelete(req.params.id);
@@ -191,3 +191,4 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
 });
 
 module.exports = router;
+

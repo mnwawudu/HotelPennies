@@ -1,4 +1,4 @@
-// routes/paystackRoutes.js
+﻿// routes/paystackRoutes.js
 const express = require('express');
 const axios = require('axios');
 const router = express.Router();
@@ -6,7 +6,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Vendor = require('../models/vendorModel');
 
-// ✅ NEW: booking + ledger (non-breaking additions)
+// âœ… NEW: booking + ledger (non-breaking additions)
 const Booking = require('../models/bookingModel');
 const { ensureBookingLedger } = require('../services/ledgerService');
 
@@ -24,7 +24,7 @@ const normalizeName = (s = '') => {
     .trim();
 };
 
-// fuzzy-ish check: allow “zimbooz ltd” to match “zimbooz”
+// fuzzy-ish check: allow â€œzimbooz ltdâ€ to match â€œzimboozâ€
 const approxNameMatch = (a, b) => {
   const A = normalizeName(a);
   const B = normalizeName(b);
@@ -45,7 +45,7 @@ async function resolveBankCode(bankName) {
     );
     return found?.code || null;
   } catch (e) {
-    console.warn('⚠️ resolveBankCode failed:', e?.response?.data || e.message);
+    console.warn('âš ï¸ resolveBankCode failed:', e?.response?.data || e.message);
     return null;
   }
 }
@@ -164,7 +164,7 @@ router.get('/verify/:reference', async (req, res) => {
 
     const data = response.data;
     if (data.status && data.data.status === 'success') {
-      // ✅ OPTIONAL: attach to a booking and write ledger rows (non-breaking)
+      // âœ… OPTIONAL: attach to a booking and write ledger rows (non-breaking)
       // Pass bookingId as query param when calling this endpoint:
       //   GET /api/paystack/verify/<reference>?bookingId=<bookingId>
       const bookingId = req.query.bookingId;
@@ -182,10 +182,10 @@ router.get('/verify/:reference', async (req, res) => {
             // write ledger rows exactly once
             await ensureBookingLedger(booking);
           } else {
-            console.warn('⚠️ verify: booking not found for bookingId', bookingId);
+            console.warn('âš ï¸ verify: booking not found for bookingId', bookingId);
           }
         } catch (e) {
-          console.error('⚠️ verify: ledger attach failed', e?.response?.data || e.message || e);
+          console.error('âš ï¸ verify: ledger attach failed', e?.response?.data || e.message || e);
           // do not change response; verification has succeeded
         }
       }
@@ -195,7 +195,7 @@ router.get('/verify/:reference', async (req, res) => {
       return res.json({ verified: false });
     }
   } catch (error) {
-    console.error('❌ Paystack verification error:', error.response?.data || error.message);
+    console.error('âŒ Paystack verification error:', error.response?.data || error.message);
     res.status(500).json({ verified: false });
   }
 });
@@ -209,7 +209,7 @@ router.post('/vendor-withdraw', auth, async (req, res) => {
     const { amount, account } = req.body || {};
     const amountNaira = Math.round(Number(amount) || 0);
     if (!amountNaira || amountNaira < 5000) {
-      return res.status(400).json({ message: 'Minimum withdrawal is ₦5,000' });
+      return res.status(400).json({ message: 'Minimum withdrawal is â‚¦5,000' });
     }
 
     const vendor = await Vendor.findById(vendorId).exec();
@@ -235,7 +235,7 @@ router.post('/vendor-withdraw', auth, async (req, res) => {
       return res.status(400).json({ message: 'Selected account is not on file for this vendor' });
     }
 
-    // Enforce account name ≈ vendor name
+    // Enforce account name â‰ˆ vendor name
     const registeredName = vendor.name || '';
     const acctName = account?.accountName || match.accountName || '';
     if (!approxNameMatch(registeredName, acctName)) {
@@ -269,7 +269,7 @@ router.post('/vendor-withdraw', auth, async (req, res) => {
     const ok = consumePendingPayouts(vendor, amountNaira);
     if (!ok) {
       // this should not happen because we checked pendingBalance first
-      console.warn('⚠️ consumePendingPayouts ended with remainder.');
+      console.warn('âš ï¸ consumePendingPayouts ended with remainder.');
     }
 
     // Add an audit entry (optional; does not affect totals since we already converted lines)
@@ -300,9 +300,10 @@ router.post('/vendor-withdraw', auth, async (req, res) => {
       status: tx.finalized ? 'paid' : 'processing',
     });
   } catch (err) {
-    console.error('❌ vendor-withdraw error:', err?.response?.data || err.message || err);
+    console.error('âŒ vendor-withdraw error:', err?.response?.data || err.message || err);
     return res.status(500).json({ message: 'Withdrawal failed' });
   }
 });
 
 module.exports = router;
+

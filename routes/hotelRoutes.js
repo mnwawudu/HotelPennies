@@ -1,25 +1,25 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Hotel = require('../models/hotelModel');
 const auth = require('../middleware/auth');
-const upload = require('../middleware/upload'); // ✅ Cloudinary upload middleware
+const upload = require('../middleware/upload'); // âœ… Cloudinary upload middleware
 
 
 
-// ✅ Public access: only hotels that actually have rooms, ranked by quality
+// âœ… Public access: only hotels that actually have rooms, ranked by quality
 router.get('/all-public', async (req, res) => {
   try {
     const hotels = await Hotel.find(
       {
-        // isPublished: true,    // ← Uncomment if you use a publish flag
+        // isPublished: true,    // â† Uncomment if you use a publish flag
         roomsCount: { $gt: 0 },  // hide hotels with no rooms
       }
     )
       .sort({
-        averageRating: -1,  // ⭐ highest rated first
-        bookingsCount: -1,  // 🧾 then most booked
-        ctr: -1,            // 👀 then highest CTR (if present)
-        createdAt: -1,      // ⏱️ newest as final tiebreak
+        averageRating: -1,  // â­ highest rated first
+        bookingsCount: -1,  // ðŸ§¾ then most booked
+        ctr: -1,            // ðŸ‘€ then highest CTR (if present)
+        createdAt: -1,      // â±ï¸ newest as final tiebreak
       })
       // keep payload lean; include fields your card needs
       .select('name location city state mainImage images minPrice maxPrice averageRating bookingsCount ctr roomsCount createdAt')
@@ -27,13 +27,13 @@ router.get('/all-public', async (req, res) => {
 
     res.json(hotels);
   } catch (err) {
-    console.error('❌ Failed to fetch hotels:', err);
+    console.error('âŒ Failed to fetch hotels:', err);
     res.status(500).json({ error: 'Failed to fetch public hotels' });
   }
 });
 
 
-// ✅ Public access to hotel details (for image viewing)
+// âœ… Public access to hotel details (for image viewing)
 router.get('/public/:hotelId', async (req, res) => {
   try {
     const hotel = await Hotel.findById(req.params.hotelId);
@@ -44,7 +44,7 @@ router.get('/public/:hotelId', async (req, res) => {
   }
 });
 
-// GET hotels by city (public) — ranked by quality & only hotels that have rooms
+// GET hotels by city (public) â€” ranked by quality & only hotels that have rooms
 router.get('/public/city/:city', async (req, res) => {
   try {
     const rawCity = (req.params.city || '').trim();
@@ -66,10 +66,10 @@ router.get('/public/city/:city', async (req, res) => {
 
     const hotels = await Hotel.find(filter)
       .sort({
-        averageRating: -1,  // ⭐ highest rated
-        bookingsCount: -1,  // 🧾 most booked
-        ctr: -1,            // 👀 highest CTR
-        createdAt: -1,      // ⏱️ newest as tiebreak
+        averageRating: -1,  // â­ highest rated
+        bookingsCount: -1,  // ðŸ§¾ most booked
+        ctr: -1,            // ðŸ‘€ highest CTR
+        createdAt: -1,      // â±ï¸ newest as tiebreak
       })
       .select(
         'name location city state mainImage images minPrice maxPrice ' +
@@ -81,13 +81,13 @@ router.get('/public/city/:city', async (req, res) => {
 
     res.json(hotels);
   } catch (err) {
-    console.error('❌ Failed to fetch hotels by city:', err);
+    console.error('âŒ Failed to fetch hotels by city:', err);
     res.status(500).json({ error: 'Failed to fetch hotels by city' });
   }
 });
 
 
-// ✅ Get top cities by number of hotels (for Popular Cities section)
+// âœ… Get top cities by number of hotels (for Popular Cities section)
 router.get('/public/popular-cities', async (req, res) => {
   try {
     const result = await Hotel.aggregate([
@@ -108,7 +108,7 @@ router.get('/public/popular-cities', async (req, res) => {
   }
 });
 
-// ✅ Get featured hotels for homepage
+// âœ… Get featured hotels for homepage
 router.get('/public/featured', async (req, res) => {
   try {
     const featuredHotels = await Hotel.find({ isFeatured: true })
@@ -122,7 +122,7 @@ router.get('/public/featured', async (req, res) => {
 });
 
 
-// ✅ Only vendors can access these routes
+// âœ… Only vendors can access these routes
 const requireVendor = (req, res, next) => {
   if (req.user.role !== 'vendor') {
     return res.status(403).json({ message: 'Access denied: vendors only' });
@@ -130,7 +130,7 @@ const requireVendor = (req, res, next) => {
   next();
 };
 
-// ✅ Get Vendor's Hotels (⏫ moved ABOVE the dynamic route)
+// âœ… Get Vendor's Hotels (â« moved ABOVE the dynamic route)
 router.get('/my-hotels', auth, requireVendor, async (req, res) => {
   try {
     const hotels = await Hotel.find({ vendorId: req.user._id });
@@ -140,7 +140,7 @@ router.get('/my-hotels', auth, requireVendor, async (req, res) => {
   }
 });
 
-// ✅ Get Hotel by ID (vendor only)
+// âœ… Get Hotel by ID (vendor only)
 router.get('/:hotelId', auth, requireVendor, async (req, res) => {
   try {
     const hotel = await Hotel.findOne({
@@ -154,7 +154,7 @@ router.get('/:hotelId', auth, requireVendor, async (req, res) => {
   }
 });
 
-// ✅ Create Hotel with image upload
+// âœ… Create Hotel with image upload
 router.post('/create', auth, requireVendor, upload.array('images'), async (req, res) => {
   try {
     const imageUrls = req.files.map(file => file.path); // Cloudinary returns secure URLs as `path`
@@ -168,12 +168,12 @@ router.post('/create', auth, requireVendor, upload.array('images'), async (req, 
     await hotel.save();
     res.status(201).json(hotel);
   } catch (err) {
-    console.error('❌ Error creating hotel:', err);
+    console.error('âŒ Error creating hotel:', err);
     res.status(500).json({ error: 'Failed to create hotel' });
   }
 });
 
-// ✅ Update hotel (mainImage, details, append images)
+// âœ… Update hotel (mainImage, details, append images)
 router.put('/:hotelId', auth, requireVendor, async (req, res) => {
   try {
     let updated;
@@ -205,7 +205,7 @@ router.put('/:hotelId', auth, requireVendor, async (req, res) => {
   }
 });
 
-// ✅ Delete Hotel
+// âœ… Delete Hotel
 router.delete('/:hotelId', auth, requireVendor, async (req, res) => {
   try {
     const hotel = await Hotel.findOneAndDelete({
@@ -222,3 +222,4 @@ router.delete('/:hotelId', auth, requireVendor, async (req, res) => {
 });
 
 module.exports = router;
+

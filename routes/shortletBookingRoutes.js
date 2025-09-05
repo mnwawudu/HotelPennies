@@ -1,4 +1,4 @@
-// ✅ routes/shortletBookingRoutes.js
+﻿// âœ… routes/shortletBookingRoutes.js
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
@@ -14,7 +14,7 @@ const sendShortletBookingEmails = require('../utils/sendShortletBookingEmails');
 const sendShortletCancellationEmails = require('../utils/sendShortletCancellationEmails');
 const auth = require('../middleware/auth');
 
-// ✅ Ledger additions
+// âœ… Ledger additions
 const {
   recordBookingLedger,
   releasePendingForBooking,
@@ -22,10 +22,10 @@ const {
 
 const Ledger = require('../models/ledgerModel');
 
-// ✅ NEW: pull live percentages (cashback/referral/platform) from DB settings
+// âœ… NEW: pull live percentages (cashback/referral/platform) from DB settings
 const configService = require('../services/configService');
 
-// ───────────────────────── helper: resolve referrer (id or userCode) ──────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ helper: resolve referrer (id or userCode) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const looksLikeObjectId = (v) => typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v);
 const resolveReferrerId = async (referredByUserIdOrCode) => {
   if (!referredByUserIdOrCode) return null;
@@ -34,7 +34,7 @@ const resolveReferrerId = async (referredByUserIdOrCode) => {
     : (await User.findOne({ userCode: referredByUserIdOrCode }).select('_id').lean())?._id || null;
 };
 
-// ───────────────────────────────── verifyPayment ───────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ verifyPayment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const verifyPayment = async (reference, provider) => {
   try {
     if (provider === 'paystack') {
@@ -51,12 +51,12 @@ const verifyPayment = async (reference, provider) => {
     }
     return false;
   } catch (err) {
-    console.error('❌ [shortlet/verified] Payment verification failed:', err.message);
+    console.error('âŒ [shortlet/verified] Payment verification failed:', err.message);
     return false;
   }
 };
 
-// ─────────────────────────────── GET /my ──────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ GET /my â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.get('/my', auth, async (req, res) => {
   try {
     const bookings = await ShortletBooking.find({ email: req.user.email })
@@ -64,12 +64,12 @@ router.get('/my', auth, async (req, res) => {
       .sort({ checkIn: -1 });
     res.json(bookings);
   } catch (err) {
-    console.error('❌ [shortlet/my] Error fetching user bookings:', err);
+    console.error('âŒ [shortlet/my] Error fetching user bookings:', err);
     res.status(500).json({ message: 'Failed to fetch bookings' });
   }
 });
 
-// ─────────────────────────────── POST / (legacy) ──────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ POST / (legacy) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/', async (req, res) => {
   try {
     const {
@@ -110,21 +110,21 @@ router.post('/', async (req, res) => {
         fullName, phone, checkIn, checkOut, guests,
       });
     } catch (e) {
-      console.warn('⚠️ [shortlet/create] Failed to send shortlet booking emails:', e.message);
+      console.warn('âš ï¸ [shortlet/create] Failed to send shortlet booking emails:', e.message);
     }
 
     res.status(201).json({ message: 'Booking saved successfully', booking: newBooking });
   } catch (err) {
-    console.error('❌ [shortlet/create] Booking creation error:', err);
+    console.error('âŒ [shortlet/create] Booking creation error:', err);
     res.status(500).json({ message: 'Booking failed' });
   }
 });
 
-// ───────────────────────────── POST /verified ─────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ POST /verified â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/verified', async (req, res) => {
   try {
-    console.log('➡️ [shortlet/verified] Booking Request Received');
-    console.log('⬅️ [shortlet/verified] keys:', Object.keys(req.body));
+    console.log('âž¡ï¸ [shortlet/verified] Booking Request Received');
+    console.log('â¬…ï¸ [shortlet/verified] keys:', Object.keys(req.body));
 
     const {
       fullName,
@@ -142,15 +142,15 @@ router.post('/verified', async (req, res) => {
     } = req.body;
 
     if (!fullName || !email || !phone || !checkIn || !checkOut || !guests || !shortletId || !price) {
-      console.log('⛔ [shortlet/verified] Missing fields:', { fullName, email, phone, checkIn, checkOut, guests, shortletId, price });
+      console.log('â›” [shortlet/verified] Missing fields:', { fullName, email, phone, checkIn, checkOut, guests, shortletId, price });
       return res.status(400).json({ error: 'Missing required booking fields' });
     }
 
     const buyerEmailRaw = (email || '').trim();
     const buyerEmail = buyerEmailRaw.toLowerCase();
-    console.log('🧑 [shortlet/verified] buyer normalized:', buyerEmail);
-    console.log('🎯 [shortlet/verified] referredByUserId (payload):', referredByUserId);
-    console.log('💰 [shortlet/verified] Booking Price:', price);
+    console.log('ðŸ§‘ [shortlet/verified] buyer normalized:', buyerEmail);
+    console.log('ðŸŽ¯ [shortlet/verified] referredByUserId (payload):', referredByUserId);
+    console.log('ðŸ’° [shortlet/verified] Booking Price:', price);
 
     // 0) Load live config (fractions, e.g. 0.03 for 3%)
     const cfg = await configService.load();
@@ -161,16 +161,16 @@ router.post('/verified', async (req, res) => {
     // 1) Resolve shortlet & vendor
     const shortlet = await Shortlet.findById(shortletId).lean();
     if (!shortlet) {
-      console.log('⛔ [shortlet/verified] Shortlet not found for id:', shortletId);
+      console.log('â›” [shortlet/verified] Shortlet not found for id:', shortletId);
       return res.status(404).json({ error: 'Invalid shortlet' });
     }
 
     const vendorIdForLedger = shortlet.vendorId ? String(shortlet.vendorId) : null;
     if (!vendorIdForLedger) {
-      console.log('⛔ [shortlet/verified] Shortlet has no vendorId');
+      console.log('â›” [shortlet/verified] Shortlet has no vendorId');
       return res.status(400).json({ error: 'Shortlet vendor not found' });
     }
-    console.log('🧭 [shortlet/verified] vendorIdForLedger resolved as:', vendorIdForLedger);
+    console.log('ðŸ§­ [shortlet/verified] vendorIdForLedger resolved as:', vendorIdForLedger);
 
     // 2) Try to identify the logged-in buyer from Authorization header
     let authUser = null;
@@ -180,10 +180,10 @@ router.post('/verified', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         if (decoded?.id) {
           authUser = await User.findById(decoded.id).exec();
-          if (authUser) console.log('🔐 [shortlet/verified] Authenticated buyer via token:', authUser.email);
+          if (authUser) console.log('ðŸ” [shortlet/verified] Authenticated buyer via token:', authUser.email);
         }
       } catch (e) {
-        console.warn('⚠️ [shortlet/verified] JWT decode failed or user not found:', e.message);
+        console.warn('âš ï¸ [shortlet/verified] JWT decode failed or user not found:', e.message);
       }
     }
 
@@ -202,22 +202,22 @@ router.post('/verified', async (req, res) => {
       paymentStatus: 'paid',
     });
     await newBooking.save();
-    console.log('✅ [shortlet/verified] Booking saved with ID:', newBooking._id);
+    console.log('âœ… [shortlet/verified] Booking saved with ID:', newBooking._id);
 
     // Debug: confirm collection/existence
-    console.log('📂 [shortlet/verified] ShortletBooking collection =', ShortletBooking.collection.collectionName);
-    console.log('🗄️  [shortlet/verified] Connected DB name     =', ShortletBooking.db?.name);
-    console.log('🔎 [shortlet/verified] Post-save exists?      =', !!(await ShortletBooking.exists({ _id: newBooking._id })));
+    console.log('ðŸ“‚ [shortlet/verified] ShortletBooking collection =', ShortletBooking.collection.collectionName);
+    console.log('ðŸ—„ï¸  [shortlet/verified] Connected DB name     =', ShortletBooking.db?.name);
+    console.log('ðŸ”Ž [shortlet/verified] Post-save exists?      =', !!(await ShortletBooking.exists({ _id: newBooking._id })));
 
-    // 4) Resolve buyer account → prefer token, else body, else email lookup
+    // 4) Resolve buyer account â†’ prefer token, else body, else email lookup
     let buyerUser = authUser;
     if (!buyerUser && buyerUserIdFromBody) {
       buyerUser = await User.findById(buyerUserIdFromBody).exec();
-      if (buyerUser) console.log('👤 [shortlet/verified] Buyer resolved via body.buyerUserId:', buyerUser.email);
+      if (buyerUser) console.log('ðŸ‘¤ [shortlet/verified] Buyer resolved via body.buyerUserId:', buyerUser.email);
     }
     if (!buyerUser) {
       buyerUser = await User.findOne({ email: buyerEmail }).exec();
-      if (buyerUser) console.log('👤 [shortlet/verified] Buyer resolved via email lookup:', buyerUser.email);
+      if (buyerUser) console.log('ðŸ‘¤ [shortlet/verified] Buyer resolved via email lookup:', buyerUser.email);
     }
 
     const buyerAccountEmail = (buyerUser?.email || buyerEmail).toLowerCase();
@@ -228,21 +228,21 @@ router.post('/verified', async (req, res) => {
       paymentStatus: 'paid',
       canceled: { $ne: true },
     });
-    console.log('🧮 [shortlet/verified] buyerPaidCount:', buyerPaidCount);
+    console.log('ðŸ§® [shortlet/verified] buyerPaidCount:', buyerPaidCount);
 
     // For logs only (accurate now)
     console.log(
-      `🏁 [shortlet/verified] cashback %=${(pctCash*100).toFixed(2)} | referral %=${(pctRef*100).toFixed(2)} | platform(lodging) %=${(pctPlat*100).toFixed(2)}`
+      `ðŸ [shortlet/verified] cashback %=${(pctCash*100).toFixed(2)} | referral %=${(pctRef*100).toFixed(2)} | platform(lodging) %=${(pctPlat*100).toFixed(2)}`
     );
 
     // 6) Resolve referrer id (id or userCode)
     let resolvedReferrerId = null;
     if (referredByUserId) {
       resolvedReferrerId = await resolveReferrerId(referredByUserId);
-      console.log('🔗 [shortlet/verified] resolvedReferrerId =', resolvedReferrerId ? String(resolvedReferrerId) : null);
+      console.log('ðŸ”— [shortlet/verified] resolvedReferrerId =', resolvedReferrerId ? String(resolvedReferrerId) : null);
     }
 
-    // 🔍 Decide if THIS booking qualifies as a referral (vs cashback)
+    // ðŸ” Decide if THIS booking qualifies as a referral (vs cashback)
     const isSelfReferral =
       !!resolvedReferrerId && !!buyerUser &&
       String(resolvedReferrerId) === String(buyerUser._id);
@@ -251,10 +251,10 @@ router.post('/verified', async (req, res) => {
     const isFirstPaid = buyerPaidCount === 1;
     const isReferralForThisBooking = !!resolvedReferrerId && !isSelfReferral && isFirstPaid;
 
-    // 7) Referrer commission — only if truly eligible for THIS booking
+    // 7) Referrer commission â€” only if truly eligible for THIS booking
     if (isReferralForThisBooking) {
       // NOTE: rewardReferral uses its own logic; ledger will still reflect the correct % via recordBookingLedger
-      console.log(`👉 [shortlet/verified] referral eligible — calling rewardReferral at ${(pctRef*100).toFixed(2)}% of price`);
+      console.log(`ðŸ‘‰ [shortlet/verified] referral eligible â€” calling rewardReferral at ${(pctRef*100).toFixed(2)}% of price`);
       await rewardReferral({
         buyerEmail: buyerAccountEmail,
         bookingId: newBooking._id,
@@ -262,20 +262,20 @@ router.post('/verified', async (req, res) => {
         referrerId: resolvedReferrerId,
       });
     } else if (resolvedReferrerId) {
-      console.log('⛔ Skipping commission: not eligible for referral on this booking.');
+      console.log('â›” Skipping commission: not eligible for referral on this booking.');
     }
 
-    // 8) Cashback — only if NOT a referral for this booking and buyer has an account
+    // 8) Cashback â€” only if NOT a referral for this booking and buyer has an account
     let actuallyCreditedCashback = false;
     const cashbackEligibleNow = !!buyerUser && !isReferralForThisBooking;
 
-    console.log('🔁 [shortlet/verified] cashback gating:', {
+    console.log('ðŸ” [shortlet/verified] cashback gating:', {
       cashbackEligibleNow,
       buyerId: buyerUser ? String(buyerUser._id) : null,
     });
 
     if (cashbackEligibleNow) {
-      const cashbackAmount = Math.round(Number(price) * pctCash); // ← use live % (no 5% hardcode)
+      const cashbackAmount = Math.round(Number(price) * pctCash); // â† use live % (no 5% hardcode)
       buyerUser.earnings = buyerUser.earnings || {};
       buyerUser.earnings = Array.isArray(buyerUser.earnings) ? buyerUser.earnings : [];
       buyerUser.payoutStatus = buyerUser.payoutStatus || {};
@@ -290,15 +290,15 @@ router.post('/verified', async (req, res) => {
       buyerUser.payoutStatus.currentBalance = (buyerUser.payoutStatus.currentBalance || 0) + cashbackAmount;
       await buyerUser.save();
       actuallyCreditedCashback = true;
-      console.log(`💵 [shortlet/verified] Cashback credited: ₦${cashbackAmount} @ ${(pctCash*100).toFixed(2)}%`);
+      console.log(`ðŸ’µ [shortlet/verified] Cashback credited: â‚¦${cashbackAmount} @ ${(pctCash*100).toFixed(2)}%`);
     } else if (buyerUser) {
-      console.log('🚫 [shortlet/verified] No cashback: referral applies for this booking.');
+      console.log('ðŸš« [shortlet/verified] No cashback: referral applies for this booking.');
     } else {
-      console.log('ℹ️ [shortlet/verified] Guest booking — no cashback (no buyer account identified).');
+      console.log('â„¹ï¸ [shortlet/verified] Guest booking â€” no cashback (no buyer account identified).');
       console.log('   Tip: FE can send Authorization token and/or buyerUserId.');
     }
 
-    // 9) Vendor payout (best-effort; mirror hotel) — compute from live platform %
+    // 9) Vendor payout (best-effort; mirror hotel) â€” compute from live platform %
     try {
       const vendorShare = Math.round(Number(price) * (1 - pctPlat)); // no hardcoded 85%
       const vendor = await Vendor.findById(vendorIdForLedger).exec();
@@ -314,16 +314,16 @@ router.post('/verified', async (req, res) => {
         });
         await vendor.save();
         console.log(
-          `🏦 [shortlet/verified] Vendor credited (pending) ${vendor.email} +₦${vendorShare} (platform=${(pctPlat*100).toFixed(2)}%)`
+          `ðŸ¦ [shortlet/verified] Vendor credited (pending) ${vendor.email} +â‚¦${vendorShare} (platform=${(pctPlat*100).toFixed(2)}%)`
         );
       } else {
-        console.warn('⚠️ [shortlet/verified] Vendor not found in Vendor collection for id:', String(vendorIdForLedger));
+        console.warn('âš ï¸ [shortlet/verified] Vendor not found in Vendor collection for id:', String(vendorIdForLedger));
       }
     } catch (e) {
-      console.warn('⚠️ [shortlet/verified] Vendor payout failed:', e.message);
+      console.warn('âš ï¸ [shortlet/verified] Vendor payout failed:', e.message);
     }
 
-    // 10) Ledger — reflect the same classification
+    // 10) Ledger â€” reflect the same classification
     try {
       const args = {
         _id: newBooking._id,
@@ -336,7 +336,7 @@ router.post('/verified', async (req, res) => {
         referralUserId: isReferralForThisBooking ? resolvedReferrerId : null,
         type: 'shortlet',
       };
-      console.log('📝 [shortlet/verified] recordBookingLedger args:', {
+      console.log('ðŸ“ [shortlet/verified] recordBookingLedger args:', {
         bookingId: String(args._id),
         userId: args.userId ? String(args.userId) : null,
         vendorId: String(args.vendorId),
@@ -348,12 +348,12 @@ router.post('/verified', async (req, res) => {
       });
 
       await recordBookingLedger(args, { category: 'shortlet' });
-      console.log('🧾 [shortlet/verified] Ledger rows recorded for booking:', String(newBooking._id));
+      console.log('ðŸ§¾ [shortlet/verified] Ledger rows recorded for booking:', String(newBooking._id));
 
       const cnt = await Ledger.countDocuments({ bookingId: newBooking._id });
-      console.log('📘 [shortlet/verified] Ledger collection =', Ledger.collection.collectionName, '| have rows =', cnt > 0, '| count =', cnt);
+      console.log('ðŸ“˜ [shortlet/verified] Ledger collection =', Ledger.collection.collectionName, '| have rows =', cnt > 0, '| count =', cnt);
     } catch (e) {
-      console.error('⚠️ [shortlet/verified] recordBookingLedger failed (booking continues):', e.message);
+      console.error('âš ï¸ [shortlet/verified] recordBookingLedger failed (booking continues):', e.message);
     }
 
     // 11) Emails (best-effort)
@@ -365,19 +365,19 @@ router.post('/verified', async (req, res) => {
         shortletName: shortlet.name || shortlet.title || 'Shortlet',
         fullName, phone, checkIn, checkOut, guests,
       });
-      console.log('✅ Shortlet booking confirmation emails sent.');
+      console.log('âœ… Shortlet booking confirmation emails sent.');
     } catch (e) {
-      console.warn('⚠️ [shortlet/verified] Failed to send shortlet booking emails:', e.message);
+      console.warn('âš ï¸ [shortlet/verified] Failed to send shortlet booking emails:', e.message);
     }
 
-    return res.status(201).json({ message: '✅ Booking saved successfully' });
+    return res.status(201).json({ message: 'âœ… Booking saved successfully' });
   } catch (err) {
-    console.error('❌ [shortlet/verified] Booking error:', err);
+    console.error('âŒ [shortlet/verified] Booking error:', err);
     return res.status(500).json({ error: 'Booking failed. Please try again.' });
   }
 });
 
-// ─────────────────────────────── CANCEL ───────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ CANCEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.patch('/:id/cancel', async (req, res) => {
   try {
     // Resolve caller email: prefer JWT, else body
@@ -409,7 +409,7 @@ router.patch('/:id/cancel', async (req, res) => {
       return res.status(400).json({ message: 'Cannot cancel after check-in date' });
     }
 
-    // ✅ Reverse buyer cashback (earnings + ledger adjustment)
+    // âœ… Reverse buyer cashback (earnings + ledger adjustment)
     try {
       const buyer = await User.findOne({ email: candidateEmail }).exec();
       if (buyer) {
@@ -449,7 +449,7 @@ router.patch('/:id/cancel', async (req, res) => {
           buyer.payoutStatus.currentBalance = Math.max(0, Number(buyer.payoutStatus.currentBalance || 0) - reversed);
           await buyer.save();
 
-          // ✅ Ledger debit (enum-safe)
+          // âœ… Ledger debit (enum-safe)
           try {
             await Ledger.create({
               accountType: 'user',
@@ -469,10 +469,10 @@ router.patch('/:id/cancel', async (req, res) => {
         }
       }
     } catch (e) {
-      console.warn('⚠️ [shortlet/cancel] Cashback reversal failed softly:', e.message);
+      console.warn('âš ï¸ [shortlet/cancel] Cashback reversal failed softly:', e.message);
     }
 
-    // ✅ Reverse any referrer commission (earnings + ledger)
+    // âœ… Reverse any referrer commission (earnings + ledger)
     try {
       let refUser = null;
       let refAmountFromLedger = 0;
@@ -537,7 +537,7 @@ router.patch('/:id/cancel', async (req, res) => {
           refUser.payoutStatus.currentBalance = Math.max(0, Number(refUser.payoutStatus.currentBalance || 0) - finalCommission);
           await refUser.save();
 
-          // ✅ Ledger debit (enum-safe)
+          // âœ… Ledger debit (enum-safe)
           try {
             await Ledger.create({
               accountType: 'user',
@@ -557,10 +557,10 @@ router.patch('/:id/cancel', async (req, res) => {
         }
       }
     } catch (e) {
-      console.warn('⚠️ [shortlet/cancel] Referral commission reversal failed softly:', e.message);
+      console.warn('âš ï¸ [shortlet/cancel] Referral commission reversal failed softly:', e.message);
     }
 
-    // ✅ Cancel booking (fix: reuse existing `booking`, no second `const now`)
+    // âœ… Cancel booking (fix: reuse existing `booking`, no second `const now`)
     booking.canceled = true;
     booking.cancellationDate = new Date();
     await booking.save();
@@ -579,12 +579,12 @@ router.patch('/:id/cancel', async (req, res) => {
         guests: booking.guests,
       });
     } catch (e) {
-      console.warn('⚠️ [shortlet/cancel] Failed to send cancellation emails:', e.message);
+      console.warn('âš ï¸ [shortlet/cancel] Failed to send cancellation emails:', e.message);
     }
 
     return res.status(200).json({ message: 'Booking canceled successfully' });
   } catch (err) {
-    console.error('❌ [shortlet/cancel] Cancel Booking Error:', err);
+    console.error('âŒ [shortlet/cancel] Cancel Booking Error:', err);
     res.status(500).json({ message: 'Failed to cancel booking' });
   }
 });
@@ -603,7 +603,7 @@ router.post('/:id/check-in', auth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// Mark check-out and release pending → available
+// Mark check-out and release pending â†’ available
 router.post('/:id/check-out', auth, async (req, res) => {
   const b = await ShortletBooking.findById(req.params.id);
   if (!b) return res.status(404).json({ message: 'Booking not found' });
@@ -619,3 +619,4 @@ router.post('/:id/check-out', auth, async (req, res) => {
 });
 
 module.exports = router;
+

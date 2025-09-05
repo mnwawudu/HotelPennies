@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Shortlet = require('../models/shortletModel');
 const auth = require('../middleware/auth');
@@ -12,24 +12,24 @@ const PUBLISHED_OR_MISSING = {
 };
 
 //
-// 🔹 PUBLIC ROUTES (No auth)
+// ðŸ”¹ PUBLIC ROUTES (No auth)
 //
 
-// ✅ Public shortlets: ranked by quality, fast, paginated, tolerant to missing isPublished
+// âœ… Public shortlets: ranked by quality, fast, paginated, tolerant to missing isPublished
 router.get('/public', async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page || '1', 10), 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit || '12', 10), 1), 50);
     const skip = (page - 1) * limit;
 
-    const filter = PUBLISHED_OR_MISSING; // 👈 tolerant
+    const filter = PUBLISHED_OR_MISSING; // ðŸ‘ˆ tolerant
 
     const shortlets = await Shortlet.find(filter)
       .sort({
-        averageRating: -1,   // ⭐ highest rated
-        bookingsCount: -1,   // 🧾 most booked
-        ctr: -1,             // 👀 highest CTR
-        createdAt: -1,       // ⏱️ newest as last tiebreak
+        averageRating: -1,   // â­ highest rated
+        bookingsCount: -1,   // ðŸ§¾ most booked
+        ctr: -1,             // ðŸ‘€ highest CTR
+        createdAt: -1,       // â±ï¸ newest as last tiebreak
       })
       .select(
         'title name mainImage images price promoPrice location city state averageRating bookingsCount ctr createdAt'
@@ -40,12 +40,12 @@ router.get('/public', async (req, res) => {
 
     res.json(shortlets);
   } catch (err) {
-    console.error('❌ Failed to fetch shortlets:', err);
+    console.error('âŒ Failed to fetch shortlets:', err);
     res.status(500).json({ message: 'Failed to fetch shortlets' });
   }
 });
 
-// ✅ Get shortlets by city (public, ranked, paginated, tolerant to missing isPublished)
+// âœ… Get shortlets by city (public, ranked, paginated, tolerant to missing isPublished)
 router.get('/public/city/:city', async (req, res) => {
   try {
     const rawCity = (req.params.city || '').trim();
@@ -56,7 +56,7 @@ router.get('/public/city/:city', async (req, res) => {
     const skip = (page - 1) * limit;
 
     const filter = {
-      ...PUBLISHED_OR_MISSING, // 👈 tolerant
+      ...PUBLISHED_OR_MISSING, // ðŸ‘ˆ tolerant
       city: { $regex: `^${rawCity}$`, $options: 'i' },
     };
 
@@ -76,7 +76,7 @@ router.get('/public/city/:city', async (req, res) => {
 
     res.json(shortlets);
   } catch (err) {
-    console.error('❌ Failed to fetch shortlets by city:', err);
+    console.error('âŒ Failed to fetch shortlets by city:', err);
     res.status(500).json({ message: 'Failed to fetch shortlets by city' });
   }
 });
@@ -88,13 +88,13 @@ router.get('/public/:id', async (req, res) => {
     if (!shortlet) return res.status(404).json({ message: 'Shortlet not found' });
     res.json(shortlet);
   } catch (err) {
-    console.error('❌ Public shortlet fetch error:', err);
+    console.error('âŒ Public shortlet fetch error:', err);
     res.status(500).json({ message: 'Failed to fetch shortlet' });
   }
 });
 
 //
-// 🔹 AUTHENTICATED VENDOR ROUTES
+// ðŸ”¹ AUTHENTICATED VENDOR ROUTES
 //
 
 // Create a shortlet
@@ -108,7 +108,7 @@ router.post('/create', auth, async (req, res) => {
     await shortlet.save();
     res.status(201).json({ message: 'Shortlet created', shortlet });
   } catch (err) {
-    console.error('❌ Shortlet creation error:', err);
+    console.error('âŒ Shortlet creation error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
@@ -208,7 +208,7 @@ router.get('/:id/unavailable-dates', auth, async (req, res) => {
 
     res.json({ unavailableDates: shortlet.unavailableDates || [] });
   } catch (err) {
-    console.error('❌ Failed to fetch unavailable dates:', err);
+    console.error('âŒ Failed to fetch unavailable dates:', err);
     res.status(500).json({ message: 'Failed to fetch unavailable dates' });
   }
 });
@@ -228,7 +228,7 @@ router.put('/:id/unavailable-dates', auth, async (req, res) => {
 
     res.json({ message: 'Unavailable dates updated', shortlet });
   } catch (err) {
-    console.error('❌ Failed to update unavailable dates:', err);
+    console.error('âŒ Failed to update unavailable dates:', err);
     res.status(500).json({ message: 'Failed to update unavailable dates' });
   }
 });
@@ -248,7 +248,7 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 //
-// 🔹 CATCH-ALL AUTH ROUTE (MUST BE LAST)
+// ðŸ”¹ CATCH-ALL AUTH ROUTE (MUST BE LAST)
 //
 
 // Get single shortlet (authenticated vendor only)
@@ -266,3 +266,4 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 module.exports = router;
+

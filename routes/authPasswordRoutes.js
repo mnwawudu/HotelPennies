@@ -1,19 +1,19 @@
-const express = require('express');
+﻿const express = require('express');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
 
 const User = require('../models/userModel');
-const Vendor = require('../models/vendorModel'); // ⬅️ add vendor
+const Vendor = require('../models/vendorModel'); // â¬…ï¸ add vendor
 const auth = require('../middleware/auth');
 const sendSecurityEmail = require('../utils/sendSecurityEmail');
 
 const router = express.Router();
 
-// ───────────────── Rate limits ────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Rate limits â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const changeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 const resetLimiter  = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
-// ───────────────── Helpers ────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const isStrong = (pwd = '') =>
   pwd.length >= 8 && /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /[0-9]/.test(pwd);
 
@@ -24,7 +24,7 @@ const FRONTEND_BASE =
 
 const hash = (s='') => crypto.createHash('sha256').update(String(s)).digest('hex');
 
-// ───────────────── Change password (logged in; works for user or vendor) ─────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Change password (logged in; works for user or vendor) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/change-password', auth, changeLimiter, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body || {};
@@ -61,7 +61,7 @@ router.post('/change-password', auth, changeLimiter, async (req, res) => {
         subject: 'Your HotelPennies password was changed',
         text: 'If you did not perform this change, please reset your password immediately.',
         html: `<p>Your password was just changed.</p>
-               <p>If this wasn’t you, <a href="${FRONTEND_BASE}/forgot-password">reset it now</a>.</p>`,
+               <p>If this wasnâ€™t you, <a href="${FRONTEND_BASE}/forgot-password">reset it now</a>.</p>`,
       });
     } catch (e) {
       console.error('[change-password] email send failed:', e?.message || e);
@@ -74,7 +74,7 @@ router.post('/change-password', auth, changeLimiter, async (req, res) => {
   }
 });
 
-// ───────────────── Forgot password (request token) — supports User or Vendor ─────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Forgot password (request token) â€” supports User or Vendor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/forgot-password', resetLimiter, async (req, res) => {
   try {
     const { email } = req.body || {};
@@ -83,7 +83,7 @@ router.post('/forgot-password', resetLimiter, async (req, res) => {
     }
     const normEmail = String(email).toLowerCase();
 
-    // Look up in both collections (no enumeration — always 200)
+    // Look up in both collections (no enumeration â€” always 200)
     const [user, vendor] = await Promise.all([
       User.findOne({ email: normEmail }),
       Vendor.findOne({ email: normEmail }),
@@ -97,7 +97,7 @@ router.post('/forgot-password', resetLimiter, async (req, res) => {
       const link =
         `${FRONTEND_BASE}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(subject.email)}`;
 
-      console.info('[forgot-password] sending reset email →', subject.email, 'link:', link);
+      console.info('[forgot-password] sending reset email â†’', subject.email, 'link:', link);
 
       try {
         await sendSecurityEmail({
@@ -121,7 +121,7 @@ router.post('/forgot-password', resetLimiter, async (req, res) => {
   }
 });
 
-// ───────────────── Reset password (using token) — supports User or Vendor ────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Reset password (using token) â€” supports User or Vendor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/reset-password', resetLimiter, async (req, res) => {
   try {
     const { email, token, newPassword } = req.body || {};
@@ -156,7 +156,7 @@ router.post('/reset-password', resetLimiter, async (req, res) => {
           to: doc.email,
           subject: 'Your HotelPennies password was reset',
           text: 'If you did not request this reset, please contact support.',
-          html: `<p>Your password was just reset.</p><p>If this wasn’t you, please contact support immediately.</p>`,
+          html: `<p>Your password was just reset.</p><p>If this wasnâ€™t you, please contact support immediately.</p>`,
         });
       } catch (e) {
         console.error('[reset-password] email send failed:', e?.message || e);
@@ -176,3 +176,4 @@ router.post('/reset-password', resetLimiter, async (req, res) => {
 });
 
 module.exports = router;
+

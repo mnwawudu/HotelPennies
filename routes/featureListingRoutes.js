@@ -1,9 +1,9 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
 const FeatureListing = require('../models/featureListingModel');
-const auth = require('../middleware/Auth');
+const auth = require('../middleware/auth');
 
 // MODELS
 const Hotel = require('../models/hotelModel');
@@ -38,7 +38,7 @@ const normalizeResourceType = (pathLabel) => {
   return map[pathLabel] || 'room';
 };
 
-// ───────────────── helpers ─────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function getStateForResource(resourceType, resourceId) {
   try {
     switch (resourceType) {
@@ -227,7 +227,7 @@ const addFlutterwaveRoute = (pathLabel) => {
   addFlutterwaveRoute(type);
 });
 
-// ✅ Public Fetch Route (tightened)
+// âœ… Public Fetch Route (tightened)
 router.get('/public', async (req, res) => {
   try {
     const st = String(req.query.state || '').trim();
@@ -338,3 +338,4 @@ router.get('/public', async (req, res) => {
 });
 
 module.exports = router;
+

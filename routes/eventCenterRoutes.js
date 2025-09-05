@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -7,10 +7,10 @@ const EventCenterBooking = require('../models/eventCenterBookingModel');
 
 
 //
-// ✅ PUBLIC ROUTES (NO AUTH REQUIRED)
+// âœ… PUBLIC ROUTES (NO AUTH REQUIRED)
 // --------------------------------------
 
-// Get all public event centers, ranked by quality (rating → bookings → CTR → newest)
+// Get all public event centers, ranked by quality (rating â†’ bookings â†’ CTR â†’ newest)
 router.get('/all-public', async (req, res) => {
   try {
     // simple, safe pagination (defaults keep your current UI behavior sane)
@@ -24,10 +24,10 @@ router.get('/all-public', async (req, res) => {
 
     const events = await EventCenter.find(filter)
       .sort({
-        averageRating: -1,  // ⭐ highest rated first
-        bookingsCount: -1,  // 🧾 then most booked
-        ctr: -1,            // 👀 then highest CTR
-        createdAt: -1,      // ⏱️ newest last tiebreak
+        averageRating: -1,  // â­ highest rated first
+        bookingsCount: -1,  // ðŸ§¾ then most booked
+        ctr: -1,            // ðŸ‘€ then highest CTR
+        createdAt: -1,      // â±ï¸ newest last tiebreak
       })
       .select(
         'name mainImage images location city state capacity price promoPrice usePromo ' +
@@ -39,7 +39,7 @@ router.get('/all-public', async (req, res) => {
 
     res.json(events);
   } catch (err) {
-    console.error('❌ Failed to fetch public event centers:', err);
+    console.error('âŒ Failed to fetch public event centers:', err);
     res.status(500).json({ error: 'Failed to fetch event centers' });
   }
 });
@@ -61,13 +61,13 @@ router.get('/public/city/:city', async (req, res) => {
 
     res.json(items);
   } catch (err) {
-    console.error('❌ Failed to fetch city event centers:', err);
+    console.error('âŒ Failed to fetch city event centers:', err);
     res.status(500).json({ error: 'Failed to fetch event centers' });
   }
 });
 
 
-// Get single public event center by ID (✅ includes unavailableDates)
+// Get single public event center by ID (âœ… includes unavailableDates)
 router.get('/public/:id', async (req, res) => {
   try {
     const event = await EventCenter.findById(req.params.id);
@@ -89,17 +89,17 @@ router.get('/public/:id', async (req, res) => {
       openingHours: event.openingHours || {},
       images: event.images || [],
       mainImage: event.mainImage || '',
-      unavailableDates: event.unavailableDates || [] // ✅ Added
+      unavailableDates: event.unavailableDates || [] // âœ… Added
     });
   } catch (err) {
-    console.error('❌ Failed to fetch public event center:', err);
+    console.error('âŒ Failed to fetch public event center:', err);
     res.status(500).json({ error: 'Failed to fetch event center' });
   }
 });
 
 
 //
-// ✅ VENDOR-ONLY ROUTES (AUTH REQUIRED)
+// âœ… VENDOR-ONLY ROUTES (AUTH REQUIRED)
 // --------------------------------------
 
 // Create new event center
@@ -140,7 +140,7 @@ router.post('/', auth, upload.array('images'), async (req, res) => {
     await newEvent.save();
     res.status(201).json(newEvent);
   } catch (err) {
-    console.error('❌ Failed to create event center:', err);
+    console.error('âŒ Failed to create event center:', err);
     res.status(400).json({ error: 'Failed to create event center' });
   }
 });
@@ -151,7 +151,7 @@ router.get('/my-listings', auth, async (req, res) => {
     const events = await EventCenter.find({ vendorId: req.user._id }).sort({ createdAt: -1 });
     res.json(events);
   } catch (err) {
-    console.error('❌ Failed to fetch listings:', err);
+    console.error('âŒ Failed to fetch listings:', err);
     res.status(500).json({ error: 'Failed to fetch listings' });
   }
 });
@@ -189,7 +189,7 @@ router.put('/:id', auth, async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    console.error('❌ Failed to update event center:', err);
+    console.error('âŒ Failed to update event center:', err);
     res.status(400).json({ error: 'Update failed' });
   }
 });
@@ -202,7 +202,7 @@ router.get('/:id/unavailable-dates', async (req, res) => {
 
     res.json({ unavailableDates: center.unavailableDates || [] });
   } catch (err) {
-    console.error('❌ Failed to fetch unavailable dates:', err);
+    console.error('âŒ Failed to fetch unavailable dates:', err);
     res.status(500).json({ error: 'Failed to fetch unavailable dates' });
   }
 });
@@ -227,7 +227,7 @@ router.put('/:id/unavailable-dates', auth, async (req, res) => {
 
     res.json(center);
   } catch (err) {
-    console.error('❌ Failed to update unavailable dates:', err);
+    console.error('âŒ Failed to update unavailable dates:', err);
     res.status(500).json({ error: 'Failed to update unavailable dates' });
   }
 });
@@ -256,7 +256,7 @@ router.get('/:id', auth, async (req, res) => {
       mainImage: event.mainImage || '',
     });
   } catch (err) {
-    console.error('❌ Failed to fetch event center:', err);
+    console.error('âŒ Failed to fetch event center:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -275,9 +275,10 @@ router.delete('/:id', auth, async (req, res) => {
 
     res.json({ message: 'Event Center deleted successfully' });
   } catch (err) {
-    console.error('❌ Failed to delete event center:', err);
+    console.error('âŒ Failed to delete event center:', err);
     res.status(500).json({ error: 'Failed to delete event center' });
   }
 });
 
 module.exports = router;
+

@@ -1,4 +1,4 @@
-// ✅ routes/payoutRequestRoutes.js
+﻿// âœ… routes/payoutRequestRoutes.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
@@ -135,10 +135,10 @@ router.post('/request', auth, async (req, res) => {
       return res.status(400).json({ message: 'No payable balance available' });
     }
     if (amount < MIN_PAYOUT_NGN) {
-      return res.status(400).json({ message: `Minimum payout is ₦${MIN_PAYOUT_NGN.toLocaleString()}` });
+      return res.status(400).json({ message: `Minimum payout is â‚¦${MIN_PAYOUT_NGN.toLocaleString()}` });
     }
     if (amount > available) {
-      return res.status(400).json({ message: `Amount exceeds available balance (₦${available.toLocaleString()})` });
+      return res.status(400).json({ message: `Amount exceeds available balance (â‚¦${available.toLocaleString()})` });
     }
     if (await hasActiveRequest(payeeType, payeeId)) {
       return res.status(409).json({ message: 'You already have a pending payout (requested/processing).' });
@@ -267,7 +267,7 @@ router.get('/me', auth, async (req, res) => {
         payableBalance: available, // available is already net of payout locks in your ledger
       },
       payouts,
-      minPayout: MIN_PAYOUT_NGN, // << ✅ expose minimum payout (NGN, major units)
+      minPayout: MIN_PAYOUT_NGN, // << âœ… expose minimum payout (NGN, major units)
       currency: 'NGN',
     });
   } catch (err) {
@@ -277,3 +277,4 @@ router.get('/me', auth, async (req, res) => {
 });
 
 module.exports = router;
+

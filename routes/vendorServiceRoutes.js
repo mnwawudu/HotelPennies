@@ -1,10 +1,10 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const Vendor = require('../models/vendorModel'); // ✅ Add this line
+const Vendor = require('../models/vendorModel'); // âœ… Add this line
 
 
-// ✅ GET current vendor services
+// âœ… GET current vendor services
 router.get('/me', auth, async (req, res) => {
   try {
     let record = await VendorService.findOne({ vendorId: req.user._id });
@@ -12,12 +12,12 @@ router.get('/me', auth, async (req, res) => {
 
     res.json({ services: record.services });
   } catch (err) {
-    console.error('❌ Failed to fetch services:', err);
+    console.error('âŒ Failed to fetch services:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// ✅ PUT to add/remove service
+// âœ… PUT to add/remove service
 router.put('/services', auth, async (req, res) => {
   const { service, action } = req.body;
   if (!service || !['add', 'remove'].includes(action)) {
@@ -47,9 +47,10 @@ router.put('/services', auth, async (req, res) => {
     await vendor.save();
     res.json({ message: 'Service updated successfully', businessTypes: vendor.businessTypes });
   } catch (err) {
-    console.error('❌ Failed to update vendor services:', err);
+    console.error('âŒ Failed to update vendor services:', err);
     res.status(500).json({ message: 'Failed to update services' });
   }
 });
 
 module.exports = router;
+

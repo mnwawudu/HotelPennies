@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Vendor = require('../models/vendorModel');
 const auth = require('../middleware/auth');
@@ -36,7 +36,7 @@ const autoVerifyVendor = async (vendor) => {
   await vendor.save();
 };
 
-// ✅ PUT: Update Vendor Profile
+// âœ… PUT: Update Vendor Profile
 router.put(
   '/profile',
   auth,
@@ -47,7 +47,7 @@ router.put(
   ]),
   async (req, res) => {
     try {
-      const vendor = await Vendor.findById(req.vendorId); // ✅ FIXED HERE
+      const vendor = await Vendor.findById(req.vendorId); // âœ… FIXED HERE
 
       if (!vendor) return res.status(404).json({ message: 'Vendor not found' });
 
@@ -110,3 +110,4 @@ router.put(
 );
 
 module.exports = router;
+

@@ -1,4 +1,4 @@
-// routes/tourGuideRoutes.js
+﻿// routes/tourGuideRoutes.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
@@ -9,24 +9,24 @@ const TourGuide = require('../models/tourGuideModel');
    PUBLIC ROUTES (no auth)
 ---------------------------- */
 
-// ✅ Ranked, lean, paginated list (alias: /public AND /all-public)
+// âœ… Ranked, lean, paginated list (alias: /public AND /all-public)
 async function fetchRankedGuides(req, res) {
   try {
     const page  = Math.max(parseInt(req.query.page  || '1', 10), 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit || '12', 10), 1), 50);
     const skip  = (page - 1) * limit;
 
-    // Don’t hard-filter by isPublished unless you’re certain it exists.
+    // Donâ€™t hard-filter by isPublished unless youâ€™re certain it exists.
     // If you do use it, pass ?published=1 to enable.
     const filter = {};
     if (req.query.published === '1') filter.isPublished = true;
 
     const guides = await TourGuide.find(filter)
       .sort({
-        averageRating: -1,   // ⭐ highest rated
-        bookingsCount: -1,   // 🧾 most booked
-        ctr: -1,             // 👀 highest CTR
-        createdAt: -1,       // ⏱️ newest as tiebreak
+        averageRating: -1,   // â­ highest rated
+        bookingsCount: -1,   // ðŸ§¾ most booked
+        ctr: -1,             // ðŸ‘€ highest CTR
+        createdAt: -1,       // â±ï¸ newest as tiebreak
       })
       .select(
         'name price promoPrice location city state language experience ' +
@@ -38,7 +38,7 @@ async function fetchRankedGuides(req, res) {
 
     res.json(guides);
   } catch (err) {
-    console.error('❌ Failed to fetch tour guides:', err);
+    console.error('âŒ Failed to fetch tour guides:', err);
     res.status(500).json({ message: 'Failed to fetch tour guides' });
   }
 }
@@ -46,7 +46,7 @@ async function fetchRankedGuides(req, res) {
 router.get('/public', fetchRankedGuides);
 router.get('/all-public', fetchRankedGuides); // <- some frontends use this path
 
-// ✅ Ranked by city (lean + paginated)
+// âœ… Ranked by city (lean + paginated)
 router.get('/public/city/:city', async (req, res) => {
   try {
     const rawCity = (req.params.city || '').trim();
@@ -76,31 +76,31 @@ router.get('/public/city/:city', async (req, res) => {
 
     res.json(guides);
   } catch (err) {
-    console.error('❌ Failed to fetch tour guides by city:', err);
+    console.error('âŒ Failed to fetch tour guides by city:', err);
     res.status(500).json({ message: 'Failed to fetch tour guides by city' });
   }
 });
 
-// ✅ Public detail
+// âœ… Public detail
 router.get('/public/:id', async (req, res) => {
   try {
     const guide = await TourGuide.findById(req.params.id);
     if (!guide) return res.status(404).json({ message: 'Tour guide not found' });
     res.json(guide);
   } catch (err) {
-    console.error('❌ Public tour guide fetch error:', err);
+    console.error('âŒ Public tour guide fetch error:', err);
     res.status(500).json({ message: 'Server error while fetching tour guide' });
   }
 });
 
-// ✅ Public unavailable dates
+// âœ… Public unavailable dates
 router.get('/:id/unavailable-dates', async (req, res) => {
   try {
     const guide = await TourGuide.findById(req.params.id);
     if (!guide) return res.status(404).json({ message: 'Tour guide not found' });
     res.json({ unavailableDates: guide.unavailableDates || [] });
   } catch (err) {
-    console.error('❌ Failed to fetch unavailable dates:', err);
+    console.error('âŒ Failed to fetch unavailable dates:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -158,7 +158,7 @@ router.post(
       await newGuide.save();
       res.status(201).json(newGuide);
     } catch (err) {
-      console.error('❌ Failed to create tour guide:', err);
+      console.error('âŒ Failed to create tour guide:', err);
       res.status(400).json({ error: 'Failed to create tour guide' });
     }
   }
@@ -174,7 +174,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Vendor’s listings
+// Vendorâ€™s listings
 router.get('/my-listings', auth, async (req, res) => {
   try {
     const guides = await TourGuide.find({ vendorId: req.user._id }).sort({ createdAt: -1 });
@@ -185,14 +185,14 @@ router.get('/my-listings', auth, async (req, res) => {
 });
 
 /**
- * ✅ Update guide (JSON-friendly for UploadImageModal)
+ * âœ… Update guide (JSON-friendly for UploadImageModal)
  * Supports:
  *   {$push: { images: { $each: [...] }}}  // append images
  *   {$pull: { images: 'https://...' }}    // delete one image
  *   { mainImage: 'https://...' }          // set cover image
  *   + normal scalar fields in body
  *
- * NOTE: no multer here — keeps JSON bodies intact.
+ * NOTE: no multer here â€” keeps JSON bodies intact.
  */
 router.put('/:id', auth, async (req, res) => {
   try {
@@ -320,3 +320,4 @@ router.put('/:id/unavailable-dates', auth, async (req, res) => {
 });
 
 module.exports = router;
+

@@ -1,4 +1,4 @@
-// 📁 backend/routes/hotelRoomRoutes.js
+﻿// ðŸ“ backend/routes/hotelRoomRoutes.js
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -8,14 +8,14 @@ const authMiddleware = require('../middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
-// ✅ Cloudinary config
+// âœ… Cloudinary config
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// ✅ Multer setup
+// âœ… Multer setup
 const storage = multer.diskStorage({
   destination: 'uploads/',
   filename: (req, file, cb) => {
@@ -35,12 +35,12 @@ const upload = multer({
   }
 });
 
-// ✅ Test route
+// âœ… Test route
 router.get('/test', (req, res) => {
-  res.send('✅ Hotel Room Routes Loaded');
+  res.send('âœ… Hotel Room Routes Loaded');
 });
 
-// ✅ Create room
+// âœ… Create room
 router.post('/create/:hotelId', authMiddleware, upload.array('images', 6), async (req, res) => {
   try {
     const { name, price, guestCapacity, bedType, promoPrice, complimentary, description } = req.body;
@@ -67,12 +67,12 @@ router.post('/create/:hotelId', authMiddleware, upload.array('images', 6), async
     await newRoom.save();
     res.status(201).json({ message: 'Room created successfully', room: newRoom });
   } catch (err) {
-    console.error('❌ Room creation error:', err);
+    console.error('âŒ Room creation error:', err);
     res.status(500).json({ message: 'Room creation failed' });
   }
 });
 
-// ✅ Get all rooms for a hotel
+// âœ… Get all rooms for a hotel
 router.get('/:hotelId/rooms', async (req, res) => {
   try {
     const hotelId = req.params.hotelId;
@@ -83,23 +83,23 @@ router.get('/:hotelId/rooms', async (req, res) => {
     const rooms = await Room.find({ hotelId });
     res.json(rooms);
   } catch (err) {
-    console.error('❌ Fetch rooms error:', err);
+    console.error('âŒ Fetch rooms error:', err);
     res.status(500).json({ message: 'Failed to fetch rooms' });
   }
 });
 
-// ✅ Get public rooms
+// âœ… Get public rooms
 router.get('/public', async (req, res) => {
   try {
     const rooms = await Room.find().populate('hotelId', 'city');
     res.json(rooms);
   } catch (err) {
-    console.error('❌ Public room fetch error:', err);
+    console.error('âŒ Public room fetch error:', err);
     res.status(500).json({ message: 'Failed to fetch public rooms' });
   }
 });
 
-// ✅ Get single room by ID
+// âœ… Get single room by ID
 router.get('/:roomId', async (req, res) => {
   try {
     const room = await Room.findById(req.params.roomId);
@@ -111,7 +111,7 @@ router.get('/:roomId', async (req, res) => {
   }
 });
 
-// ✅ Upload images
+// âœ… Upload images
 router.post('/upload/:roomId', authMiddleware, upload.array('images', 6), async (req, res) => {
   try {
     const room = await Room.findById(req.params.roomId);
@@ -128,12 +128,12 @@ router.post('/upload/:roomId', authMiddleware, upload.array('images', 6), async 
     req.files.forEach(file => fs.unlinkSync(file.path));
     res.json({ message: 'Uploaded successfully', images: room.images });
   } catch (err) {
-    console.error('❌ Upload error:', err);
+    console.error('âŒ Upload error:', err);
     res.status(500).json({ message: 'Image upload failed' });
   }
 });
 
-// ✅ Set main image
+// âœ… Set main image
 router.put('/:roomId/main-image', authMiddleware, async (req, res) => {
   try {
     const { imageUrl } = req.body;
@@ -150,7 +150,7 @@ router.put('/:roomId/main-image', authMiddleware, async (req, res) => {
   }
 });
 
-// ✅ Update room
+// âœ… Update room
 router.put('/:roomId', authMiddleware, async (req, res) => {
   try {
     const updated = await Room.findOneAndUpdate(
@@ -162,12 +162,12 @@ router.put('/:roomId', authMiddleware, async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    console.error('❌ Update error:', err);
+    console.error('âŒ Update error:', err);
     res.status(500).json({ message: 'Failed to update room' });
   }
 });
 
-// ✅ Delete room
+// âœ… Delete room
 router.delete('/:roomId', authMiddleware, async (req, res) => {
   try {
     const deleted = await Room.findOneAndDelete({ _id: req.params.roomId, vendorId: req.user._id });
@@ -175,24 +175,24 @@ router.delete('/:roomId', authMiddleware, async (req, res) => {
 
     res.json({ message: 'Room deleted successfully' });
   } catch (err) {
-    console.error('❌ Delete error:', err);
+    console.error('âŒ Delete error:', err);
     res.status(500).json({ message: 'Failed to delete room' });
   }
 });
 
-// ✅ GET room unavailable dates (frontend datepicker uses this)
+// âœ… GET room unavailable dates (frontend datepicker uses this)
 router.get('/:roomId/unavailable-dates', async (req, res) => {
   try {
     const room = await Room.findById(req.params.roomId);
     if (!room) return res.status(404).json({ message: 'Room not found' });
     res.json({ unavailableDates: room.unavailableDates || [] });
   } catch (err) {
-    console.error('❌ Fetch error:', err);
+    console.error('âŒ Fetch error:', err);
     res.status(500).json({ message: 'Failed to get unavailable dates' });
   }
 });
 
-// ✅ VENDOR: Save unavailable dates (only vendor can set these)
+// âœ… VENDOR: Save unavailable dates (only vendor can set these)
 router.put('/:roomId/unavailable-dates', authMiddleware, async (req, res) => {
   try {
     const room = await Room.findOne({ _id: req.params.roomId, vendorId: req.user._id });
@@ -203,12 +203,12 @@ router.put('/:roomId/unavailable-dates', authMiddleware, async (req, res) => {
 
     res.json({ message: 'Unavailable dates updated', unavailableDates: room.unavailableDates });
   } catch (err) {
-    console.error('❌ Error updating unavailable dates:', err);
+    console.error('âŒ Error updating unavailable dates:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// ✅ Feature toggle
+// âœ… Feature toggle
 router.put('/:roomId/feature', authMiddleware, async (req, res) => {
   try {
     const { isFeatured } = req.body;
@@ -226,3 +226,4 @@ router.put('/:roomId/feature', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
