@@ -1,43 +1,38 @@
-const nodemailer = require('nodemailer');
+// utils/sendShortletCancellationEmails.js
+// Uses shared transporter from services/mailer (SMTP or json fallback)
+const { transporter, FROM_EMAIL, ADMIN_EMAIL } = require('../services/mailer');
 
-const GMAIL_USER = process.env.GMAIL_USER || '';
-const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+const asArray = (v) => (Array.isArray(v) ? v : v ? [v] : []);
 
-if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-  console.warn('⚠️  GMAIL_USER or GMAIL_APP_PASSWORD missing. Emails will fail to send.');
-}
+async function sendShortletCancellationEmails({
+  userEmail,
+  vendorEmail,
+  adminEmail,
+  shortletName,
+  fullName,
+  phone,
+  checkIn,
+  checkOut,
+  guests,
+}) {
+  if (!userEmail) {
+    console.warn('📭 sendShortletCancellationEmails: no userEmail provided; skipping send.');
+    return false;
+  }
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: GMAIL_USER,
-    pass: GMAIL_APP_PASSWORD,
-  },
-});
-
-// non-fatal warm-up check
-transporter.verify()
-  .then(() => console.log('📬 Gmail SMTP ready'))
-  .catch(err => console.warn('⚠️  SMTP verify failed:', err.message));
-
-const sendShortletCancellationEmails = async ({
-  userEmail, vendorEmail, adminEmail, shortletName, fullName, phone, checkIn, checkOut, guests
-}) => {
-  const subject = `🚫 Shortlet Booking Canceled - ${shortletName}`;
+  const subject = `🚫 Shortlet Booking Canceled - ${shortletName || 'Shortlet'}`;
   const text = `
 Hello,
 
 This is to notify you that a shortlet booking has been canceled.
 
-🏠 Shortlet: ${shortletName}
-👤 Guest Name: ${fullName}
-📞 Phone: ${phone}
+🏠 Shortlet: ${shortletName || 'Shortlet'}
+👤 Guest Name: ${fullName || '-'}
+📞 Phone: ${phone || '-'}
 📧 Email: ${userEmail}
-📅 Check-in: ${checkIn}
-📅 Check-out: ${checkOut}
-👥 Guests: ${guests}
+📅 Check-in: ${checkIn || '-'}
+📅 Check-out: ${checkOut || '-'}
+👥 Guests: ${guests ?? '-'}
 
 Please update your records.
 
@@ -45,20 +40,25 @@ Thanks,
 HotelPennies Team
 `.trim();
 
-  const mailOptions = {
-    from: `"HotelPennies" <${GMAIL_USER}>`,
-    to: userEmail,
-    bcc: [vendorEmail, adminEmail].filter(Boolean),
-    subject,
-    text,
-  };
+  const bccList = [
+    ...asArray(vendorEmail),
+    ...asArray(adminEmail || ADMIN_EMAIL),
+  ].filter(Boolean);
 
   try {
-    await transporter.sendMail(mailOptions);
+    await transporter.sendMail({
+      from: FROM_EMAIL,
+      to: userEmail,
+      ...(bccList.length ? { bcc: bccList } : {}),
+      subject,
+      text,
+    });
     console.log('✅ Shortlet cancellation emails sent.');
+    return true;
   } catch (error) {
-    console.error('❌ Failed to send shortlet cancellation emails:', error);
+    console.error('❌ Failed to send shortlet cancellation emails:', error?.message || error);
+    return false;
   }
-};
+}
 
 module.exports = sendShortletCancellationEmails;

@@ -1,51 +1,22 @@
-// server.js — production-ready with hardening + require diagnostics
+// server.js — production-clean
 // ---------------------------------------------------------------
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+const dotenv = require('dotenv');
+
+// Load env from standard .env, then also from Render Secret File if present
+dotenv.config(); // ./.env if present
+const RENDER_ENV = '/etc/secrets/.env';
+if (fs.existsSync(RENDER_ENV)) {
+  dotenv.config({ path: RENDER_ENV, override: true });
+}
+
 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const path = require('path');
-const fs = require('fs');
-
-// Helper: require with explicit diagnostics (which file failed)
-const R = (p) => {
-  try {
-    const m = require(p);
-    console.log('✅ required:', p);
-    return m;
-  } catch (e) {
-    console.error('❌ require failed:', p);
-    console.error(e && e.stack ? e.stack : e);
-    // Fail fast with non-zero exit so Render logs show the culprit
-    process.exit(1);
-  }
-};
-
-// Optional startup checks (enable via RENDER_DEBUG=1)
-if (process.env.RENDER_DEBUG) {
-  const reqs = [
-    'adminAnalyticsRoutes','adminAuditRoutes','adminAuthRoutes','adminDashboardRoutes',
-    'adminFeatureRoutes','adminLedgerRoutes','adminPayoutRoutes','adminSettingsRoutes',
-    'adminUserRoutes','adminVendorApprovalRoutes','advertRoutes','authPasswordRoutes',
-    'authRoutes','blogRoutes','bookingCancelRoutes','chopRoutes','chopsBookingRoutes',
-    'cityCruisePriceRoutes','cloudinaryRoutes','cruiseInquiryRoutes','cruiseRoutes',
-    'deleteUser','eventCenterBookingRoutes','eventCenterRoutes','featureListingRoutes',
-    'featurePricingRoutes','giftRoutes','guestCancelRoutes','hotelBookingRoutes',
-    'hotelPublicTopRoutes','hotelRoomRoutes','hotelRoutes','login','myOrdersRoutes',
-    'paymentRoutes','payoutRequestRoutes','paystackRoutes','pickupDeliveryRoutes',
-    'publicFeaturedRoutes','register','restaurantBookingRoutes','restaurantMenuRoutes',
-    'restaurantRoutes','reviewRoutes','searchRoutes','shortletBookingRoutes','shortletRoutes',
-    'tourGuideBookingRoutes','tourGuideRoutes','userDashboard','userRegister',
-    'vendorDashboard','vendorProfileUpdate','vendorServiceRoutes','verifyEmail','verifyStatus'
-  ];
-  for (const r of reqs) {
-    const p = path.join(__dirname, 'routes', `${r}.js`);
-    console.log('🔎 Route check:', p, 'exists?', fs.existsSync(p));
-  }
-}
 
 // --- Safe import for express-rate-limit (v6, v7, or missing) ---
 let rateLimit;
@@ -59,22 +30,19 @@ try {
   rateLimit = () => (req, res, next) => next();
 }
 
-// Use safe require for local modules too (catches case/paths)
-const configService = R('./services/configService');
+const configService = require('./services/configService');
 
 // Polyfill fetch for Node < 18
 const major = parseInt(process.versions.node.split('.')[0], 10);
 if (major < 18) {
-  R('./polyfills/fetch');
+  require('./polyfills/fetch');
 }
 
 const app = express();
 app.disable('x-powered-by');
 
 // --- Webhook (raw body) BEFORE JSON body parsing ---
-const webhookAbsPath = path.join(__dirname, 'routes', 'paystackWebhook.js');
-console.log('🔎 Checking webhook file:', webhookAbsPath, 'exists?', fs.existsSync(webhookAbsPath));
-const paystackWebhook = R(webhookAbsPath); // absolute path with .js
+const paystackWebhook = require('./routes/paystackWebhook');
 app.use('/api/webhooks/paystack', express.raw({ type: '*/*' }), paystackWebhook);
 
 // --- CORS (env allow-list + sensible defaults) ---
@@ -83,7 +51,6 @@ const defaultOrigins = [
   'https://hotelpennies.com',
   'https://www.hotelpennies.com',
   'https://hotelpennies-frontend.onrender.com',
-  // backend URL is harmless to allow from browsers:
   'https://hotelpennies-4.onrender.com',
 ];
 
@@ -136,64 +103,64 @@ mongoose.connect(process.env.MONGO_URI, {
   }
 }).catch(err => console.error('❌ MongoDB connection error:', err));
 
-// --- Route imports (ALL via R to surface any remaining case/path issues) ---
-const authRoutes = R('./routes/authRoutes');
-const paymentRoutes = R('./routes/paymentRoutes');
-const vendorProfileUpdateRoutes = R('./routes/vendorProfileUpdate');
-const shortletRoutes = R('./routes/shortletRoutes');
-const hotelRoutes = R('./routes/hotelRoutes');
-const restaurantRoutes = R('./routes/restaurantRoutes');
-const restaurantMenuRoutes = R('./routes/restaurantMenuRoutes');
-const eventCenterRoutes = R('./routes/eventCenterRoutes');
-const tourGuideRoutes = R('./routes/tourGuideRoutes');
-const tourGuideBookingRoutes = R('./routes/tourGuideBookingRoutes');
-const advertRoutes = R('./routes/advertRoutes');
-const registerRoutes = R('./routes/register');
-const loginRoutes = R('./routes/login');
-const userRegisterRoutes = R('./routes/userRegister');
-const userDashboardRoutes = R('./routes/userDashboard');
-const adminPayoutRoutes = R('./routes/adminPayoutRoutes');
-const verifyEmailRoutes = R('./routes/verifyEmail');
-const vendorDashboardRoutes = R('./routes/vendorDashboard');
-const deleteUserRoute = R('./routes/deleteUser');
-const verifyStatusRoutes = R('./routes/verifyStatus');
-const featurePricingRoutes = R('./routes/featurePricingRoutes');
-const featureListingRoutes = R('./routes/featureListingRoutes');
-const pickupDeliveryRoutes = R('./routes/pickupDeliveryRoutes');
-const adminAuthRoutes = R('./routes/adminAuthRoutes');
-const adminDashboardRoutes = R('./routes/adminDashboardRoutes');
-const cloudinaryRoutes = R('./routes/cloudinaryRoutes');
-const hotelRoomRoutes = R('./routes/hotelRoomRoutes');
-const vendorServiceRoutes = R('./routes/vendorServiceRoutes');
-const chopRoutes = R('./routes/chopRoutes');
-const chopsBookingRoutes = R('./routes/chopsBookingRoutes');
-const giftRoutes = R('./routes/giftRoutes');
-const cruiseRoutes = R('./routes/cruiseRoutes');
-const cityCruisePriceRoutes = R('./routes/cityCruisePriceRoutes');
-const blogRoutes = R('./routes/blogRoutes');
-const reviewRoutes = R('./routes/reviewRoutes');
-const hotelBookingRoutes = R('./routes/hotelBookingRoutes');
-const shortletBookingRoutes = R('./routes/shortletBookingRoutes');
-const paystackRoutes = R('./routes/paystackRoutes');
-const restaurantBookingRoutes = R('./routes/restaurantBookingRoutes');
-const eventCenterBookingRoutes = R('./routes/eventCenterBookingRoutes');
-const publicFeaturedRoutes = R('./routes/publicFeaturedRoutes');
-const searchRoutes = R('./routes/searchRoutes');
-const cruiseInquiryRoutes = R('./routes/cruiseInquiryRoutes');
-const payoutRequestRoutes = R('./routes/payoutRequestRoutes');
-const bookingCancelRoutes = R('./routes/bookingCancelRoutes');
-const authPasswordRoutes = R('./routes/authPasswordRoutes');
-const adminSettingsRoutes = R('./routes/adminSettingsRoutes');
+// --- Route imports ---
+const authRoutes = require('./routes/authRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const vendorProfileUpdateRoutes = require('./routes/vendorProfileUpdate');
+const shortletRoutes = require('./routes/shortletRoutes');
+const hotelRoutes = require('./routes/hotelRoutes');
+const restaurantRoutes = require('./routes/restaurantRoutes');
+const restaurantMenuRoutes = require('./routes/restaurantMenuRoutes');
+const eventCenterRoutes = require('./routes/eventCenterRoutes');
+const tourGuideRoutes = require('./routes/tourGuideRoutes');
+const tourGuideBookingRoutes = require('./routes/tourGuideBookingRoutes');
+const advertRoutes = require('./routes/advertRoutes');
+const registerRoutes = require('./routes/register');
+const loginRoutes = require('./routes/login');
+const userRegisterRoutes = require('./routes/userRegister');
+const userDashboardRoutes = require('./routes/userDashboard');
+const adminPayoutRoutes = require('./routes/adminPayoutRoutes');
+const verifyEmailRoutes = require('./routes/verifyEmail');
+const vendorDashboardRoutes = require('./routes/vendorDashboard');
+const deleteUserRoute = require('./routes/deleteUser');
+const verifyStatusRoutes = require('./routes/verifyStatus');
+const featurePricingRoutes = require('./routes/featurePricingRoutes');
+const featureListingRoutes = require('./routes/featureListingRoutes');
+const pickupDeliveryRoutes = require('./routes/pickupDeliveryRoutes');
+const adminAuthRoutes = require('./routes/adminAuthRoutes');
+const adminDashboardRoutes = require('./routes/adminDashboardRoutes');
+const cloudinaryRoutes = require('./routes/cloudinaryRoutes');
+const hotelRoomRoutes = require('./routes/hotelRoomRoutes');
+const vendorServiceRoutes = require('./routes/vendorServiceRoutes');
+const chopRoutes = require('./routes/chopRoutes');
+const chopsBookingRoutes = require('./routes/chopsBookingRoutes');
+const giftRoutes = require('./routes/giftRoutes');
+const cruiseRoutes = require('./routes/cruiseRoutes');
+const cityCruisePriceRoutes = require('./routes/cityCruisePriceRoutes');
+const blogRoutes = require('./routes/blogRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const hotelBookingRoutes = require('./routes/hotelBookingRoutes');
+const shortletBookingRoutes = require('./routes/shortletBookingRoutes');
+const paystackRoutes = require('./routes/paystackRoutes');
+const restaurantBookingRoutes = require('./routes/restaurantBookingRoutes');
+const eventCenterBookingRoutes = require('./routes/eventCenterBookingRoutes');
+const publicFeaturedRoutes = require('./routes/publicFeaturedRoutes');
+const searchRoutes = require('./routes/searchRoutes');
+const cruiseInquiryRoutes = require('./routes/cruiseInquiryRoutes');
+const payoutRequestRoutes = require('./routes/payoutRequestRoutes');
+const bookingCancelRoutes = require('./routes/bookingCancelRoutes');
+const authPasswordRoutes = require('./routes/authPasswordRoutes');
+const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
 
-const myOrdersRoutes = R('./routes/myOrdersRoutes');
-const adminAuditRoutes = R('./routes/adminAuditRoutes');
-const adminLedgerRoutes = R('./routes/adminLedgerRoutes');
-const guestCancelRoutes = R('./routes/guestCancelRoutes');
-const adminFeatureRoutes = R('./routes/adminFeatureRoutes');
-const adminVendorApprovalRoutes = R('./routes/adminVendorApprovalRoutes');
-const adminUserRoutes = R('./routes/adminUserRoutes');
-const adminAnalyticsRoutes = R('./routes/adminAnalyticsRoutes');
-const hotelPublicTopRoutes = R('./routes/hotelPublicTopRoutes');
+const myOrdersRoutes = require('./routes/myOrdersRoutes');
+const adminAuditRoutes = require('./routes/adminAuditRoutes');
+const adminLedgerRoutes = require('./routes/adminLedgerRoutes');
+const guestCancelRoutes = require('./routes/guestCancelRoutes');
+const adminFeatureRoutes = require('./routes/adminFeatureRoutes');
+const adminVendorApprovalRoutes = require('./routes/adminVendorApprovalRoutes');
+const adminUserRoutes = require('./routes/adminUserRoutes');
+const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
+const hotelPublicTopRoutes = require('./routes/hotelPublicTopRoutes');
 
 // --- Route mounts ---
 app.use('/api/payments', paymentRoutes);
@@ -254,55 +221,39 @@ app.use('/api/admin/settings', adminSettingsRoutes);
 app.use('/api', hotelPublicTopRoutes);
 
 // --- Health & API 404 ---
-app.get('/api/test', (req, res) => {
+app.get('/api/test', (_req, res) => {
   res.send('✅ HotelPennies API is running and reachable');
 });
-
-app.use('/api', (req, res) => {
-  return res.status(404).json({ message: 'Route not found' });
-});
+app.use('/api', (_req, res) => res.status(404).json({ message: 'Route not found' }));
 
 // --- Static uploads ---
-app.use('/uploads', express.static(
-  path.join(__dirname, 'uploads'),
-  { maxAge: '7d', immutable: true }
-));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7d', immutable: true }));
 
 // --- Root ping ---
-app.get('/', (req, res) => {
-  res.send('HotelPennies API is running...');
-});
+app.get('/', (_req, res) => res.send('HotelPennies API is running...'));
 
 // --- Global error handler ---
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
   console.error(err.stack);
   res.status(500).send('Something went wrong!');
 });
 
-// --- Graceful shutdown + extra logging ---
+// --- Graceful shutdown ---
 process.on('SIGINT', async () => {
   await mongoose.connection.close();
   console.log('MongoDB connection closed');
   process.exit(0);
 });
-process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled Rejection:', reason);
-});
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-});
+process.on('unhandledRejection', (reason) => console.error('Unhandled Rejection:', reason));
+process.on('uncaughtException', (err) => console.error('Uncaught Exception:', err));
 
 // --- SPA fallback (only if serving FE from this service) ---
 const clientBuildPath = path.join(__dirname, 'client', 'build');
 if (process.env.SERVE_SPA === 'true' && fs.existsSync(clientBuildPath)) {
   app.use(express.static(clientBuildPath));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(clientBuildPath, 'index.html'));
-  });
+  app.get('*', (_req, res) => res.sendFile(path.join(clientBuildPath, 'index.html')));
 }
 
 // --- Start server ---
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

@@ -1,52 +1,35 @@
 // utils/sendBookingEmails.js
-const nodemailer = require('nodemailer');
+// Uses shared transporter from services/mailer (SMTP or json fallback)
+const { transporter, FROM_EMAIL, ADMIN_EMAIL } = require('../services/mailer');
 
-const FROM_EMAIL = process.env.GMAIL_USER;
-const FROM_NAME =
-  process.env.GMAIL_FROM_NAME && String(process.env.GMAIL_FROM_NAME).trim()
-    ? process.env.GMAIL_FROM_NAME.trim()
-    : 'HotelPennies';
-
-// Strip spaces in case the app password was pasted like "xxxx xxxx xxxx xxxx"
-const APP_PASS = String(process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
-
-if (!FROM_EMAIL) console.warn('⚠️ GMAIL_USER is not set — emails cannot be sent.');
-if (!APP_PASS) console.warn('⚠️ GMAIL_APP_PASSWORD is not set — Gmail transporter will fail to authenticate.');
-
-// Simple Gmail transporter (same style as the working shortlet mailers)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: { user: FROM_EMAIL, pass: APP_PASS },
-});
+const asArray = (v) => (Array.isArray(v) ? v : v ? [v] : []);
 
 /**
- * Send hotel booking confirmation email.
- * Mirrors the working shortlet approach, but keeps params flexible so existing calls still work.
- *
- * Accepts either { to } or { userEmail } as the primary recipient.
- * BCCs vendor/admin if provided.
+ * Send booking confirmation / notification emails.
+ * Backward compatible with previous params.
  */
 async function sendBookingNotifications(params = {}) {
-  if (!FROM_EMAIL || !APP_PASS) return false;
-
   const {
-    // common/legacy fields we’ve seen across your codebase:
     category = 'Hotel',
-    to,                 // optional
-    bcc,                // optional (string or array)
-    userEmail,          // preferred “to”
-    vendorEmail,        // optional bcc
-    adminEmail,         // optional bcc
 
-    // display fields
+    // recipient variants:
+    to,
+    userEmail,          // preferred
+    email,              // legacy echo
+
+    // optional BCCs:
+    bcc,
+    vendorEmail,
+    adminEmail,
+
+    // display fields:
     hotelName,
     shortletName,
     title,
-    subTitle,           // e.g., room name
+    subTitle,
     vendorName,
     fullName,
     phone,
-    email,              // echo back to user
     checkIn,
     checkOut,
     reservationTime,
@@ -60,20 +43,17 @@ async function sendBookingNotifications(params = {}) {
 
   const primaryTo = (userEmail || to || email || '').trim();
   if (!primaryTo) {
-    console.warn('📭 sendBookingNotifications(hotel): no recipient email; skipping send.');
+    console.warn('📭 sendBookingNotifications: no recipient email; skipping send.');
     return false;
   }
 
-  // Build BCC list like the shortlet mailers
-  const bccList = []
-    .concat(Array.isArray(bcc) ? bcc : bcc ? [bcc] : [])
-    .concat(vendorEmail ? [vendorEmail] : [])
-    .concat(adminEmail ? [adminEmail] : [])
-    .filter(Boolean);
+  const bccList = [
+    ...asArray(bcc),
+    ...asArray(vendorEmail),
+    ...asArray(adminEmail || ADMIN_EMAIL),
+  ].filter(Boolean);
 
-  // Pick the best visible name for the subject
   const nameForSubject = title || hotelName || shortletName || category;
-
   const subject = `🏨 Booking Confirmed - ${nameForSubject}`;
 
   const fmtDate = (d) => {
@@ -86,45 +66,43 @@ async function sendBookingNotifications(params = {}) {
     }
   };
 
-  const textLines = [
+  const lines = [
     `Hello${fullName ? ` ${fullName}` : ''},`,
-    '',
+    ``,
     `Your ${category.toLowerCase()} booking has been confirmed.`,
-    '',
+    ``,
     `🏨 ${category}: ${nameForSubject}`,
   ];
-  if (subTitle) textLines.push(`🏷️ Room/Item: ${subTitle}`);
-  if (vendorName) textLines.push(`🏢 Vendor: ${vendorName}`);
-  if (fullName) textLines.push(`👤 Name: ${fullName}`);
-  if (phone) textLines.push(`📞 Phone: ${phone}`);
-  if (email) textLines.push(`📧 Email: ${email}`);
+  if (subTitle) lines.push(`🏷️ Room/Item: ${subTitle}`);
+  if (vendorName) lines.push(`🏢 Vendor: ${vendorName}`);
+  if (fullName) lines.push(`👤 Name: ${fullName}`);
+  if (phone) lines.push(`📞 Phone: ${phone}`);
+  if (email) lines.push(`📧 Email: ${email}`);
 
-  if (checkIn) textLines.push(`📅 Check-in: ${fmtDate(checkIn)}`);
-  if (checkOut) textLines.push(`📅 Check-out: ${fmtDate(checkOut)}`);
-  if (reservationTime) textLines.push(`🕒 Reservation: ${fmtDate(reservationTime)}`);
-  if (eventDate) textLines.push(`🗓️ Event Date: ${fmtDate(eventDate)}`);
-  if (tourDate) textLines.push(`🗺️ Tour Date: ${fmtDate(tourDate)}`);
-  if (guests) textLines.push(`👥 Guests: ${guests}`);
-  if (notes && String(notes).trim()) textLines.push(`📝 Notes: ${String(notes).trim()}`);
-  if (price != null) textLines.push(`💵 Amount: ₦${Number(price).toLocaleString()}`);
-  if (paymentReference) textLines.push(`🔖 Payment Ref: ${paymentReference}`);
+  if (checkIn) lines.push(`📅 Check-in: ${fmtDate(checkIn)}`);
+  if (checkOut) lines.push(`📅 Check-out: ${fmtDate(checkOut)}`);
+  if (reservationTime) lines.push(`🕒 Reservation: ${fmtDate(reservationTime)}`);
+  if (eventDate) lines.push(`🗓️ Event Date: ${fmtDate(eventDate)}`);
+  if (tourDate) lines.push(`🗺️ Tour Date: ${fmtDate(tourDate)}`);
+  if (guests != null) lines.push(`👥 Guests: ${guests}`);
+  if (notes && String(notes).trim()) lines.push(`📝 Notes: ${String(notes).trim()}`);
+  if (price != null) lines.push(`💵 Amount: ₦${Number(price).toLocaleString()}`);
+  if (paymentReference) lines.push(`🔖 Payment Ref: ${paymentReference}`);
 
-  textLines.push('', 'Thanks for using HotelPennies!', 'HotelPennies Team');
-
-  const text = textLines.join('\n');
+  lines.push('', 'Thanks for using HotelPennies!', 'HotelPennies Team');
 
   try {
     await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: FROM_EMAIL,           // already includes display name if configured
       to: primaryTo,
       ...(bccList.length ? { bcc: bccList } : {}),
       subject,
-      text,
+      text: lines.join('\n'),
     });
-    console.log('✅ Hotel booking confirmation email sent.');
+    console.log('✅ Booking email sent.');
     return true;
-  } catch (error) {
-    console.error('❌ Failed to send hotel booking email:', error);
+  } catch (err) {
+    console.error('❌ Failed to send booking email:', err?.message || err);
     return false;
   }
 }
