@@ -210,3 +210,24 @@ body.hp-dashboard-route .vendor-dashboard,
 body.hp-dashboard-route .dashboard-wrapper {
   overflow: visible !important;
 }
+/* src/components/Header.css — only the .logo block shown */
+.logo{
+  display:inline-block;
+  width:190px;
+  height:36px;
+  /* 🔧 remove the broken background-image line */
+  /* background-image:url('/logo-hotelpennies-wordmark.svg'); */
+  background-repeat:no-repeat;
+  background-size:contain;
+  background-position:left center;
+  text-indent:0;          /* show the “HotelPennies” text for now */
+  font-weight:700;
+  color:#ffffff;
+}
+/* Keep existing header styles; just ensure the wordmark image fits */
+.logo-img {
+  display: block;
+  height: 28px;         /* adjust if you want it bigger */
+  width: auto;
+  object-fit: contain;
+}

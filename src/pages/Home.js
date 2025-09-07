@@ -1,4 +1,4 @@
-// ✅ src/pages/Home.js
+// ✅ src/pages/Home.js 
 import React, { useEffect, useState } from 'react';
 import '../pages/Home.css';
 import AdBanner from '../components/AdBanner';
@@ -7,19 +7,14 @@ import Header from '../components/Header';
 import SearchBar from '../components/SearchBar';
 import ExploreCategories from '../components/ExploreCategories';
 import BlogSection from '../components/BlogSection';
-import heroImage from '../images/banner.png';
 import axios from '../utils/axiosConfig';
 import Slider from 'react-slick';
 
-import HotelCardPublic from '../components/HotelCardPublic';
 import ShortletCardFeatured from '../components/ShortletCardFeatured';
 import RestaurantCardFeatured from '../components/RestaurantCardFeatured';
 import EventCenterCardFeatured from '../components/EventCenterCardFeatured';
 import RoomCardPublic from '../components/RoomCardPublic';
 import MenuCardPublic from '../components/MenuCardPublic';
-
-// 👉 New: trending/top block component
-import HotelsInNigeria from '../components/HotelsInNigeria';
 
 const Home = () => {
   const [featured, setFeatured] = useState({
@@ -30,7 +25,20 @@ const Home = () => {
     eventcenters: [],
   });
 
-  const [popularCities, setPopularCities] = useState([]);
+  // ✅ control slides per viewport without extra React imports
+  const [slidesToShow, setSlidesToShow] = useState(4);
+
+  useEffect(() => {
+    const computeSlides = () => {
+      const w = window.innerWidth || 1200;
+      if (w <= 640) setSlidesToShow(1);       // phones
+      else if (w <= 1024) setSlidesToShow(2); // tablets
+      else setSlidesToShow(4);                 // desktop
+    };
+    computeSlides();
+    window.addEventListener('resize', computeSlides, { passive: true });
+    return () => window.removeEventListener('resize', computeSlides);
+  }, []);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -38,44 +46,34 @@ const Home = () => {
         const res = await axios.get('/api/featurelisting/public');
         setFeatured(res.data);
 
-        setTimeout(() => {
-          window.dispatchEvent(new Event('resize'));
-        }, 300);
+        // Nudge slick to recalc once DOM/images settle
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
       } catch (err) {
         console.error('❌ Failed to fetch featured listings:', err);
       }
     };
 
-    const fetchPopularCities = async () => {
-      try {
-        const res = await axios.get('/api/hotels/public/popular-cities');
-        setPopularCities(res.data);
-      } catch (err) {
-        console.error('❌ Failed to fetch popular cities:', err);
-      }
-    };
-
     fetchFeatured();
-    fetchPopularCities();
   }, []);
+
+  const sliderBase = {
+    dots: false,
+    infinite: true,
+    speed: 500,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    swipeToSlide: true,
+    adaptiveHeight: true,
+    arrows: true,
+  };
 
   const renderFeatured = (title, data, CardComponent, propKey) => {
     if (!Array.isArray(data) || data.length === 0) return null;
 
     const settings = {
-      dots: false,
-      infinite: true,
-      speed: 500,
-      autoplay: true,
-      autoplaySpeed: 3000,
-      slidesToShow: 4,
+      ...sliderBase,
+      slidesToShow,
       slidesToScroll: 1,
-      arrows: true,
-      responsive: [
-        { breakpoint: 1024, settings: { slidesToShow: 3 } },
-        { breakpoint: 768, settings: { slidesToShow: 2 } },
-        { breakpoint: 480, settings: { slidesToShow: 1 } },
-      ],
     };
 
     return (
@@ -96,20 +94,57 @@ const Home = () => {
     <div>
       <Header />
 
-      {/* ✅ Hero Section with SearchBar (added bottom padding to lift the bar off the edge) */}
-      <div className="hero-section" style={{ backgroundImage: `url(${heroImage})` }}>
-        <div className="hero-overlay" style={{ paddingBottom: 40 }}>
-          <div className="hero-text">
+      {/* ✅ Hero Section with responsive sources + centered SearchBar (no header changes) */}
+      <div className="hero-section" style={{ position: 'relative' }}>
+        <picture>
+          {/* desktop first */}
+          <source
+            media="(min-width: 1025px)"
+            srcSet="/img/hero-city-desktop.webp"
+            type="image/webp"
+          />
+          <source
+            media="(min-width: 641px)"
+            srcSet="/img/hero-city-tablet.webp"
+            type="image/webp"
+          />
+          <img
+            src="/img/hero-city-mobile.webp"
+            alt="A modern Nigerian city skyline with a soft gradient overlay"
+            style={{
+              width: '100%',
+              height: '420px',
+              objectFit: 'cover',
+              display: 'block'
+            }}
+          />
+        </picture>
+
+        {/* dark overlay for legibility */}
+        <div
+          className="hero-overlay"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingBottom: 40
+          }}
+        >
+          <div className="hero-text" style={{ textAlign: 'center', color: '#fff', maxWidth: 1000, padding: '0 12px' }}>
             <h1>
               Find Hotels, Shortlets, Event Centers,
               Restaurants, and Tour Guides,
               and have the best time in Nigeria.
             </h1>
-            <p>The best deals that you cannot find anywhere else…</p>
-          </div>
+            <p style={{ color: '#e9eef5' }}>The best deals that you cannot find anywhere else…</p>
 
-          <div className="searchbar-wrapper">
-            <SearchBar />
+            {/* hard-center the SearchBar container */}
+            <div className="searchbar-wrapper" style={{ maxWidth: 820, width: '100%', margin: '0 auto' }}>
+              <SearchBar />
+            </div>
           </div>
         </div>
       </div>
@@ -126,7 +161,6 @@ const Home = () => {
         {renderFeatured('Popular Dishes', featured.menus, MenuCardPublic, 'menu')}
         {renderFeatured('Event Centers', featured.eventcenters, EventCenterCardFeatured, 'center')}
       </section>
-	  
 
       {/* ✅ Why Choose Section */}
       <section className="why-section">

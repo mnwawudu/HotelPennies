@@ -1,11 +1,22 @@
-import React, { useEffect, useRef, useState } from "react";
+// src/components/Header.js
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.css";
 
 const Header = () => {
-  const mq = typeof window !== 'undefined'
-    ? window.matchMedia('(max-width: 767px)')
-    : { matches: false, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {} };
+  // Memoized media query to avoid ESLint warning
+  const mq = useMemo(() => {
+    if (typeof window !== "undefined" && "matchMedia" in window) {
+      return window.matchMedia("(max-width: 767px)");
+    }
+    return {
+      matches: false,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+    };
+  }, []);
 
   const [isMobile, setIsMobile] = useState(mq.matches);
   const [role, setRole] = useState(null);
@@ -50,11 +61,11 @@ const Header = () => {
   }, []);
 
   useEffect(() => {
-    const onChange = (e) => setIsMobile(e.matches);
-    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    const onChange = (e) => setIsMobile(!!e.matches);
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
     else mq.addListener(onChange);
     return () => {
-      if (mq.removeEventListener) mq.removeEventListener('change', onChange);
+      if (mq.removeEventListener) mq.removeEventListener("change", onChange);
       else mq.removeListener(onChange);
     };
   }, [mq]);
@@ -73,14 +84,18 @@ const Header = () => {
     if (!mobileMenuOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev || ""; };
+    return () => {
+      document.body.style.overflow = prev || "";
+    };
   }, [mobileMenuOpen]);
 
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
       const prev = window.history.scrollRestoration;
       window.history.scrollRestoration = "manual";
-      return () => { window.history.scrollRestoration = prev; };
+      return () => {
+        window.history.scrollRestoration = prev;
+      };
     }
   }, []);
 
@@ -112,7 +127,15 @@ const Header = () => {
               ☰
             </button>
           )}
-          <Link to="/" className="logo">HotelPennies</Link>
+
+          {/* ✅ Wordmark image from /public (keeps your header logic unchanged) */}
+          <Link to="/" className="logo" aria-label="HotelPennies home">
+            <img
+              className="logo-img"
+              src={process.env.PUBLIC_URL + "/logo-hotelpennies-wordmark-white.svg"}
+              alt="HotelPennies"
+            />
+          </Link>
         </div>
 
         <div className="header-buttons">
@@ -135,7 +158,6 @@ const Header = () => {
                     aria-label="Open profile menu"
                     title="Profile"
                   >
-                    {/* White avatar (SVG) */}
                     <svg
                       className="profile-icon"
                       viewBox="0 0 24 24"

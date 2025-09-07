@@ -39,7 +39,7 @@ const MainFooter = () => {
         <a href="https://facebook.com/HotelPennies" target="_blank" rel="noopener noreferrer">Facebook</a>
         <a href="https://instagram.com/HotelPennies" target="_blank" rel="noopener noreferrer">Instagram</a>
         <a href="https://x.com/HotelPennies" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
-        <a href="https://https://www.linkedin.com/in/hotel-pennies-b14a89382" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        
       </div>
 
       <div style={bottomBar}>
