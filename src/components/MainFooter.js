@@ -77,3 +77,4 @@ const bottomBar = {
 
 export default MainFooter;
 
+
