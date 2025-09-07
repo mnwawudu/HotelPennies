@@ -1,4 +1,4 @@
-// ✅ src/components/MainFooter.js
+// src/components/MainFooter.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -21,7 +21,6 @@ const MainFooter = () => {
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms & Conditions</Link>
         <Link to="/faq">FAQs</Link>
-        {/* ✅ New: guest cancellation entry point */}
         <Link to="/manage-booking/cancel">Manage Booking (Cancel)</Link>
         <Link to="/contact">Contact Customer Service</Link>
       </div>
@@ -40,7 +39,7 @@ const MainFooter = () => {
         <a href="https://facebook.com/HotelPennies" target="_blank" rel="noopener noreferrer">Facebook</a>
         <a href="https://instagram.com/HotelPennies" target="_blank" rel="noopener noreferrer">Instagram</a>
         <a href="https://x.com/HotelPennies" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
-        <a href="https://https://www.linkedin.com/in/hotel-pennies-b14a89382/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href="https://https://www.linkedin.com/in/hotel-pennies-b14a89382" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
 
       <div style={bottomBar}>
@@ -50,7 +49,6 @@ const MainFooter = () => {
   );
 };
 
-// ✅ Styles
 const footerStyle = {
   backgroundColor: '#ccc',
   color: '#222',
@@ -78,3 +76,4 @@ const bottomBar = {
 };
 
 export default MainFooter;
+

@@ -142,3 +142,4 @@ input, select, textarea { font-size: 16px; }
 .account-form .error-text,
 .account-form .success-text { display:block; min-height:1.25rem; line-height:1.25rem; }
 .namecheck-slot { display:inline-block; min-width:7ch; }
+

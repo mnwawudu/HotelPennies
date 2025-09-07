@@ -1,219 +1,155 @@
-import React from "react";
+// src/components/DownloadAppPrompt.js
+import React, { useEffect, useMemo, useState } from 'react';
 
-/**
- * DownloadAppPrompt
- * - Shows on mobile only
- * - Waits `delayMs` before showing
- * - Remembers "Remind me later" and "No thanks" with localStorage expiries
- * - If PWA "beforeinstallprompt" is available, shows an "Install Web App" button
- *
- * Props:
- *  - playUrl: Google Play link (e.g., https://play.google.com/store/apps/details?id=com.your.app)
- *  - appStoreUrl: Apple App Store link (e.g., https://apps.apple.com/app/id1234567890)
- *  - delayMs: ms to wait before showing (default 5000)
- *  - remindDays: days to snooze when clicking "Remind me later" (default 7)
- *  - neverDays: days to hide after "No thanks" (default 180)
- */
-export default function DownloadAppPrompt({
-  playUrl = "#",
-  appStoreUrl = "#",
-  delayMs = 5000,
-  remindDays = 7,
-  neverDays = 180,
-}) {
-  const [visible, setVisible] = React.useState(false);
-  const [installEvt, setInstallEvt] = React.useState(null);
+const SHOW_DELAY_MS = 12000;        // wait 12s before showing
+const COOLDOWN_MS   = 24 * 60 * 60 * 1000; // don't re-show for 24h after "Not now"
 
-  const KEY_NEXT = "hp_app_prompt_next";
-  const now = () => Date.now();
-  const inStandalone =
-    (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
-    (window.navigator && window.navigator.standalone); // iOS Safari
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.hotelpennies.app';
+const APPLE_URL = 'https://apps.apple.com/app/id0000000000'; // <-- replace when live
 
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+function isMobileSafari() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const iOS = /iPad|iPhone|iPod/.test(ua);
+  const wk  = /WebKit/.test(ua);
+  const isCriOS = /CriOS/.test(ua);
+  return iOS && wk && !isCriOS;
+}
+function isAndroidChrome() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /Android/.test(ua) && /Chrome/.test(ua);
+}
 
-  // Gate: only show on mobile, not in standalone/PWA mode
-  const allowShow = isMobile && !inStandalone;
+export default function DownloadAppPrompt() {
+  const [visible, setVisible] = useState(false);
 
-  // Respect snooze/never timers
-  function canShowNow() {
-    const nextAt = Number(localStorage.getItem(KEY_NEXT) || "0");
-    return nextAt <= now();
-  }
-
-  function setNext(days) {
-    const ms = days * 24 * 60 * 60 * 1000;
-    localStorage.setItem(KEY_NEXT, String(now() + ms));
-  }
-
-  // Delay show after first mount
-  React.useEffect(() => {
-    if (!allowShow || !canShowNow()) return;
-    const t = setTimeout(() => setVisible(true), delayMs);
-    return () => clearTimeout(t);
-  }, [allowShow, delayMs]);
-
-  // Capture beforeinstallprompt (PWA “Install”)
-  React.useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault();
-      setInstallEvt(e);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+  const platform = useMemo(() => {
+    if (isAndroidChrome()) return 'android';
+    if (isMobileSafari())  return 'ios';
+    return null;
   }, []);
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (!platform) return;
+
+    const hidden = localStorage.getItem('hp-app-prompt-hidden');
+    if (hidden === '1') return;
+
+    const last = Number(localStorage.getItem('hp-app-prompt-last-closed') || 0);
+    if (Date.now() - last < COOLDOWN_MS) return;
+
+    const t = setTimeout(() => setVisible(true), SHOW_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [platform]);
+
+  if (!platform || !visible) return null;
+
+  const close = () => {
+    setVisible(false);
+    localStorage.setItem('hp-app-prompt-last-closed', String(Date.now()));
+  };
+
+  const neverShow = () => {
+    setVisible(false);
+    localStorage.setItem('hp-app-prompt-hidden', '1');
+  };
+
+  const storeHref = platform === 'android' ? PLAY_URL : APPLE_URL;
 
   return (
-    <div style={styles.backdrop} role="dialog" aria-modal="true" aria-labelledby="hp-appprompt-title">
-      <div style={styles.modal}>
-        <button
-          aria-label="Close"
-          onClick={() => {
-            setVisible(false);
-            setNext(neverDays); // treat X as "No thanks"
-          }}
-          style={styles.close}
-        >
-          ✕
-        </button>
-
-        <h3 id="hp-appprompt-title" style={{ marginTop: 0, marginBottom: 8 }}>Get the HotelPennies App</h3>
-        <p style={{ marginTop: 0, color: "#333" }}>
-          Book faster, get updates, and manage trips on the go.
-        </p>
-
-        <div style={styles.btnRow}>
-          {playUrl !== "#" && (
-            <a href={playUrl} target="_blank" rel="noreferrer" style={styles.cta}>
-              Get it on Google Play
-            </a>
-          )}
-          {appStoreUrl !== "#" && (
-            <a href={appStoreUrl} target="_blank" rel="noreferrer" style={styles.ctaAlt}>
-              Download on the App Store
-            </a>
-          )}
-          {installEvt && (
-            <button
-              style={styles.ctaGhost}
-              onClick={async () => {
-                installEvt.prompt();
-                try {
-                  await installEvt.userChoice;
-                } catch {}
-                setInstallEvt(null); // only prompt once
-                setVisible(false);
-                setNext(neverDays);
-              }}
-            >
-              Install Web App
-            </button>
-          )}
+    <div style={wrap}>
+      <div style={card}>
+        <div style={row}>
+          <div style={title}>Get the HotelPennies app</div>
+          <button onClick={close} aria-label="Close" style={xBtn}>×</button>
         </div>
 
-        <div style={styles.footerRow}>
-          <button
-            style={styles.linkBtn}
-            onClick={() => {
-              setVisible(false);
-              setNext(remindDays);
-            }}
-          >
-            Remind me later
-          </button>
-          <button
-            style={styles.linkBtn}
-            onClick={() => {
-              setVisible(false);
-              setNext(neverDays);
-            }}
-          >
-            No thanks
-          </button>
+        <div style={desc}>Faster search, easier bookings, instant updates.</div>
+
+        <div style={actions}>
+          <a href={storeHref} target="_blank" rel="noopener noreferrer" style={cta}>
+            {platform === 'android' ? 'Get it on Google Play' : 'Download on the App Store'}
+          </a>
+          <button onClick={neverShow} style={ghost}>Not now</button>
         </div>
       </div>
     </div>
   );
 }
 
-const styles = {
-  backdrop: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.35)",
-    zIndex: 9999,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  modal: {
-    width: "100%",
-    maxWidth: 420,
-    background: "#fff",
-    borderRadius: 14,
-    boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-    padding: 18,
-    position: "relative",
-  },
-  close: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    background: "transparent",
-    border: "none",
-    fontSize: 18,
-    cursor: "pointer",
-    lineHeight: 1,
-  },
-  btnRow: {
-    display: "grid",
-    gap: 8,
-    marginTop: 12,
-  },
-  cta: {
-    display: "inline-block",
-    textAlign: "center",
-    padding: "12px 14px",
-    borderRadius: 10,
-    background: "#0a3d62",
-    color: "#fff",
-    textDecoration: "none",
-    fontWeight: 700,
-  },
-  ctaAlt: {
-    display: "inline-block",
-    textAlign: "center",
-    padding: "12px 14px",
-    borderRadius: 10,
-    background: "#111",
-    color: "#fff",
-    textDecoration: "none",
-    fontWeight: 700,
-  },
-  ctaGhost: {
-    display: "inline-block",
-    textAlign: "center",
-    padding: "12px 14px",
-    borderRadius: 10,
-    background: "#f2f4f7",
-    color: "#0a3d62",
-    border: "1px solid #d0d5dd",
-    fontWeight: 700,
-  },
-  footerRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  linkBtn: {
-    background: "transparent",
-    border: "none",
-    color: "#0a3d62",
-    textDecoration: "underline",
-    padding: 8,
-    cursor: "pointer",
-  },
+/* ---- styles: top-right toast ---- */
+const wrap = {
+  position: 'fixed',
+  top: 12,
+  right: 12,
+  zIndex: 10000,
+  maxWidth: 420,
+  width: 'calc(100vw - 24px)',
+};
+
+const card = {
+  background: '#ffffff',
+  border: '1px solid rgba(0,0,0,0.08)',
+  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+  borderRadius: 12,
+  padding: 16,
+  fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+};
+
+const row = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: 12,
+};
+
+const title = {
+  fontSize: 16,
+  fontWeight: 700,
+  color: '#0a2540',
+};
+
+const xBtn = {
+  appearance: 'none',
+  border: 'none',
+  background: 'transparent',
+  fontSize: 22,
+  lineHeight: 1,
+  cursor: 'pointer',
+  color: '#667085',
+};
+
+const desc = {
+  marginTop: 8,
+  fontSize: 14,
+  color: '#344054',
+};
+
+const actions = {
+  display: 'flex',
+  gap: 8,
+  marginTop: 12,
+  flexWrap: 'wrap',
+};
+
+const cta = {
+  display: 'inline-block',
+  padding: '10px 12px',
+  borderRadius: 8,
+  fontWeight: 700,
+  textDecoration: 'none',
+  background: '#0a3d62',
+  color: '#fff',
+};
+
+const ghost = {
+  appearance: 'none',
+  border: '1px solid #d0d5dd',
+  background: '#fff',
+  color: '#344054',
+  padding: '10px 12px',
+  borderRadius: 8,
+  fontWeight: 600,
+  cursor: 'pointer',
 };
