@@ -8,9 +8,25 @@ const User = require('../models/userModel');
 const Vendor = require('../models/vendorModel');
 const PendingRegistration = require('../models/pendingRegistrationModel');
 const { generateCode } = require('../utils/codeGenerator');
-const sendVerificationEmail = require('../utils/sendVerificationEmail');
+
+// ✅ Use unified mailer that supports SMTP or Gmail transparently
+const sendSecurityEmail = require('../utils/sendSecurityEmail');
 
 console.log('🔧 [register] route file loaded'); // fires on require()
+
+// small helper to build a safe absolute URL for the FE
+function buildFrontendUrl(path) {
+  const rawBase =
+    process.env.FRONTEND_BASE_URL ||
+    process.env.FRONTEND_URL ||
+    'https://www.hotelpennies.com'; // hard fallback so emails are always absolute
+
+  // strip trailing slashes
+  const base = String(rawBase).replace(/\/+$/, '');
+  // ensure path starts with single slash
+  const p = String(path || '').replace(/^\/*/, '/');
+  return `${base}${p}`;
+}
 
 router.post('/register', async (req, res) => {
   const {
@@ -27,7 +43,8 @@ router.post('/register', async (req, res) => {
 
   try {
     // 1) Validate required fields
-    if (!userType || !['user', 'vendor'].includes(String(userType).toLowerCase())) {
+    const role = String(userType || '').toLowerCase();
+    if (!['user', 'vendor'].includes(role)) {
       return res.status(400).json({ message: 'Invalid user type' });
     }
     if (!name || !email || !password || !phone || !address) {
@@ -68,13 +85,18 @@ router.post('/register', async (req, res) => {
       address: String(address || '').trim(),
       state: String(state || '').trim(),
       city:  String(city  || '').trim(),
-      userType: String(userType).toLowerCase(),
+      userType: role,
       businessTypes: Array.isArray(businessTypes) ? businessTypes : [],
       passwordHash,
       // expiresAt handled by model default (24h TTL)
     });
 
-    console.log('🟢 [register] PendingRegistration created:', pending._id.toString(), normEmail, String(userType).toLowerCase());
+    console.log(
+      '🟢 [register] PendingRegistration created:',
+      pending._id.toString(),
+      normEmail,
+      role
+    );
 
     // 5) Build verification token with ONLY the JTI (pending _id)
     const verificationToken = jwt.sign(
@@ -83,18 +105,57 @@ router.post('/register', async (req, res) => {
       { expiresIn: '1d' }
     );
 
-    const base = process.env.FRONTEND_BASE_URL || process.env.FRONTEND_URL || '';
-    const activationLink = `${base}/verify-email/${verificationToken}`;
-
+    // ✅ Always absolute, with your live domain fallback
+    const activationLink = buildFrontendUrl(`/verify-email/${verificationToken}`);
     console.log('🔗 [register] activationLink:', activationLink);
 
-    // 6) Send email
-    await sendVerificationEmail(normEmail, name, activationLink);
+    // 6) Send email via unified mailer (SMTP or Gmail)
+    const subject = 'Verify Your Email - HotelPennies';
+    const text = [
+      `Hello ${name || ''},`,
+      '',
+      'Thank you for registering on HotelPennies.',
+      'Please verify your email by opening the link below:',
+      activationLink,
+      '',
+      'If you didn’t request this, you can ignore this email.',
+      '',
+      'HotelPennies Team',
+    ].join('\n');
+
+    const html = `
+      <div style="font-family:sans-serif; line-height:1.6;">
+        <h2>Welcome to HotelPennies 🎉</h2>
+        <p>Thank you for registering. Please verify your email by clicking the button below:</p>
+        <p>
+          <a href="${activationLink}"
+             style="display:inline-block;padding:10px 20px;background:#001f3f;color:#fff;text-decoration:none;border-radius:4px">
+            Verify Email
+          </a>
+        </p>
+        <p>If the button doesn’t work, copy and paste this link into your browser:</p>
+        <p><a href="${activationLink}">${activationLink}</a></p>
+        <br />
+        <p>If you didn’t request this, please ignore this email.</p>
+        <p>— HotelPennies Team</p>
+      </div>
+    `;
+
+    try {
+      await sendSecurityEmail({ to: normEmail, subject, text, html });
+    } catch (mailErr) {
+      // Clean up the pending doc if email couldn’t be sent
+      await PendingRegistration.deleteOne({ _id: pending._id }).catch(() => {});
+      console.error('📮 [register] email send failed, pending removed:', mailErr?.message || mailErr);
+      return res.status(502).json({
+        message: 'Could not send verification email. Please try again shortly.',
+      });
+    }
 
     // 7) Respond
     return res.status(200).json({
       message: 'Registration email sent. Please verify your email to activate your account.',
-      token: verificationToken, // your UI doesn’t use this, but we keep parity
+      token: verificationToken, // not used by UI, but retained for parity
     });
   } catch (err) {
     console.error('❌ [register] error:', err?.stack || err);
