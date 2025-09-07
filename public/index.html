@@ -2,11 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="HotelPennies: Seamless booking for Hotels, Events, Chops, and more." />
-    <!-- ❌ removed the old logo192 link that 404'd -->
+    <meta name="theme-color" content="#0a2a66" />
+    <meta name="description" content="HotelPennies: Seamless booking for Hotels, Shortlets, Event Centers, Restaurants, Chops & more." />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>HotelPennies</title>
 
@@ -46,10 +45,7 @@
     </style>
     <script>
       (function () {
-        // disable browser scroll restoration
         try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e){}
-
-        // remove any dev overlays if injected
         function nuke() {
           var ids = ['webpack-dev-server-client-overlay','react-error-overlay','react-refresh-overlay'];
           ids.forEach(function(id){

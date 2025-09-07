@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="130" viewBox="0 0 1000 130">
+  <style>.t{font-family:'Inter','Segoe UI',Arial,sans-serif;font-weight:800;font-size:92px;letter-spacing:.5px}</style>
+  <circle cx="45" cy="65" r="25" fill="#10b7ff"/>
+  <text x="95" y="90" class="t" fill="#ffffff">HotelPennies</text>
+</svg>

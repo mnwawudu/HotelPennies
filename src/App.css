@@ -143,3 +143,23 @@ input, select, textarea { font-size: 16px; }
 .account-form .success-text { display:block; min-height:1.25rem; line-height:1.25rem; }
 .namecheck-slot { display:inline-block; min-width:7ch; }
 
+/* === Emergency mobile one-up fix (must be last) === */
+@media (max-width: 640px){
+  .featured-grid,
+  .explore-grid,
+  .city-grid{
+    display: block !important;
+    margin: 12px 0 !important;
+    padding: 0 12px !important;
+    overflow: visible !important;
+  }
+  .featured-grid > *,
+  .explore-grid > *,
+  .city-grid > *{
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 0 12px 0 !important;
+    flex: none !important;   /* kills any old flex widths */
+  }
+}
