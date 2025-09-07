@@ -38,7 +38,6 @@ async function sendVerificationEmail(email, name, activationLink) {
     `— HotelPennies Team`,
   ].join('\n');
 
-  console.log('📧 Sending verification email to:', email);
   await send({
     to: email,
     bcc: ADMIN_EMAIL, // harmless if undefined

@@ -10,8 +10,6 @@ const PendingRegistration = require('../models/pendingRegistrationModel');
 const { generateCode } = require('../utils/codeGenerator');
 const sendVerificationEmail = require('../utils/sendVerificationEmail');
 
-console.log('🔧 [register] route file loaded'); // fires on require()
-
 router.post('/register', async (req, res) => {
   const {
     name,
@@ -74,8 +72,6 @@ router.post('/register', async (req, res) => {
       // expiresAt handled by model default (24h TTL)
     });
 
-    console.log('🟢 [register] PendingRegistration created:', pending._id.toString(), normEmail, String(userType).toLowerCase());
-
     // 5) Build verification token with ONLY the JTI (pending _id)
     const verificationToken = jwt.sign(
       { jti: String(pending._id) },
@@ -102,4 +98,4 @@ router.post('/register', async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;
