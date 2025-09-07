@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.css";
+import DownloadAppPrompt from "./DownloadAppPrompt";
 
 const Header = () => {
   // Memoized media query to avoid ESLint warning
@@ -250,6 +251,9 @@ const Header = () => {
           </div>
         </>
       )}
+
+      {/* Tiny install/download pill */}
+      <DownloadAppPrompt />
     </header>
   );
 };
