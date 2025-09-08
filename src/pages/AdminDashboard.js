@@ -23,6 +23,13 @@ const AdminDashboard = () => {
   // ✅ top user origins (from /api/admin/analytics/user-origins)
   const [origins, setOrigins] = useState({ total: 0, byState: [], byCity: [] });
 
+  // ✅ vendor agreement signatures
+  const [agreements, setAgreements] = useState([]);
+  const [agreementsLoading, setAgreementsLoading] = useState(true);
+  const [agreementsError, setAgreementsError] = useState('');
+  const [agreementsFilter, setAgreementsFilter] = useState('all'); // all | signed | unsigned
+  const [agreementsSearch, setAgreementsSearch] = useState('');
+
   const formatNaira = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
   const authHeaders = () => ({
@@ -83,11 +90,30 @@ const AdminDashboard = () => {
     }
   };
 
+  // ✅ vendor agreement signatures
+  const fetchAgreements = async () => {
+    try {
+      setAgreementsError('');
+      setAgreementsLoading(true);
+      // endpoint expected from backend vendorAgreementRoutes admin section
+      const res = await axios.get('/api/admin/vendor-agreement/signatures?limit=200', authHeaders());
+      const rows = Array.isArray(res.data?.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+      setAgreements(rows);
+    } catch (err) {
+      console.error('Failed to fetch vendor agreements:', err);
+      setAgreementsError('Vendor agreement endpoint not available or failed.');
+      setAgreements([]);
+    } finally {
+      setAgreementsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchSummary();
     fetchPayouts();
     fetchFeaturedCounts();
     fetchOrigins();
+    fetchAgreements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -98,6 +124,47 @@ const AdminDashboard = () => {
     if (!r) return '-';
     const s = String(r);
     return s.length <= 10 ? s : `${s.slice(0, 6)}…${s.slice(-4)}`;
+  };
+
+  const filteredAgreements = agreements
+    .filter((row) => {
+      if (agreementsFilter === 'signed') return !!row.accepted;
+      if (agreementsFilter === 'unsigned') return !row.accepted;
+      return true;
+    })
+    .filter((row) => {
+      const q = agreementsSearch.trim().toLowerCase();
+      if (!q) return true;
+      const hay = [
+        row.vendorName, row.vendorEmail, row.vendorId, row.businessName
+      ].map(x => String(x || '').toLowerCase()).join(' ');
+      return hay.includes(q);
+    });
+
+  const exportAgreementsCSV = () => {
+    const rows = [
+      ['Vendor ID', 'Vendor Name', 'Business', 'Email', 'Accepted', 'Accepted At', 'Version', 'Content Hash']
+    ];
+    filteredAgreements.forEach((r) => {
+      rows.push([
+        r.vendorId || '',
+        r.vendorName || '',
+        r.businessName || '',
+        r.vendorEmail || '',
+        r.accepted ? 'yes' : 'no',
+        r.acceptedAt ? new Date(r.acceptedAt).toISOString() : '',
+        r.version || '',
+        r.contentHash || ''
+      ]);
+    });
+    const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vendor_agreements_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -264,6 +331,62 @@ const AdminDashboard = () => {
         <a className="btn-link" href="/admin/explore-manager" style={{ marginTop: 8, display: 'inline-block' }}>
           Open Explore Manager →
         </a>
+      </div>
+
+      {/* ✅ Vendor Agreement Signatures */}
+      <div className="dashboard-card">
+        <h3>📄 Vendor Agreement Signatures</h3>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+          <select value={agreementsFilter} onChange={(e) => setAgreementsFilter(e.target.value)}>
+            <option value="all">All</option>
+            <option value="signed">Signed</option>
+            <option value="unsigned">Not Signed</option>
+          </select>
+          <input
+            placeholder="Search name/email/vendorId…"
+            value={agreementsSearch}
+            onChange={(e) => setAgreementsSearch(e.target.value)}
+            style={{ minWidth: 240 }}
+          />
+          <button className="secondary" onClick={fetchAgreements}>Refresh</button>
+          <button className="secondary" onClick={exportAgreementsCSV}>Export CSV</button>
+        </div>
+
+        {agreementsLoading && <p>Loading vendor agreements…</p>}
+        {agreementsError && <p className="error">{agreementsError}</p>}
+        {!agreementsLoading && !agreementsError && filteredAgreements.length === 0 && (
+          <p>No matching vendors.</p>
+        )}
+        {!agreementsLoading && !agreementsError && filteredAgreements.length > 0 && (
+          <table className="dashboard-table">
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Email</th>
+                <th>Business</th>
+                <th>Status</th>
+                <th>Accepted At</th>
+                <th>Hash</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAgreements.map((r) => (
+                <tr key={r.vendorId || `${r.vendorEmail}-${r.contentHash}`}>
+                  <td>{r.vendorName || '-'}</td>
+                  <td>{r.vendorEmail || '-'}</td>
+                  <td>{r.businessName || '-'}</td>
+                  <td style={{ textTransform: 'capitalize' }}>
+                    {r.accepted ? 'signed' : 'not signed'}
+                    {r.version && <div style={{ fontSize: 12, color: '#6c757d' }}>v{r.version}</div>}
+                  </td>
+                  <td>{r.acceptedAt ? new Date(r.acceptedAt).toLocaleString() : '-'}</td>
+                  <td>{shortRef(r.contentHash)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

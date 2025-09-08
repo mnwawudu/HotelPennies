@@ -74,6 +74,69 @@ const InlineKycBanner = ({ vendor, onGoProfile }) => {
   );
 };
 
+/* 🔷 Non-blocking Vendor Agreement banner (no dates).
+   Clause: "By publishing a listing on HotelPennies, you agree to the Vendor Agreement."
+   Dismissible; can be re-shown from Support tab; auto-stays hidden after signing. */
+const InlineVendorAgreementBanner = ({
+  accepted,
+  hidden,
+  onHide,
+  onOpenAgreement,
+  onAgree,
+}) => {
+  if (accepted || hidden) return null;
+
+  return (
+    <div
+      style={{
+        background: '#EEF6FF',
+        border: '1px solid #BBD7FF',
+        padding: '10px 12px',
+        borderRadius: 8,
+        margin: '0 0 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10
+      }}
+      role="region"
+      aria-label="Vendor agreement notice"
+    >
+      <div style={{ color: '#0a2540', lineHeight: 1.4 }}>
+        By <b>publishing a listing</b> on HotelPennies, you agree to the{' '}
+        <button
+          onClick={onOpenAgreement}
+          className="linklike"
+          style={{ border: 'none', background: 'transparent', textDecoration: 'underline', color: '#0a3d62', cursor: 'pointer', padding: 0 }}
+          aria-label="Open Vendor Agreement"
+          type="button"
+        >
+          Vendor Agreement
+        </button>.
+      </div>
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+        <button
+          onClick={onAgree}
+          type="button"
+        >
+          I Agree
+        </button>
+        <button
+          onClick={onHide}
+          className="secondary"
+          aria-label="Hide agreement notice"
+          type="button"
+        >
+          Hide
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// 🔐 Banner persistence (TTL hide for 7 days; permanent hide after accept)
+const AGREE_HIDE_KEY = 'hp-vendor-agree-banner-hide-until';
+const AGREE_HIDE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 const VendorDashboard = () => {
   const [vendor, setVendor] = useState(null);
   const [stats, setStats] = useState(null);
@@ -115,6 +178,12 @@ const VendorDashboard = () => {
   const [bookPage, setBookPage] = useState(1);
   const [bookPageSize, setBookPageSize] = useState(25);        // 10 | 25 | 50 | 100
 
+  // Vendor Agreement: meta + UI control
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
+  const [agreementHash, setAgreementHash] = useState(null);
+  const [agreeBannerHidden, setAgreeBannerHidden] = useState(false);
+  const [agreementLoading, setAgreementLoading] = useState(true);
+
   const location = useLocation();
 
   const token = useMemo(
@@ -134,6 +203,79 @@ const VendorDashboard = () => {
   }, []);
   useEffect(() => { if (!isDesktop) setIsSidebarOpen(false); }, [location.pathname, isDesktop]);
   const handleSidebarNavigate = () => { if (!isDesktop) setIsSidebarOpen(false); };
+
+  // Agreement: load hidden flag (TTL-based) & meta (accepted/hash)
+  useEffect(() => {
+    try {
+      const until = Number(localStorage.getItem(AGREE_HIDE_KEY) || 0);
+      if (until > Date.now()) {
+        setAgreeBannerHidden(true);
+      } else {
+        localStorage.removeItem(AGREE_HIDE_KEY);
+        setAgreeBannerHidden(false);
+      }
+    } catch {}
+  }, []);
+  useEffect(() => {
+    (async () => {
+      if (!token) { setAgreementLoading(false); return; }
+      try {
+        const { data } = await axios.get('/api/vendor-agreement/meta', { headers: authHeaders });
+        setAgreementAccepted(!!data?.accepted);
+        setAgreementHash(data?.hash || null);
+      } catch {
+        // meta endpoint missing or failed — keep defaults (banner becomes manual)
+      } finally {
+        setAgreementLoading(false);
+      }
+    })();
+  }, [token, authHeaders]);
+
+  // Once accepted, keep banner hidden permanently
+  useEffect(() => {
+    if (agreementAccepted) {
+      try { localStorage.removeItem(AGREE_HIDE_KEY); } catch {}
+      setAgreeBannerHidden(true);
+    }
+  }, [agreementAccepted]);
+
+  const openVendorAgreement = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/vendor-agreement/file', {
+        headers: authHeaders,
+        responseType: 'blob',
+      });
+      const blobUrl = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      // Optionally revoke later: setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Could not open Vendor Agreement.');
+    }
+  }, [authHeaders]);
+
+  const hideAgreementBanner = useCallback(() => {
+    try {
+      const hideUntil = Date.now() + AGREE_HIDE_TTL_MS;
+      localStorage.setItem(AGREE_HIDE_KEY, String(hideUntil));
+    } catch {}
+    setAgreeBannerHidden(true);
+  }, []);
+
+  const unhideAgreementBanner = useCallback(() => {
+    try { localStorage.removeItem(AGREE_HIDE_KEY); } catch {}
+    setAgreeBannerHidden(false);
+  }, []);
+
+  const agreeVendorAgreement = useCallback(async () => {
+    try {
+      // explicit acceptance, no dates — only contentHash
+      await axios.post('/api/vendor-agreement/accept', { contentHash: agreementHash }, { headers: authHeaders });
+      setAgreementAccepted(true);
+      setAgreeBannerHidden(true); // keep it hidden after signing
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Could not record agreement. Please try again.');
+    }
+  }, [agreementHash, authHeaders]);
 
   // Single source of truth for payouts/balances + min payout
   const fetchPayoutsAndBalances = useCallback(async () => {
@@ -539,6 +681,17 @@ const VendorDashboard = () => {
           onGoProfile={() => setActiveTab('profile')}
         />
 
+        {/* 🔷 Non-blocking legal clause (no dates) */}
+        {!agreementLoading && (
+          <InlineVendorAgreementBanner
+            accepted={agreementAccepted}
+            hidden={agreeBannerHidden}
+            onHide={hideAgreementBanner}
+            onOpenAgreement={openVendorAgreement}
+            onAgree={agreeVendorAgreement}
+          />
+        )}
+
         {activeTab === 'analytics' && (
           <div className="dashboard-section">
             <h3>Analytics</h3>
@@ -864,6 +1017,24 @@ const VendorDashboard = () => {
           <div className="dashboard-section">
             <h3>Support</h3>
             <p>Contact support@yourdomain.com or call +234-XXX-XXX-XXXX.</p>
+
+            {/* Legal quick actions */}
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button className="secondary" onClick={openVendorAgreement}>
+                Open Vendor Agreement
+              </button>
+              {!agreementAccepted && (
+                <>
+                  <button onClick={agreeVendorAgreement}>I Agree</button>
+                  <button className="tiny" onClick={unhideAgreementBanner}>
+                    Show Agreement Notice Again
+                  </button>
+                </>
+              )}
+              {agreementAccepted && (
+                <span className="hint">Agreement signed ✔</span>
+              )}
+            </div>
           </div>
         )}
       </>
