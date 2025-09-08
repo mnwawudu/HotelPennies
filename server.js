@@ -161,6 +161,8 @@ const adminVendorApprovalRoutes = require('./routes/adminVendorApprovalRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
 const hotelPublicTopRoutes = require('./routes/hotelPublicTopRoutes');
+const vendorAgreementRoutes = require('./routes/vendorAgreement'); 
+const adminVendorAgreementRoutes = require('./routes/adminVendorAgreement');
 
 // --- Route mounts ---
 app.use('/api/payments', paymentRoutes);
@@ -219,6 +221,8 @@ app.use('/api/admin', adminUserRoutes);
 app.use('/api/admin', adminAnalyticsRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
 app.use('/api', hotelPublicTopRoutes);
+app.use('/api', vendorAgreementRoutes); 
+app.use('/api/admin', adminVendorAgreementRoutes);
 
 // --- Health & API 404 ---
 app.get('/api/test', (_req, res) => {
