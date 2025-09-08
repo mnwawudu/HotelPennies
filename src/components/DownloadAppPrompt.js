@@ -1,165 +1,131 @@
 // src/components/DownloadAppPrompt.js
 import React, { useEffect, useMemo, useState } from 'react';
 
-const SHOW_DELAY_MS = 12000;                 // wait 12s before showing
-const COOLDOWN_MS   = 24 * 60 * 60 * 1000;   // 24h cooldown after close/click
-const APK_URL = process.env.REACT_APP_APK_URL || '/apk/hotelpennies-latest.apk';
+const SHOW_DELAY_MS = 5000;                 // was 12000 — make it snappier
+const COOLDOWN_MS   = 24 * 60 * 60 * 1000;  // 24h
 
-function isAndroidChrome() {
+const ANDROID_APK_URL =
+  process.env.REACT_APP_ANDROID_APK_URL || '/app/HotelPennies.apk';
+
+// ——— broader detection (any Android/iOS browser) ———
+function isAndroidWeb() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || '';
+  return /Android/i.test(ua);
+}
+function isIOSWeb() {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent || '';
-  return /Android/i.test(ua) && /Chrome/i.test(ua);
-}
-function isMobileSafari() {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  const iOS = /iPad|iPhone|iPod/.test(ua);
-  const wk  = /WebKit/.test(ua);
-  const isCriOS = /CriOS/.test(ua);
-  return iOS && wk && !isCriOS; // Safari only (A2HS available here)
-}
-function isStandalone() {
-  if (typeof window === 'undefined') return false;
-  // iOS Safari uses navigator.standalone
-  // Modern PWAs expose display-mode media query
-  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
-      || (window.navigator && window.navigator.standalone === true);
+  return /iPad|iPhone|iPod/i.test(ua);
 }
 
 export default function DownloadAppPrompt() {
   const [visible, setVisible] = useState(false);
-  const [showTip, setShowTip] = useState(false);
 
   const platform = useMemo(() => {
-    if (isAndroidChrome()) return 'android';
-    if (isMobileSafari())  return 'ios';
+    if (isAndroidWeb()) return 'android';
+    if (isIOSWeb())     return 'ios';
     return null;
   }, []);
 
   useEffect(() => {
+    // Dev helpers: force via ?showAppPrompt=1 (ignores cooldown/hidden)
+    const qp = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const force = qp?.get('showAppPrompt') === '1';
+
     if (!platform) return;
-    if (platform === 'ios' && isStandalone()) return; // already “installed” as PWA
 
+    // Don’t show if permanently hidden (unless forced)
+    const hidden = !force && localStorage.getItem('hp-app-prompt-hidden') === '1';
+    if (hidden) return;
+
+    // Cooldown after closing (unless forced)
     const last = Number(localStorage.getItem('hp-app-prompt-last-closed') || 0);
-    if (Date.now() - last < COOLDOWN_MS) return;
+    if (!force && Date.now() - last < COOLDOWN_MS) return;
 
-    const t = setTimeout(() => setVisible(true), SHOW_DELAY_MS);
+    const t = setTimeout(() => setVisible(true), force ? 0 : SHOW_DELAY_MS);
     return () => clearTimeout(t);
   }, [platform]);
 
+  // Expose a global for QA: window.hpForceShowAppPrompt()
+  useEffect(() => {
+    window.hpForceShowAppPrompt = () => {
+      try {
+        localStorage.removeItem('hp-app-prompt-hidden');
+        localStorage.removeItem('hp-app-prompt-last-closed');
+      } catch {}
+      setVisible(true);
+    };
+    return () => { delete window.hpForceShowAppPrompt; };
+  }, []);
+
   if (!platform || !visible) return null;
 
-  const rememberClose = () =>
-    localStorage.setItem('hp-app-prompt-last-closed', String(Date.now()));
-
-  const closeAll = () => {
-    rememberClose();
-    setShowTip(false);
+  const close = () => {
     setVisible(false);
+    localStorage.setItem('hp-app-prompt-last-closed', String(Date.now()));
   };
 
-  const downloadApk = () => {
-    try {
-      const apkUrl = new URL(APK_URL, window.location.href);
-      const sameOrigin = apkUrl.origin === window.location.origin;
+  const neverShow = () => {
+    setVisible(false);
+    localStorage.setItem('hp-app-prompt-hidden', '1');
+  };
+
+  const handlePrimary = () => {
+    if (platform === 'android') {
+      // Direct APK download (same-origin recommended)
       const a = document.createElement('a');
-      a.href = apkUrl.toString();
-      if (sameOrigin) a.setAttribute('download', 'HotelPennies.apk');
-      a.rel = 'noopener';
+      a.href = ANDROID_APK_URL;
+      a.download = 'HotelPennies.apk';
+      a.rel = 'noopener noreferrer';
       document.body.appendChild(a);
       a.click();
       a.remove();
-    } catch {
-      window.location.href = APK_URL;
-    } finally {
-      closeAll();
+      return;
     }
-  };
-
-  const handleClick = () => {
-    if (platform === 'android') downloadApk();
-    else setShowTip((v) => !v); // iOS — toggle tip
+    // iOS: cannot download apps outside App Store — prompt A2HS
+    alert('Install on iPhone: Share ▸ Add to Home Screen to get the HotelPennies app-like experience.');
   };
 
   return (
-    <>
-      <button
-        onClick={handleClick}
-        aria-label={platform === 'android' ? 'Download app' : 'Install app'}
-        style={pill}
-      >
-        {platform === 'android' ? 'Download app' : 'Install app'}
-      </button>
-
-      {platform === 'ios' && showTip && (
-        <div role="dialog" aria-live="polite" style={tipWrap}>
-          <div style={tipCard}>
-            <div style={tipTitle}>Add to Home Screen</div>
-            <div style={tipText}>
-              Tap <span style={iconBox}>⃞↑</span> <span style={{opacity:.7}}>(Share)</span> &nbsp;
-              then <strong>“Add to Home Screen”</strong>.
-            </div>
-            <button onClick={closeAll} style={tipBtn}>Got it</button>
-          </div>
-        </div>
-      )}
-    </>
+    <div style={wrap} role="dialog" aria-live="polite" aria-label="Install app">
+      <div style={pill}>
+        <button onClick={handlePrimary} style={pillBtn}
+          aria-label={platform === 'android' ? 'Download app' : 'Install app'}>
+          {platform === 'android' ? 'Download app' : 'Install app'}
+        </button>
+        <button onClick={neverShow} style={ghost} aria-label="Not now">Not now</button>
+        <button onClick={close} aria-label="Close" style={xBtn}>×</button>
+      </div>
+    </div>
   );
 }
 
-/* --- tiny pill (SofaScore-style) --- */
+/* styles: tiny pill, top-right */
+const wrap = {
+  position: 'fixed',
+  top: 12, right: 12, zIndex: 10000,
+  maxWidth: 360, width: 'calc(100vw - 24px)'
+};
 const pill = {
-  position: 'fixed',
-  top: 'max(8px, env(safe-area-inset-top))',
-  right: 'max(8px, env(safe-area-inset-right))',
-  zIndex: 2147483647,
-  padding: '8px 12px',
-  borderRadius: 9999,
+  display: 'flex', alignItems: 'center', gap: 8,
+  background: '#ffffff',
   border: '1px solid rgba(0,0,0,0.08)',
-  background: '#fff',
-  color: '#111',
-  fontWeight: 700,
-  fontSize: 13,
-  boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
-  cursor: 'pointer',
-  lineHeight: 1,
-  touchAction: 'manipulation',
-  WebkitTapHighlightColor: 'transparent',
-};
-
-/* --- iOS tip bubble --- */
-const tipWrap = {
-  position: 'fixed',
-  top: 'calc(max(8px, env(safe-area-inset-top)) + 40px)',
-  right: 'max(8px, env(safe-area-inset-right))',
-  zIndex: 2147483647,
-  maxWidth: 320,
-};
-const tipCard = {
-  background: '#fff',
-  border: '1px solid rgba(0,0,0,0.08)',
-  borderRadius: 12,
-  boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
-  padding: 12,
+  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+  borderRadius: 999, padding: '8px 8px 8px 12px',
   fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
 };
-const tipTitle = { fontSize: 14, fontWeight: 700, color: '#0a2540', marginBottom: 4 };
-const tipText  = { fontSize: 13, color: '#344054', lineHeight: 1.4, marginBottom: 8 };
-const tipBtn   = {
-  appearance: 'none',
-  border: '1px solid #d0d5dd',
-  background: '#fff',
-  color: '#344054',
-  padding: '8px 10px',
-  borderRadius: 8,
-  fontWeight: 600,
-  cursor: 'pointer',
+const pillBtn = {
+  appearance: 'none', border: 'none',
+  background: '#0a3d62', color: '#fff',
+  padding: '8px 12px', borderRadius: 999, fontWeight: 700, cursor: 'pointer'
 };
-const iconBox  = {
-  display: 'inline-block',
-  border: '1px solid #d0d5dd',
-  borderRadius: 6,
-  padding: '0 4px',
-  fontSize: 12,
-  lineHeight: '16px',
+const ghost = {
+  appearance: 'none', border: '1px solid #d0d5dd',
+  background: '#fff', color: '#344054',
+  padding: '8px 12px', borderRadius: 999, fontWeight: 600, cursor: 'pointer'
+};
+const xBtn = {
+  appearance: 'none', border: 'none', background: 'transparent',
+  fontSize: 18, lineHeight: 1, cursor: 'pointer', color: '#667085', padding: 6
 };
