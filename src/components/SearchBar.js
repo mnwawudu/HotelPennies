@@ -1,3 +1,4 @@
+// ✅ src/components/SearchBar.js
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../utils/axiosConfig';
@@ -26,6 +27,7 @@ export default function SearchBar({
   const cacheRef = useRef(new Map()); // q -> suggestions
 
   const trimmed = useMemo(() => q.trim(), [q]);
+  const activeId = active >= 0 && active < items.length ? `hp-opt-${active}` : undefined;
 
   // Close on outside click
   useEffect(() => {
@@ -101,14 +103,7 @@ export default function SearchBar({
   };
 
   return (
-    <div
-      ref={rootRef}
-      className={`hp-searchbar ${className}`}
-      role="combobox"
-      aria-expanded={open}
-      aria-owns="hp-search-listbox"
-      aria-haspopup="listbox"
-    >
+    <div ref={rootRef} className={`hp-searchbar ${className}`}>
       <form
         onSubmit={(e) => { e.preventDefault(); submit(); }}
         className="hp-searchbar-form"
@@ -122,12 +117,17 @@ export default function SearchBar({
           onChange={(e) => { setQ(e.target.value); setActive(-1); }}
           onFocus={() => { if (items.length) setOpen(true); }}
           onKeyDown={onKeyDown}
-          aria-autocomplete="list"
-          aria-controls="hp-search-listbox"
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
           autoFocus={autoFocus}
+          // A11y combobox props ↓
+          role="combobox"
+          aria-expanded={open}
+          aria-controls="hp-search-listbox"
+          aria-haspopup="listbox"
+          aria-autocomplete="list"
+          aria-activedescendant={activeId}
         />
         <button type="submit" className="hp-search-btn" aria-label="Search">Search</button>
       </form>
@@ -145,6 +145,7 @@ export default function SearchBar({
             <>
               {items.slice(0, 12).map((s, i) => (
                 <li
+                  id={`hp-opt-${i}`}
                   key={`${s}-${i}`}
                   role="option"
                   aria-selected={active === i}

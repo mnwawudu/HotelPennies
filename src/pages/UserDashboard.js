@@ -140,7 +140,6 @@ const UserDashboard = () => {
   const [accounts, setAccounts] = useState([]);
   const [lockedIndex, setLockedIndex] = useState(null);
   const [partnerBanks, setPartnerBanks] = useState([]);
-  const [bankMandate, setBankMandate] = useState('soft');
 
   // Add account (bottom sheet)
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -198,7 +197,6 @@ const UserDashboard = () => {
         setLockedIndex(li);
 
         setPartnerBanks(dashRes.data?.partnerBanks || []);
-        setBankMandate(dashRes.data?.bankMandate || 'soft');
       } catch {
         setError('❌ Failed to load dashboard');
       }
@@ -282,8 +280,6 @@ const UserDashboard = () => {
   const totalEarnedNet  = commissionNet + cashbackNet;
 
   const breakdowns = dashboard?.breakdowns || {};
-  const commBreak  = breakdowns?.commission || null;
-  const cashBreak  = breakdowns?.cashback || null;
 
   // -------- Payout modal handlers --------
   const openPayoutModal = () => {
@@ -351,7 +347,6 @@ const UserDashboard = () => {
           ? res.data.lockedPayoutAccountIndex
           : null
       );
-      if (res.data?.bankMandate) setBankMandate(res.data.bankMandate);
       if (Array.isArray(res.data?.partnerBanks)) setPartnerBanks(res.data.partnerBanks);
     } catch {
       /* ignore */
