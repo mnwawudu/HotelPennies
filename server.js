@@ -11,7 +11,6 @@ if (fs.existsSync(RENDER_ENV)) {
   dotenv.config({ path: RENDER_ENV, override: true });
 }
 
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -45,40 +44,51 @@ app.disable('x-powered-by');
 const paystackWebhook = require('./routes/paystackWebhook');
 app.use('/api/webhooks/paystack', express.raw({ type: '*/*' }), paystackWebhook);
 
-// --- CORS (env allow-list + sensible defaults) ---
+/* ============================================================
+   CORS (env allow-list + sensible defaults)  ✅ UPDATED BLOCK
+   ============================================================ */
 const defaultOrigins = [
   'http://localhost:3000',
   'https://hotelpennies.com',
   'https://www.hotelpennies.com',
   'https://hotelpennies-frontend.onrender.com',
-  'https://hotelpennies-4.onrender.com',
+  'https://hotelpennies-4.onrender.com', // backend on Render
 ];
 
 const envOrigins = (process.env.ORIGIN_WHITELIST || '')
   .split(',')
-  .map(s => s.trim())
+  .map((s) => s.trim())
   .filter(Boolean);
 
 const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
 
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // Postman/cURL/native apps
-    if (allowedOrigins.has(origin)) return cb(null, true);
-    return cb(new Error('CORS blocked'), false);
-  },
-  credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-}));
+const isLocalDevOrigin = (o) =>
+  !!o && (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(o) || o === 'capacitor://localhost');
+
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      // No origin = native apps/Postman/etc.
+      if (!origin) return cb(null, true);
+      // Allow explicit allowlist, any localhost:*, and Capacitor WebView
+      if (allowedOrigins.has(origin) || isLocalDevOrigin(origin)) return cb(null, true);
+      return cb(new Error('CORS blocked'), false);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 app.options('*', cors());
 
 // --- Trust proxy + security/compression/limits ---
 app.set('trust proxy', 1);
 
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(compression());
 
 // Use safe limiter (no-op if not installed)
@@ -90,18 +100,21 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // --- MongoDB + config prime ---
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(async () => {
-  console.log('✅ MongoDB connected');
-  try {
-    await configService.prime();
-    console.log('✅ Config cache primed');
-  } catch (e) {
-    console.warn('⚠️ Config cache prime skipped:', e?.message || e);
-  }
-}).catch(err => console.error('❌ MongoDB connection error:', err));
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(async () => {
+    console.log('✅ MongoDB connected');
+    try {
+      await configService.prime();
+      console.log('✅ Config cache primed');
+    } catch (e) {
+      console.warn('⚠️ Config cache prime skipped:', e?.message || e);
+    }
+  })
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // --- Route imports ---
 const authRoutes = require('./routes/authRoutes');
@@ -161,7 +174,7 @@ const adminVendorApprovalRoutes = require('./routes/adminVendorApprovalRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
 const hotelPublicTopRoutes = require('./routes/hotelPublicTopRoutes');
-const vendorAgreementRoutes = require('./routes/vendorAgreement'); 
+const vendorAgreementRoutes = require('./routes/vendorAgreement');
 const adminVendorAgreementRoutes = require('./routes/adminVendorAgreement');
 
 // --- Route mounts ---
@@ -221,7 +234,7 @@ app.use('/api/admin', adminUserRoutes);
 app.use('/api/admin', adminAnalyticsRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
 app.use('/api', hotelPublicTopRoutes);
-app.use('/api', vendorAgreementRoutes); 
+app.use('/api', vendorAgreementRoutes);
 app.use('/api/admin', adminVendorAgreementRoutes);
 
 // --- Health & API 404 ---
