@@ -15,3 +15,18 @@ code {
 /* ✅ Load calendar styles */
 @import 'react-datepicker/dist/react-datepicker.css';
 
+html, body, #root { height: 100%; }
+body {
+  min-height: 100dvh; /* fixes “100vh” issues in webview */
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #fff;
+}
+
+/* sheet / modal full-bleed without clipping under notches */
+.hp-sheet-overlay { position: fixed; inset: 0; z-index: 9999; }
+.hp-sheet { max-height: calc(100dvh - env(safe-area-inset-top)); overflow: auto; }
+
+/* (optional) avoid body scroll jumps when keyboard opens */
+@supports (height: 100svh) {
+  body { min-height: 100svh; }
+}
