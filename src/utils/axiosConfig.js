@@ -1,9 +1,17 @@
 // src/utils/axiosConfig.js
 import axios from 'axios';
 
-const baseURL = /localhost|127\.0\.0\.1/.test(window.location.hostname)
-  ? 'http://localhost:10000'
-  : 'https://hotelpennies-4.onrender.com';
+const isCapacitor = typeof window !== 'undefined' && window.location?.protocol === 'capacitor:';
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+
+// In Capacitor, always use prod API. In browser localhost, use local API.
+const baseURL = isCapacitor
+  ? 'https://hotelpennies-4.onrender.com'
+  : (isLocalhost
+      ? 'http://localhost:10000'
+      : 'https://hotelpennies-4.onrender.com');
 
 const instance = axios.create({ baseURL });
 
