@@ -164,6 +164,9 @@ const payoutRequestRoutes = require('./routes/payoutRequestRoutes');
 const bookingCancelRoutes = require('./routes/bookingCancelRoutes');
 const authPasswordRoutes = require('./routes/authPasswordRoutes');
 const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
+const contentWriteGate = require('./middleware/contentWriteGate');
+const adminUsersRoutes = require('./routes/adminUsers');
+
 
 const myOrdersRoutes = require('./routes/myOrdersRoutes');
 const adminAuditRoutes = require('./routes/adminAuditRoutes');
@@ -176,6 +179,8 @@ const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
 const hotelPublicTopRoutes = require('./routes/hotelPublicTopRoutes');
 const vendorAgreementRoutes = require('./routes/vendorAgreement');
 const adminVendorAgreementRoutes = require('./routes/adminVendorAgreement');
+
+
 
 // --- Route mounts ---
 app.use('/api/payments', paymentRoutes);
@@ -236,6 +241,8 @@ app.use('/api/admin/settings', adminSettingsRoutes);
 app.use('/api', hotelPublicTopRoutes);
 app.use('/api', vendorAgreementRoutes);
 app.use('/api/admin', adminVendorAgreementRoutes);
+app.use(contentWriteGate());
+app.use('/api/admin', adminUsersRoutes);
 
 // --- Health & API 404 ---
 app.get('/api/test', (_req, res) => {
