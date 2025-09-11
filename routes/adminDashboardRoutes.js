@@ -1,10 +1,11 @@
-// routes/adminDashboardRoutes.js  
+// routes/adminDashboardRoutes.js
 const express = require('express');
 const router = express.Router();
 
 const mongoose = require('mongoose');
 const auth = require('../middleware/adminAuth');
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
 
 // models
 const Admin = require('../models/adminModel');
@@ -21,7 +22,6 @@ const Page = require('../models/pageModel');
 const Payout = require('../models/payoutModel');
 const Ledger = require('../models/ledgerModel');
 const FeatureListing = require('../models/featureListingModel');
-
 
 // ---------------- utils ----------------
 const normalizeKey = (s) => (s || '').toString().trim().toLowerCase().replace(/\s+/g, '');
@@ -108,11 +108,9 @@ async function getEffectiveAvailableBalance(accountType, idStr) {
     accountId,
     direction: 'debit',
     $or: [
-      // rare direct debit with same reason
       ...(accountType === 'vendor'
         ? [{ reason: 'vendor_share' }]
         : [{ reason: { $in: USER_CREDIT_REASONS } }, { reason: CASHBACK_RE }, { reason: REF_OR_COMM_RE }]),
-      // adjustments tagged as reversals
       { $and: [{ reason: 'adjustment' }, { $or: [{ 'meta.kind': REVERSAL_MARK_RE }, { 'meta.subtype': REVERSAL_MARK_RE }] }] },
     ],
   };
@@ -258,6 +256,51 @@ async function activeFeatureCounts() {
 
   return { total, breakdown: map };
 }
+
+/* ======================
+   ADMIN: CHANGE PASSWORD
+   ====================== */
+router.post('/change-password', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'currentPassword and newPassword are required' });
+    }
+    if (String(newPassword).length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters' });
+    }
+
+    const adminId = req.user?._id || req.user?.id || req.admin?._id || req.admin?.id;
+    if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const admin = await Admin.findById(adminId).select('+password +passwordHash');
+    if (!admin) return res.status(404).json({ message: 'Admin not found' });
+
+    // verify current password
+    let ok = false;
+    if (typeof admin.comparePassword === 'function') {
+      ok = await admin.comparePassword(currentPassword);
+    } else {
+      const stored = admin.passwordHash || admin.password;
+      if (!stored) return res.status(500).json({ message: 'Password not set on admin' });
+      ok = await bcrypt.compare(currentPassword, stored);
+    }
+    if (!ok) return res.status(400).json({ message: 'Current password is incorrect' });
+
+    // set new password
+    const newHash = await bcrypt.hash(String(newPassword), 10);
+    if ('passwordHash' in admin) admin.passwordHash = newHash;
+    else admin.password = newHash;
+
+    admin.passwordChangedAt = new Date();
+    await admin.save();
+
+    return res.json({ ok: true, message: 'Password updated' });
+  } catch (e) {
+    console.error('admin change-password error:', e);
+    return res.status(500).json({ message: 'Failed to change password' });
+  }
+});
 
 /* ======================
    DASHBOARD OVERVIEW

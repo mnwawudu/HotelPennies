@@ -1,75 +1,149 @@
 // routes/adminUsers.js
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const router = express.Router();
+
 const Admin = require('../models/adminModel');
 const adminAuth = require('../middleware/adminAuth');
 const adminRole = require('../middleware/adminRole');
+const sendMail = require('../utils/mail');
 
-const router = express.Router();
-const STRONG = (p='') => p.length>=8 && /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p);
+// helpers
+const FRONTEND_BASE = process.env.FRONTEND_BASE_URL || 'https://www.hotelpennies.com';
+const VALID_ROLES = new Set(['superadmin', 'manager', 'staff']);
 
-// List admins (superadmin only)
-router.get('/admins', adminAuth, adminRole(['superadmin']), async (_req, res) => {
-  const rows = await Admin.find().select('_id email username role createdAt updatedAt').lean();
-  res.json(rows);
-});
+function makeInviteUrl(email, token) {
+  const qs = new URLSearchParams({ email, token }).toString();
+  return `${FRONTEND_BASE}/admin/set-password?${qs}`;
+}
 
-// Create admin (superadmin only)
-router.post('/admins', adminAuth, adminRole(['superadmin']), async (req, res) => {
+async function issueInvite(adminDoc) {
+  const token = adminDoc.issuePasswordResetToken(); // sets hash & expiry on doc
+  await adminDoc.save();
+
+  const inviteUrl = makeInviteUrl(adminDoc.email, token);
+  const subject = 'HotelPennies — Admin invite';
+  const html = `
+    <p>Hello ${adminDoc.username || 'there'},</p>
+    <p>You’ve been invited as an <strong>${adminDoc.role}</strong> on HotelPennies.</p>
+    <p>Click the button below to set your password:</p>
+    <p><a href="${inviteUrl}" style="background:#0a2a66;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none">Set Password</a></p>
+    <p>Or open this link:<br/><code>${inviteUrl}</code></p>
+    <p>This link expires in 60 minutes.</p>
+  `;
   try {
-    const { email, password, role='staff', username } = req.body || {};
-    if (!email || !password) return res.status(400).json({ message: 'email and password are required' });
-    if (!['staff','manager','superadmin'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role' });
-    }
-    if (!STRONG(password)) return res.status(400).json({ message: 'Weak password' });
-
-    const exists = await Admin.findOne({ email });
-    if (exists) return res.status(409).json({ message: 'Admin with this email already exists' });
-
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(password, salt);
-
-    const admin = await Admin.create({
-      email,
-      username: username || email.split('@')[0],
-      role,
-      password: hashed
-    });
-
-    res.status(201).json({ id: admin._id, email: admin.email, role: admin.role });
+    await sendMail({ to: adminDoc.email, subject, html });
   } catch (e) {
-    console.error('Create admin error:', e);
-    res.status(500).json({ message: 'Failed to create admin' });
+    console.warn('⚠️ invite email failed; share link manually:', inviteUrl, e?.message || e);
   }
+  return inviteUrl;
+}
+
+// ───────────── GET /api/admin/users  (list admins) ─────────────
+router.get('/users', adminAuth, adminRole(['superadmin']), async (_req, res) => {
+  const rows = await Admin.find({})
+    .select('_id username email role createdAt resetTokenExpires')
+    .sort({ createdAt: -1 })
+    .lean();
+  res.json(
+    rows.map(r => ({
+      id: r._id,
+      name: r.username || '',
+      email: r.email,
+      role: r.role,
+      createdAt: r.createdAt,
+      invitePending: !!(r.resetTokenExpires && r.resetTokenExpires > new Date()),
+    }))
+  );
 });
 
-// Update role (superadmin only)
-router.patch('/admins/:id/role', adminAuth, adminRole(['superadmin']), async (req, res) => {
-  const { id } = req.params;
-  const { role } = req.body || {};
-  if (!['staff','manager','superadmin'].includes(role)) {
+// ───────── POST /api/admin/users/invite  (create + invite) ───────
+router.post('/users/invite', adminAuth, adminRole(['superadmin']), async (req, res) => {
+  const { name = '', email = '', role = '' } = req.body || {};
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanRole  = String(role).trim().toLowerCase();
+
+  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return res.status(400).json({ message: 'Valid email is required' });
+  }
+  if (!VALID_ROLES.has(cleanRole)) {
     return res.status(400).json({ message: 'Invalid role' });
   }
-  const doc = await Admin.findByIdAndUpdate(id, { role }, { new: true });
-  if (!doc) return res.status(404).json({ message: 'Admin not found' });
-  res.json({ id: doc._id, email: doc.email, role: doc.role });
+
+  let admin = await Admin.findOne({ email: cleanEmail });
+  if (admin) {
+    return res.status(409).json({ message: 'Admin already exists. Use “Resend Invite”.' });
+  }
+
+  // Create with a random password (user will set a new one via invite)
+  const tempPassword = crypto.randomBytes(16).toString('hex');
+  admin = await Admin.create({
+    username: name || cleanEmail.split('@')[0],
+    email: cleanEmail,
+    role: cleanRole,
+    password: tempPassword,
+  });
+
+  const inviteUrl = await issueInvite(admin);
+  return res.status(201).json({ id: admin._id, inviteUrl });
 });
 
-// Reset password (superadmin only)
-router.post('/admins/:id/reset-password', adminAuth, adminRole(['superadmin']), async (req, res) => {
-  const { id } = req.params;
-  const { newPassword } = req.body || {};
-  if (!STRONG(newPassword)) return res.status(400).json({ message: 'Weak password' });
+// ───────── POST /api/admin/users/:id/invite  (resend) ────────────
+router.post('/users/:id/invite', adminAuth, adminRole(['superadmin']), async (req, res) => {
+  const admin = await Admin.findById(req.params.id);
+  if (!admin) return res.status(404).json({ message: 'Admin not found' });
+  const inviteUrl = await issueInvite(admin);
+  res.json({ inviteUrl });
+});
 
-  const admin = await Admin.findById(id);
+// ───────── DELETE /api/admin/users/:id  (delete) ────────────────
+router.delete('/users/:id', adminAuth, adminRole(['superadmin']), async (req, res) => {
+  if (String(req.admin._id) === String(req.params.id)) {
+    return res.status(400).json({ message: "You can't delete yourself." });
+  }
+  const out = await Admin.findByIdAndDelete(req.params.id);
+  if (!out) return res.status(404).json({ message: 'Admin not found' });
+  res.json({ ok: true });
+});
+
+// ───────── POST /api/admin/set-password  (finish invite) ─────────
+router.post('/set-password', async (req, res) => {
+  const { email = '', token = '', newPassword = '' } = req.body || {};
+  const cleanEmail = String(email).trim().toLowerCase();
+
+  if (!cleanEmail || !token || !newPassword) {
+    return res.status(400).json({ message: 'email, token and newPassword are required' });
+  }
+  if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    return res.status(400).json({ message: 'Weak password. Use 8+ chars with upper, lower and a number.' });
+  }
+
+  const admin = await Admin.findOne({ email: cleanEmail }).select('+resetTokenHash');
   if (!admin) return res.status(404).json({ message: 'Admin not found' });
 
-  const salt = await bcrypt.genSalt(10);
-  admin.password = await bcrypt.hash(newPassword, salt); // pre-save will bump tokenVersion
+  if (!admin.resetTokenHash || !admin.resetTokenExpires || admin.resetTokenExpires < new Date()) {
+    return res.status(400).json({ message: 'Invite link expired. Ask for a new invite.' });
+  }
+
+  const hash = crypto.createHash('sha256').update(token).digest('hex');
+  if (hash !== admin.resetTokenHash) {
+    return res.status(400).json({ message: 'Invalid token' });
+  }
+
+  await admin.setPassword(newPassword); // pre-save hook bumps tokenVersion
+  admin.resetTokenHash = undefined;
+  admin.resetTokenExpires = undefined;
   await admin.save();
 
-  res.json({ message: 'Password reset' });
+  // auto-login after setting password
+  const jwt = require('jsonwebtoken');
+  const tkn = jwt.sign({ id: admin._id, role: 'admin', v: admin.tokenVersion || 0 }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+  res.json({
+    message: 'Password set. You are signed in.',
+    token: tkn,
+    admin: { id: admin._id, name: admin.username, email: admin.email, role: admin.role }
+  });
 });
 
 module.exports = router;
