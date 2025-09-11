@@ -1,205 +1,127 @@
-// src/admin/AdminUsers.js
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../utils/axiosConfig';
 
-const ROLES = ['superadmin', 'manager', 'staff'];
-
-function useAdminSession() {
-  return useMemo(() => {
-    try {
-      const raw = localStorage.getItem('admin');
-      const admin = raw ? JSON.parse(raw) : null;
-      const token = localStorage.getItem('adminToken') || null;
-      return { admin, token, role: admin?.role || null };
-    } catch {
-      return { admin: null, token: null, role: null };
-    }
-  }, []);
-}
-
 export default function AdminUsers() {
-  const { token, role } = useAdminSession();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
-
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [newRole, setNewRole] = useState('staff');
-  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('staff');
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
 
-  const canCreate = role === 'superadmin';
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
-  async function fetchAdmins() {
+  const load = async () => {
     setLoading(true);
-    setErr('');
     try {
-      const { data } = await api.get('/api/admin/users', { headers: authHeaders });
-      setRows(Array.isArray(data) ? data : data?.items || []);
+      const { data } = await api.get('/api/admin/users', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` }
+      });
+      setRows(Array.isArray(data) ? data : []);
     } catch (e) {
-      setErr(e?.response?.data?.message || 'Failed to load admin users');
-      setRows([]);
+      setErr(e?.response?.data?.message || 'Failed to load admins');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => {
-    fetchAdmins();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  async function handleCreate(e) {
-    e.preventDefault();
-    if (!canCreate) return;
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      return alert('Name, email and password are required.');
-    }
-    setBusy(true);
+  const create = async () => {
     setErr('');
+    setBusy(true);
     try {
-      await api.post(
-        '/api/admin/users',
-        { name: name.trim(), email: email.trim(), role: newRole, password },
-        { headers: authHeaders }
+      await api.post('/api/admin/users/invite',
+        { name, email, role },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` } }
       );
-      setName('');
-      setEmail('');
-      setPassword('');
-      setNewRole('staff');
-      await fetchAdmins();
-      alert('Admin user created.');
+      setName(''); setEmail(''); setRole('staff');
+      await load();
+      alert('Invite sent (or link logged on server).');
     } catch (e) {
-      setErr(e?.response?.data?.message || 'Failed to create admin');
+      setErr(e?.response?.data?.message || 'Failed to invite');
     } finally {
       setBusy(false);
     }
-  }
+  };
 
-  async function handleDelete(id) {
-    if (!canCreate) return;
-    if (!window.confirm('Delete this admin? This cannot be undone.')) return;
+  const resend = async (id) => {
     try {
-      await api.delete(`/api/admin/users/${id}`, { headers: authHeaders });
-      await fetchAdmins();
+      await api.post(`/api/admin/users/${id}/invite`, {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` } }
+      );
+      alert('Invite re-sent (or link logged on server).');
+      await load();
     } catch (e) {
-      alert(e?.response?.data?.message || 'Failed to delete admin');
+      alert(e?.response?.data?.message || 'Failed to resend');
     }
-  }
+  };
 
-  async function handleReset(id) {
-    if (!canCreate) return;
-    const ok = window.confirm('Reset password for this admin? A temporary password will be generated.');
-    if (!ok) return;
+  const del = async (id) => {
+    if (!window.confirm('Delete this admin?')) return;
     try {
-      const { data } = await api.post(`/api/admin/users/${id}/reset-password`, {}, { headers: authHeaders });
-      const temp = data?.tempPassword || data?.password || null;
-      if (temp) {
-        // In real prod you’d email this; for now show once.
-        window.prompt('Temporary password (copy now):', temp);
-      } else {
-        alert('Password reset. The user should check their email (if configured).');
-      }
+      await api.delete(`/api/admin/users/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` }
+      });
+      await load();
     } catch (e) {
-      alert(e?.response?.data?.message || 'Failed to reset password');
+      alert(e?.response?.data?.message || 'Failed to delete');
     }
-  }
+  };
 
   return (
-    <div style={{ padding: 16 }}>
-      <h2 style={{ marginBottom: 12 }}>Admin Users & Roles</h2>
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-4">Admin Users & Roles</h2>
 
-      {err && <div style={{ color: '#b91c1c', marginBottom: 12 }}>{err}</div>}
-
-      {/* Create form (superadmin only) */}
-      {canCreate && (
-        <form onSubmit={handleCreate} style={{ display: 'grid', gap: 8, maxWidth: 520, marginBottom: 24 }}>
-          <div style={{ fontWeight: 600 }}>Create New Admin</div>
-          <input
-            type="text"
-            placeholder="Full name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="book-gift-input"
-          />
-          <input
-            type="email"
-            placeholder="Email (login)"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="book-gift-input"
-          />
-          <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="book-gift-input">
-            {ROLES.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-          <input
-            type="password"
-            placeholder="Initial password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="book-gift-input"
-          />
-          <button type="submit" className="book-gift-button submit" disabled={busy}>
-            {busy ? 'Creating…' : 'Create Admin'}
-          </button>
-        </form>
-      )}
-
-      {/* List */}
-      <div className="table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        {loading ? (
-          <p>Loading…</p>
-        ) : !rows.length ? (
-          <p>No admin users found.</p>
-        ) : (
-          <table className="nice-table" style={{ minWidth: 720 }}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Created</th>
-                {canCreate && <th style={{ width: 220 }}>Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((u) => (
-                <tr key={u._id || u.id}>
-                  <td>{u.name || '—'}</td>
-                  <td style={{ wordBreak: 'break-all' }}>{u.email}</td>
-                  <td>{u.role}</td>
-                  <td>{u.createdAt ? new Date(u.createdAt).toLocaleString() : '—'}</td>
-                  {canCreate && (
-                    <td style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button className="book-gift-button" type="button" onClick={() => handleReset(u._id || u.id)}>
-                        Reset PW
-                      </button>
-                      <button
-                        className="book-gift-button"
-                        type="button"
-                        onClick={() => handleDelete(u._id || u.id)}
-                        style={{ background: '#fee2e2', color: '#991b1b' }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <div className="bg-white rounded shadow p-4 mb-6 space-y-3 max-w-xl">
+        <input className="w-full border p-2 rounded" placeholder="Full name"
+          value={name} onChange={e => setName(e.target.value)} />
+        <input className="w-full border p-2 rounded" placeholder="Email"
+          value={email} onChange={e => setEmail(e.target.value)} />
+        <select className="w-full border p-2 rounded" value={role} onChange={e => setRole(e.target.value)}>
+          <option value="staff">staff (content)</option>
+          <option value="manager">manager</option>
+          <option value="superadmin">superadmin</option>
+        </select>
+        {err && <p className="text-red-600 text-sm">{err}</p>}
+        <button disabled={busy} onClick={create}
+          className="bg-blue-900 text-white px-4 py-2 rounded disabled:opacity-60">
+          {busy ? 'Sending…' : 'Send Invite'}
+        </button>
       </div>
 
-      {!canCreate && (
-        <p style={{ marginTop: 8, fontSize: 13, opacity: 0.8 }}>
-          You’re signed in with a non-superadmin role. You can view admins but cannot create/delete/reset.
-        </p>
-      )}
+      <div className="bg-white rounded shadow p-4">
+        <h3 className="font-medium mb-3">Admins</h3>
+        {loading ? <p>Loading…</p> : !rows.length ? <p>No admins yet.</p> : (
+          <div className="overflow-x-auto">
+            <table className="min-w-[720px] w-full">
+              <thead>
+                <tr className="text-left border-b">
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Email</th>
+                  <th className="p-2">Role</th>
+                  <th className="p-2">Created</th>
+                  <th className="p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(r => (
+                  <tr key={r.id} className="border-b">
+                    <td className="p-2">{r.name || '—'}</td>
+                    <td className="p-2">{r.email}</td>
+                    <td className="p-2 capitalize">{r.role}</td>
+                    <td className="p-2">{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</td>
+                    <td className="p-2 space-x-2">
+                      <button onClick={() => resend(r.id)} className="px-3 py-1 rounded bg-blue-700 text-white">Resend</button>
+                      <button onClick={() => del(r.id)} className="px-3 py-1 rounded bg-red-100 text-red-700">Delete</button>
+                      {r.invitePending && <span className="ml-2 text-xs text-orange-600">invite pending</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

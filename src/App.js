@@ -71,6 +71,8 @@ import AdminChangePassword from './pages/AdminChangePassword';
 import AdminCommissions from './pages/AdminCommissions';
 import RequireAdmin from './admin/RequireAdmin';
 import AdminUsers from './admin/AdminUsers';
+import AdminSetPassword from './pages/AdminSetPassword';
+
 
 // Vendor
 import VendorLayout from './components/VendorLayout';
@@ -207,6 +209,9 @@ function App() {
           <Route path="feature-manager" element={<AdminFeaturedListings />} />
           <Route path="vendor-approvals" element={<VendorApprovals />} />
           <Route path="/admin/settings/commissions" element={<AdminCommissions />} />
+		  <Route path="users" element={<AdminUsers />} />
+		  <Route path="/admin/set-password" element={<AdminSetPassword />} />
+
 
           {/* ✅ New: Manage Users (role-gated) */}
           <Route

@@ -6,15 +6,15 @@ import './AdminLayout.css';
 const AdminLayout = () => {
   const navigate = useNavigate();
 
-  // Read current admin from storage to drive role-based nav visibility
-  let adminRole = null;
+  // Read logged-in admin (set at login)
+  let me = null;
   try {
-    const raw = localStorage.getItem('admin');
-    if (raw) adminRole = JSON.parse(raw)?.role || null;
+    me = JSON.parse(localStorage.getItem('admin') || 'null');
   } catch (_) {
-    adminRole = null;
+    me = null;
   }
-  const can = (roles) => roles.includes(String(adminRole || '').toLowerCase());
+  const role = (me?.role || '').toLowerCase();
+  const isSuperadmin = role === 'superadmin';
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -42,9 +42,6 @@ const AdminLayout = () => {
           <li><Link to="/admin/user-list">User List</Link></li>
           <li><Link to="/admin/vendor-list">Vendor List</Link></li>
           <li><Link to="/admin/vendor-approvals">Vendor Approvals</Link></li>
-          {can(['superadmin','manager']) && (
-            <li><Link to="/admin/users">Manage Users</Link></li>
-          )}
 
           {/* Admin Services */}
           <li><Link to="/admin/manage-chops">Manage Chops</Link></li>
@@ -61,6 +58,7 @@ const AdminLayout = () => {
           <li><Link to="/admin/settings/commissions">Commission & Cashback</Link></li>
 
           {/* 🔐 Security */}
+          {isSuperadmin && <li><Link to="/admin/users">Admin Users</Link></li>}
           <li><Link to="/admin/change-password">Change Password</Link></li>
         </ul>
 
