@@ -14,19 +14,18 @@ const AdminLogin = () => {
 
     try {
       const res = await api.post('/api/admin/login', { email, password });
-      });
 
-      // ✅ Use a separate key for admin
+      // ✅ Store admin auth
       localStorage.setItem('adminToken', res.data.token);
       localStorage.setItem('admin', JSON.stringify(res.data.admin));
 
-      // 🧹 Optional cleanup: remove vendor token to avoid confusion
-      localStorage.removeItem('token');
+      // 🧹 Optional cleanup: remove user/vendor tokens to avoid cross-auth confusion
+      localStorage.removeItem('userToken');
       localStorage.removeItem('vendorToken');
 
       navigate('/admin/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err?.response?.data?.message || 'Login failed');
     }
   };
 
