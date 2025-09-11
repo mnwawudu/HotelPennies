@@ -1,24 +1,28 @@
+// src/admin/AdminUsers.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../utils/axiosConfig';
 
+const ROLES = ['staff', 'manager', 'superadmin']; // least-privilege → staff by default
+
 export default function AdminUsers() {
-  const [rows, setRows] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState('');
+
+  // form
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('staff');
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
+  const [password, setPassword] = useState('');
 
   const load = async () => {
-    setLoading(true);
     try {
-      const { data } = await api.get('/api/admin/users', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` }
-      });
-      setRows(Array.isArray(data) ? data : []);
+      setErr('');
+      setLoading(true);
+      const { data } = await api.get('/api/admin/admin-users'); // ✅ correct endpoint
+      setItems(Array.isArray(data?.items) ? data.items : []);
     } catch (e) {
-      setErr(e?.response?.data?.message || 'Failed to load admins');
+      setErr(e?.response?.data?.message || 'Failed to load admin users');
     } finally {
       setLoading(false);
     }
@@ -26,45 +30,42 @@ export default function AdminUsers() {
 
   useEffect(() => { load(); }, []);
 
-  const create = async () => {
-    setErr('');
-    setBusy(true);
+  const onCreate = async (e) => {
+    e.preventDefault();
     try {
-      await api.post('/api/admin/users/invite',
-        { name, email, role },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` } }
-      );
-      setName(''); setEmail(''); setRole('staff');
-      await load();
-      alert('Invite sent (or link logged on server).');
-    } catch (e) {
-      setErr(e?.response?.data?.message || 'Failed to invite');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const resend = async (id) => {
-    try {
-      await api.post(`/api/admin/users/${id}/invite`, {},
-        { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` } }
-      );
-      alert('Invite re-sent (or link logged on server).');
-      await load();
-    } catch (e) {
-      alert(e?.response?.data?.message || 'Failed to resend');
-    }
-  };
-
-  const del = async (id) => {
-    if (!window.confirm('Delete this admin?')) return;
-    try {
-      await api.delete(`/api/admin/users/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken') || ''}` }
+      setErr('');
+      await api.post('/api/admin/admin-users', {
+        name: name.trim(),
+        email: email.trim(),     // must be unique per admin!
+        role,
+        password: password.trim(),
+        sendInvite: true         // email invite if SMTP is configured
       });
+      setName(''); setEmail(''); setRole('staff'); setPassword('');
+      await load();
+      alert('Admin created. If email is valid, an invite was sent.');
+    } catch (e) {
+      setErr(e?.response?.data?.message || 'Failed to create admin');
+    }
+  };
+
+  const onReset = async (id) => {
+    if (!window.confirm('Send password reset to this admin?')) return;
+    try {
+      await api.post(`/api/admin/admin-users/${id}/reset-password`);
+      alert('Reset email sent (if SMTP configured).');
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Failed to reset password');
+    }
+  };
+
+  const onDelete = async (id) => {
+    if (!window.confirm('Delete this admin? This cannot be undone.')) return;
+    try {
+      await api.delete(`/api/admin/admin-users/${id}`);
       await load();
     } catch (e) {
-      alert(e?.response?.data?.message || 'Failed to delete');
+      alert(e?.response?.data?.message || 'Failed to delete admin');
     }
   };
 
@@ -72,55 +73,70 @@ export default function AdminUsers() {
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Admin Users & Roles</h2>
 
-      <div className="bg-white rounded shadow p-4 mb-6 space-y-3 max-w-xl">
-        <input className="w-full border p-2 rounded" placeholder="Full name"
-          value={name} onChange={e => setName(e.target.value)} />
-        <input className="w-full border p-2 rounded" placeholder="Email"
-          value={email} onChange={e => setEmail(e.target.value)} />
-        <select className="w-full border p-2 rounded" value={role} onChange={e => setRole(e.target.value)}>
-          <option value="staff">staff (content)</option>
-          <option value="manager">manager</option>
-          <option value="superadmin">superadmin</option>
+      <form onSubmit={onCreate} className="grid gap-3 max-w-xl">
+        <input
+          className="book-gift-input"
+          placeholder="Full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+        <input
+          className="book-gift-input"
+          placeholder="email@domain.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          type="email"
+          required
+        />
+        <select
+          className="book-gift-input"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+        >
+          {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
-        {err && <p className="text-red-600 text-sm">{err}</p>}
-        <button disabled={busy} onClick={create}
-          className="bg-blue-900 text-white px-4 py-2 rounded disabled:opacity-60">
-          {busy ? 'Sending…' : 'Send Invite'}
-        </button>
-      </div>
+        <input
+          className="book-gift-input"
+          placeholder="Temporary password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          type="password"
+          required
+        />
+        <button className="book-gift-button submit" type="submit">Create Admin</button>
+      </form>
 
-      <div className="bg-white rounded shadow p-4">
-        <h3 className="font-medium mb-3">Admins</h3>
-        {loading ? <p>Loading…</p> : !rows.length ? <p>No admins yet.</p> : (
-          <div className="overflow-x-auto">
-            <table className="min-w-[720px] w-full">
-              <thead>
-                <tr className="text-left border-b">
-                  <th className="p-2">Name</th>
-                  <th className="p-2">Email</th>
-                  <th className="p-2">Role</th>
-                  <th className="p-2">Created</th>
-                  <th className="p-2">Actions</th>
+      {err && <p className="text-red-600 mt-3">{err}</p>}
+
+      <div className="card mt-6">
+        <table className="nice-table">
+          <thead>
+            <tr>
+              <th>Name</th><th>Email</th><th>Role</th><th>Created</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan="5">Loading…</td></tr>
+            ) : items.length === 0 ? (
+              <tr><td colSpan="5">No admin users yet.</td></tr>
+            ) : (
+              items.map(a => (
+                <tr key={a._id}>
+                  <td>{a.name || '—'}</td>
+                  <td>{a.email}</td>
+                  <td>{a.role}</td>
+                  <td>{a.createdAt ? new Date(a.createdAt).toLocaleString() : '—'}</td>
+                  <td style={{ display: 'flex', gap: 8 }}>
+                    <button className="btn btn-secondary" onClick={() => onReset(a._id)}>Reset PW</button>
+                    <button className="btn btn-danger" onClick={() => onDelete(a._id)}>Delete</button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {rows.map(r => (
-                  <tr key={r.id} className="border-b">
-                    <td className="p-2">{r.name || '—'}</td>
-                    <td className="p-2">{r.email}</td>
-                    <td className="p-2 capitalize">{r.role}</td>
-                    <td className="p-2">{r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}</td>
-                    <td className="p-2 space-x-2">
-                      <button onClick={() => resend(r.id)} className="px-3 py-1 rounded bg-blue-700 text-white">Resend</button>
-                      <button onClick={() => del(r.id)} className="px-3 py-1 rounded bg-red-100 text-red-700">Delete</button>
-                      {r.invitePending && <span className="ml-2 text-xs text-orange-600">invite pending</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
