@@ -69,6 +69,8 @@ import AdminFeaturedListings from './pages/AdminFeaturedListings';
 import VendorApprovals from './pages/VendorApprovals';
 import AdminChangePassword from './pages/AdminChangePassword';
 import AdminCommissions from './pages/AdminCommissions';
+import RequireAdmin from './admin/RequireAdmin';
+import AdminUsers from './admin/AdminUsers';
 
 // Vendor
 import VendorLayout from './components/VendorLayout';
@@ -205,6 +207,16 @@ function App() {
           <Route path="feature-manager" element={<AdminFeaturedListings />} />
           <Route path="vendor-approvals" element={<VendorApprovals />} />
           <Route path="/admin/settings/commissions" element={<AdminCommissions />} />
+
+          {/* ✅ New: Manage Users (role-gated) */}
+          <Route
+            path="users"
+            element={
+              <RequireAdmin roles={['superadmin','manager']}>
+                <AdminUsers />
+              </RequireAdmin>
+            }
+          />
         </Route>
 
         {/* Vendor */}

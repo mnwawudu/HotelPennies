@@ -6,6 +6,16 @@ import './AdminLayout.css';
 const AdminLayout = () => {
   const navigate = useNavigate();
 
+  // Read current admin from storage to drive role-based nav visibility
+  let adminRole = null;
+  try {
+    const raw = localStorage.getItem('admin');
+    if (raw) adminRole = JSON.parse(raw)?.role || null;
+  } catch (_) {
+    adminRole = null;
+  }
+  const can = (roles) => roles.includes(String(adminRole || '').toLowerCase());
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('admin');
@@ -32,6 +42,9 @@ const AdminLayout = () => {
           <li><Link to="/admin/user-list">User List</Link></li>
           <li><Link to="/admin/vendor-list">Vendor List</Link></li>
           <li><Link to="/admin/vendor-approvals">Vendor Approvals</Link></li>
+          {can(['superadmin','manager']) && (
+            <li><Link to="/admin/users">Manage Users</Link></li>
+          )}
 
           {/* Admin Services */}
           <li><Link to="/admin/manage-chops">Manage Chops</Link></li>
