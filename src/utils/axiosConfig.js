@@ -8,12 +8,9 @@ const host  = isBrowser ? window.location.hostname : '';
 const isCapacitor = proto === 'capacitor:' || (isBrowser && !!window.Capacitor);
 const isHttpLocal = /^(localhost|127\.0\.0\.1)$/.test(host) && /^https?:$/.test(proto);
 
-// Optional override via env (useful for previews)
-const ENV_BASE = process.env.REACT_APP_API_BASE?.trim();
+// Allow either var; REACT_APP_API_URL preferred
+const ENV_BASE = (process.env.REACT_APP_API_URL || process.env.REACT_APP_API_BASE || '').trim();
 
-// If running inside Capacitor, always use production API.
-// If running in real browser at http(s)://localhost, use local API.
-// Otherwise default to production API.
 const baseURL =
   ENV_BASE ||
   (isCapacitor
@@ -24,17 +21,14 @@ const baseURL =
 
 const instance = axios.create({ baseURL });
 
-// Attach whichever auth token exists
 instance.interceptors.request.use(
   (config) => {
-    const userToken =
-      localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
-    const vendorToken =
-      localStorage.getItem('vendorToken') || sessionStorage.getItem('vendorToken');
+    const adminToken  = localStorage.getItem('adminToken')  || sessionStorage.getItem('adminToken');
+    const userToken   = localStorage.getItem('userToken')   || sessionStorage.getItem('userToken');
+    const vendorToken = localStorage.getItem('vendorToken') || sessionStorage.getItem('vendorToken');
 
-    if (userToken) config.headers.Authorization = `Bearer ${userToken}`;
-    else if (vendorToken) config.headers.Authorization = `Bearer ${vendorToken}`;
-
+    const token = adminToken || userToken || vendorToken;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
