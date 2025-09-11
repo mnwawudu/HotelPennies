@@ -1,5 +1,6 @@
+// src/pages/AdminChangePassword.js
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../utils/axiosConfig'; // <-- use the shared instance
 
 const AdminChangePassword = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -10,16 +11,15 @@ const AdminChangePassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmNew) return alert('New passwords do not match');
+    if (newPassword.length < 8) return alert('New password must be at least 8 characters');
     setBusy(true);
     try {
       const token = localStorage.getItem('adminToken');
       if (!token) return alert('You must be signed in');
 
-      await axios.post(
-        'http://localhost:10000/api/admin/change-password',
-        { currentPassword, newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.post('/api/admin/change-password', { currentPassword, newPassword }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       alert('Password changed successfully. Please sign in again.');
       localStorage.removeItem('adminToken');

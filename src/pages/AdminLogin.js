@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 
 const AdminLogin = () => {
@@ -13,9 +13,7 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const res = await axios.post('http://localhost:10000/api/admin/login', {
-        email,
-        password
+      const res = await api.post('/api/admin/login', { email, password });
       });
 
       // ✅ Use a separate key for admin

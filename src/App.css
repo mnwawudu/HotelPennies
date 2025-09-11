@@ -163,3 +163,37 @@ input, select, textarea { font-size: 16px; }
     flex: none !important;   /* kills any old flex widths */
   }
 }
+html, body, #root { height: 100%; }
+body {
+  min-height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #fff;
+}
+.hp-sheet-overlay { position: fixed; inset: 0; z-index: 9999; }
+.hp-sheet { max-height: calc(100dvh - env(safe-area-inset-top)); overflow: auto; }
+@supports (height: 100svh) { body { min-height: 100svh; } }
+:root{
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Make the document fill the screen and respect safe areas */
+html, body, #root { height: 100%; }
+body{
+  min-height: 100dvh;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  background: #fff;
+}
+
+/* If you have a sticky header, give it breathing space too */
+.header, .site-header, .hp-header{
+  padding-top: max(12px, var(--safe-top));
+}
+
+.hp-sheet-overlay { position: fixed; inset: 0; z-index: 9999; }
+.hp-sheet { max-height: calc(100dvh - var(--safe-top)); overflow: auto; }
+
+@supports (height: 100svh) {
+  body { min-height: 100svh; }
+}
