@@ -2,48 +2,61 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
+// ❌ removed: const nodemailer = require('nodemailer');
 const Admin = require('../models/adminModel');
 const adminAuth = require('../middleware/adminAuth');
 const adminRole = require('../middleware/adminRole'); // gate by role
+
+// ✅ use the same mailer as the rest of the app
+const { send, FROM_EMAIL } = require('../services/mailer');
 
 const ROLES = ['staff','manager','superadmin'];
 const isStrong = (pwd='') =>
   pwd.length >= 8 && /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /\d/.test(pwd);
 
-// mailer (no-throw: logs on failure)
-function getTransport() {
-  if (!process.env.SMTP_HOST) return null;
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
+/**
+ * Email helpers
+ * We DO NOT build a new transport here. We reuse services/mailer.js -> send()
+ * so this route behaves exactly like registration and other working emails.
+ */
+
+// Choose admin-facing base URL (prefer explicit admin app URL if set)
+function getBaseUrl() {
+  // Keep your existing FRONTEND_BASE_URL fallback to avoid behavioral change
+  return (
+    process.env.ADMIN_APP_URL ||
+    process.env.FRONTEND_BASE_URL ||
+    'https://www.hotelpennies.com'
+  ).replace(/\/+$/, '');
 }
+
 async function sendInviteEmail(to, name, token) {
-  const transport = getTransport();
-  if (!transport) return;
-  const base = process.env.FRONTEND_BASE_URL || 'https://www.hotelpennies.com';
+  if (!to || !token) return;
+
+  const base = getBaseUrl();
   const link = `${base}/admin/set-password?token=${encodeURIComponent(token)}`;
-  const from = process.env.FROM_EMAIL || 'HotelPennies <admin@hotelpennies.com>';
   const replyTo = process.env.REPLY_TO || undefined;
 
   try {
-    await transport.sendMail({
+    console.log('📧 About to send admin invite/reset email to', to, 'link:', link);
+    await send({
       to,
-      from,
+      from: FROM_EMAIL,                 // consistent with your working mail sender
       ...(replyTo ? { replyTo } : {}),
       subject: 'You’ve been granted HotelPennies admin access',
       html: `
-        <p>Hi ${name || ''},</p>
-        <p>You now have admin access to HotelPennies.</p>
-        <p><a href="${link}">Click here to set your password</a>. This link is valid for 60 minutes.</p>
-        <p>If you didn’t expect this, ignore this email.</p>
+        <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6;">
+          <p>Hi ${name || ''},</p>
+          <p>You now have admin access to HotelPennies.</p>
+          <p><a href="${link}" style="display:inline-block;background:#0b5;color:#fff;padding:.7rem 1rem;border-radius:6px;text-decoration:none;">Click here to set your password</a></p>
+          <p>This link is valid for 60 minutes.</p>
+          <p>If you didn’t expect this, ignore this email.</p>
+        </div>
       `,
     });
+    console.log('✅ Admin invite/reset email sent to', to);
   } catch (e) {
-    console.warn('Invite email failed:', e.message);
+    console.error('❌ Invite/reset email failed:', e?.message || e);
   }
 }
 
