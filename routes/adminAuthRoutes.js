@@ -136,14 +136,10 @@ router.post('/_setup/set-password', async (req, res) => {
     return res.status(500).json({ message: 'Failed to set password' });
   }
 });
- // ─────────────────────────────────────────
-// POST /api/admin/set-password   (token-based)
-// body: { token, password }
-// Uses Admin.resetTokenHash/resetTokenExpires set by issuePasswordResetToken()
-// ─────────────────────────────────────────
-const crypto = require('crypto');
+ const crypto = require('crypto');
 
 router.post('/set-password', async (req, res) => {
+  const trace = `ASET-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
   try {
     const token = String(req.body?.token || '').trim();
     const password = String(req.body?.password || '');
@@ -159,25 +155,39 @@ router.post('/set-password', async (req, res) => {
 
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
+    // 1) Look for any admin with this hash (ignore expiry) to disambiguate
+    const any = await Admin.findOne({ resetTokenHash: tokenHash })
+      .select('+resetTokenHash +resetTokenExpires email')
+      .lean();
+
+    if (!any) {
+      console.warn(`[${trace}] set-password: no admin with that tokenHash`);
+      return res.status(400).json({ message: 'Invalid or expired link' });
+    }
+
+    // 2) Now enforce expiry
     const admin = await Admin.findOne({
       resetTokenHash: tokenHash,
       resetTokenExpires: { $gt: new Date() },
     }).select('+resetTokenHash +resetTokenExpires +tokenVersion role email username');
 
     if (!admin) {
-      return res.status(400).json({ message: 'Invalid or expired link' });
+      console.warn(
+        `[${trace}] set-password: token expired for ${any.email} (expired at ${any.resetTokenExpires?.toISOString?.()})`
+      );
+      return res.status(400).json({ message: 'This reset link has expired. Please request a new one.' });
     }
 
-    // Set new password; pre('save') will hash and bump tokenVersion/passwordUpdatedAt
+    // 3) Apply the new password
     admin.password = password;
     admin.resetTokenHash = undefined;
     admin.resetTokenExpires = undefined;
     await admin.save();
 
-    // Optional: auto-sign-in after reset
     const payload = { id: admin._id, role: admin.role || 'admin', v: admin.tokenVersion || 0 };
     const tokenJwt = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
+    console.log(`[${trace}] set-password: success for ${admin.email}`);
     return res.json({
       ok: true,
       token: tokenJwt,
@@ -189,7 +199,7 @@ router.post('/set-password', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('❌ Admin token set-password error:', err);
+    console.error(`[${trace}] set-password error:`, err?.message || err);
     return res.status(500).json({ message: 'Server error' });
   }
 });
