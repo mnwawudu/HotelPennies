@@ -1,4 +1,4 @@
-// src/App.js
+// ✅ src/App.js
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
@@ -8,7 +8,7 @@ import 'slick-carousel/slick/slick-theme.css';
 import Header from './components/Header';
 import Toast from './components/Toast';
 
-// ⬇️ Add this import
+// ⬇️ App download / PWA prompt
 import DownloadAppPrompt from './components/DownloadAppPrompt';
 
 // Public pages
@@ -72,7 +72,6 @@ import AdminCommissions from './pages/AdminCommissions';
 import RequireAdmin from './admin/RequireAdmin';
 import AdminUsers from './admin/AdminUsers';
 import AdminSetPassword from './pages/AdminSetPassword';
-
 
 // Vendor
 import VendorLayout from './components/VendorLayout';
@@ -199,7 +198,17 @@ function App() {
           <Route path="explore-manager" element={<ExploreManager />} />
           <Route path="user-list" element={<UserList />} />
           <Route path="vendor-list" element={<VendorList />} />
-          <Route path="manage-payout" element={<ManagePayout />} />
+
+          {/* 🔒 Payout – gated to manager|superadmin */}
+          <Route
+            path="manage-payout"
+            element={
+              <RequireAdmin roles={['manager','superadmin']}>
+                <ManagePayout />
+              </RequireAdmin>
+            }
+          />
+
           <Route path="manage-ads" element={<ManageAds />} />
           <Route path="featured-listings" element={<PublicFeaturedListings />} />
           <Route path="manage-blogs" element={<ManageBlogs />} />
@@ -208,21 +217,23 @@ function App() {
           <Route path="change-password" element={<AdminChangePassword />} />
           <Route path="feature-manager" element={<AdminFeaturedListings />} />
           <Route path="vendor-approvals" element={<VendorApprovals />} />
+
+          {/* You asked to keep this absolute path style */}
           <Route path="/admin/settings/commissions" element={<AdminCommissions />} />
-		  <Route path="users" element={<AdminUsers />} />
-		  <Route path="/admin/set-password" element={<AdminSetPassword />} />
 
-
-          {/* ✅ New: Manage Users (role-gated) */}
+          {/* 🔒 Admin Users – superadmin only */}
           <Route
             path="users"
             element={
-              <RequireAdmin roles={['superadmin','manager']}>
+              <RequireAdmin roles={['superadmin']}>
                 <AdminUsers />
               </RequireAdmin>
             }
           />
         </Route>
+
+        {/* Absolute invite page (accessible without auth) */}
+        <Route path="/admin/set-password" element={<AdminSetPassword />} />
 
         {/* Vendor */}
         <Route path="/dashboard" element={<VendorLayout />}>

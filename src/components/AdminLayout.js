@@ -15,6 +15,7 @@ const AdminLayout = () => {
   }
   const role = (me?.role || '').toLowerCase();
   const isSuperadmin = role === 'superadmin';
+  const canPayout = role === 'manager' || role === 'superadmin';
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -30,8 +31,8 @@ const AdminLayout = () => {
           {/* Overview */}
           <li><Link to="/admin/dashboard">Dashboard</Link></li>
 
-          {/* Earnings & Payouts */}
-          <li><Link to="/admin/manage-payout">Payout</Link></li>
+          {/* Earnings & Payouts (role-gated in UI) */}
+          {canPayout && <li><Link to="/admin/manage-payout">Payout</Link></li>}
 
           {/* Listings & Promotions */}
           <li><Link to="/admin/manage-ads">Manage Ads</Link></li>

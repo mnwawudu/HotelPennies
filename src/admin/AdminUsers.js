@@ -2,14 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/axiosConfig';
 
-const ROLES = ['staff', 'manager', 'superadmin']; // least-privilege → staff by default
+const ROLES = ['staff','manager','superadmin'];
 
 export default function AdminUsers() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
-  // form
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('staff');
@@ -19,7 +18,7 @@ export default function AdminUsers() {
     try {
       setErr('');
       setLoading(true);
-      const { data } = await api.get('/api/admin/admin-users'); // ✅ correct endpoint
+      const { data } = await api.get('/api/admin/admin-users');  // ✅ admin accounts
       setItems(Array.isArray(data?.items) ? data.items : []);
     } catch (e) {
       setErr(e?.response?.data?.message || 'Failed to load admin users');
@@ -36,14 +35,14 @@ export default function AdminUsers() {
       setErr('');
       await api.post('/api/admin/admin-users', {
         name: name.trim(),
-        email: email.trim(),     // must be unique per admin!
+        email: email.trim(),
         role,
         password: password.trim(),
-        sendInvite: true         // email invite if SMTP is configured
+        sendInvite: true,
       });
       setName(''); setEmail(''); setRole('staff'); setPassword('');
       await load();
-      alert('Admin created. If email is valid, an invite was sent.');
+      alert('Admin created. If the email is valid, an invite was sent.');
     } catch (e) {
       setErr(e?.response?.data?.message || 'Failed to create admin');
     }
@@ -74,36 +73,12 @@ export default function AdminUsers() {
       <h2 className="text-xl font-semibold mb-4">Admin Users & Roles</h2>
 
       <form onSubmit={onCreate} className="grid gap-3 max-w-xl">
-        <input
-          className="book-gift-input"
-          placeholder="Full name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          className="book-gift-input"
-          placeholder="email@domain.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          type="email"
-          required
-        />
-        <select
-          className="book-gift-input"
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-        >
+        <input className="book-gift-input" placeholder="Full name" value={name} onChange={e=>setName(e.target.value)} required />
+        <input className="book-gift-input" placeholder="email@domain.com" value={email} onChange={e=>setEmail(e.target.value)} type="email" required />
+        <select className="book-gift-input" value={role} onChange={e=>setRole(e.target.value)}>
           {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
-        <input
-          className="book-gift-input"
-          placeholder="Temporary password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          type="password"
-          required
-        />
+        <input className="book-gift-input" placeholder="Temporary password" value={password} onChange={e=>setPassword(e.target.value)} type="password" required />
         <button className="book-gift-button submit" type="submit">Create Admin</button>
       </form>
 
@@ -112,29 +87,25 @@ export default function AdminUsers() {
       <div className="card mt-6">
         <table className="nice-table">
           <thead>
-            <tr>
-              <th>Name</th><th>Email</th><th>Role</th><th>Created</th><th>Actions</th>
-            </tr>
+            <tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {loading ? (
               <tr><td colSpan="5">Loading…</td></tr>
             ) : items.length === 0 ? (
               <tr><td colSpan="5">No admin users yet.</td></tr>
-            ) : (
-              items.map(a => (
-                <tr key={a._id}>
-                  <td>{a.name || '—'}</td>
-                  <td>{a.email}</td>
-                  <td>{a.role}</td>
-                  <td>{a.createdAt ? new Date(a.createdAt).toLocaleString() : '—'}</td>
-                  <td style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-secondary" onClick={() => onReset(a._id)}>Reset PW</button>
-                    <button className="btn btn-danger" onClick={() => onDelete(a._id)}>Delete</button>
-                  </td>
-                </tr>
-              ))
-            )}
+            ) : items.map(a => (
+              <tr key={a._id}>
+                <td>{a.name || '—'}</td>
+                <td>{a.email}</td>
+                <td>{a.role}</td>
+                <td>{a.createdAt ? new Date(a.createdAt).toLocaleString() : '—'}</td>
+                <td style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-secondary" onClick={() => onReset(a._id)}>Reset PW</button>
+                  <button className="btn btn-danger" onClick={() => onDelete(a._id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
