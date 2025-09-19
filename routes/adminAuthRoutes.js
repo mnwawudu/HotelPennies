@@ -136,5 +136,62 @@ router.post('/_setup/set-password', async (req, res) => {
     return res.status(500).json({ message: 'Failed to set password' });
   }
 });
+ // ─────────────────────────────────────────
+// POST /api/admin/set-password   (token-based)
+// body: { token, password }
+// Uses Admin.resetTokenHash/resetTokenExpires set by issuePasswordResetToken()
+// ─────────────────────────────────────────
+const crypto = require('crypto');
+
+router.post('/set-password', async (req, res) => {
+  try {
+    const token = String(req.body?.token || '').trim();
+    const password = String(req.body?.password || '');
+
+    if (!token || !password) {
+      return res.status(400).json({ message: 'Token and password are required' });
+    }
+    if (!isStrong(password)) {
+      return res.status(400).json({
+        message: 'Password must be at least 8 characters and include upper, lower, and a number.',
+      });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const admin = await Admin.findOne({
+      resetTokenHash: tokenHash,
+      resetTokenExpires: { $gt: new Date() },
+    }).select('+resetTokenHash +resetTokenExpires +tokenVersion role email username');
+
+    if (!admin) {
+      return res.status(400).json({ message: 'Invalid or expired link' });
+    }
+
+    // Set new password; pre('save') will hash and bump tokenVersion/passwordUpdatedAt
+    admin.password = password;
+    admin.resetTokenHash = undefined;
+    admin.resetTokenExpires = undefined;
+    await admin.save();
+
+    // Optional: auto-sign-in after reset
+    const payload = { id: admin._id, role: admin.role || 'admin', v: admin.tokenVersion || 0 };
+    const tokenJwt = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    return res.json({
+      ok: true,
+      token: tokenJwt,
+      admin: {
+        id: admin._id,
+        name: admin.name || admin.username || 'Admin',
+        email: admin.email,
+        role: admin.role || 'admin',
+      },
+    });
+  } catch (err) {
+    console.error('❌ Admin token set-password error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
 
 module.exports = router;
