@@ -6,7 +6,7 @@ const Admin = require('../models/adminModel');
 const adminAuth = require('../middleware/adminAuth');
 const adminRole = require('../middleware/adminRole'); // gate by role
 
-// ✅ use the same mailer as the rest of the app
+// ✅ reuse the shared mailer used everywhere else
 const { send, FROM_EMAIL } = require('../services/mailer');
 
 const ROLES = ['staff','manager','superadmin'];
@@ -56,6 +56,8 @@ async function sendInviteEmail(to, name, token) {
     console.log('✅ Admin invite/reset email sent to', to);
   } catch (e) {
     console.error('❌ Invite/reset email failed:', e?.message || e);
+    // let caller decide what to do; we already logged
+    throw e;
   }
 }
 
@@ -87,7 +89,11 @@ router.post('/admin-users', adminAuth, adminRole(['superadmin']), async (req, re
   if (sendInvite) {
     const raw = admin.issuePasswordResetToken();
     await admin.save();
-    await sendInviteEmail(admin.email, admin.name, raw);
+    try {
+      await sendInviteEmail(admin.email, admin.name, raw);
+    } catch (_) {
+      // already logged inside sendInviteEmail; do not fail creation because of email
+    }
   }
 
   res.status(201).json({ id: admin._id, name: admin.name, email: admin.email, role: admin.role, createdAt: admin.createdAt });
@@ -108,7 +114,14 @@ router.post('/admin-users/:id/reset-password', adminAuth, adminRole(['manager','
     await sendInviteEmail(admin.email, admin.name, raw);
     console.log('✅ Post-send for', admin.email);
   } catch (err) {
-    console.error('❌ Reset email error for', admin.email, err?.message || err);
+    console.error('❌ Reset email error for', admin.email, {
+      message: err?.message,
+      code: err?.code,
+      command: err?.command,
+      responseCode: err?.responseCode,
+      response: err?.response,
+    });
+    // we still return ok to avoid email enumeration; UI can show generic success
   }
 
   res.json({ ok: true });
