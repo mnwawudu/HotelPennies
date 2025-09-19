@@ -34,7 +34,7 @@ export default function AdminSetPassword() {
     try {
       // Use the existing backend endpoint you already have:
       // POST /api/admin/_setup/set-password with { token, password }
-      const { data } = await api.post('/api/admin/_setup/set-password', {
+      const { data } = await api.post('/api/admin/set-password', {
         token,
         password: pw,
       });
