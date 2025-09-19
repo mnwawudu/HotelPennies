@@ -1,5 +1,6 @@
 // services/mailer.js
 // One shared Nodemailer transport for the whole app (SMTP-first, Gmail fallback)
+// Back-compat helpers for legacy routes: sendAdminInvite, sendAdminReset
 
 const nodemailer = require('nodemailer');
 
@@ -30,8 +31,8 @@ function buildTransport() {
       port,
       secure,                       // false for 587 (STARTTLS), true for 465
       auth: { user, pass },
-      logger: MAIL_DEBUG,           // extra logs
-      debug: MAIL_DEBUG,            // extra logs
+      logger: MAIL_DEBUG,
+      debug: MAIL_DEBUG,
       tls: MAIL_DEBUG ? { rejectUnauthorized: false } : undefined, // relax only in debug
       greetingTimeout: 10000,
       connectionTimeout: 10000,
@@ -95,7 +96,16 @@ const FROM_EMAIL =
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || undefined;
 
-/** Small helper so callers can do: await send({to, subject, text, html}) */
+// Base URL for admin set-password/reset pages
+function getBaseUrl() {
+  return (
+    process.env.ADMIN_APP_URL ||
+    process.env.FRONTEND_BASE_URL ||
+    'https://www.hotelpennies.com'
+  ).replace(/\/+$/, '');
+}
+
+/** Core sender so callers can do: await send({to, subject, text, html}) */
 async function send({ to, subject, text, html, bcc, cc, attachments }) {
   if (MAIL_DEBUG) {
     console.log('[MAIL][REQ]', { to, subject, hasHtml: !!html, hasText: !!text, from: FROM_EMAIL });
@@ -131,9 +141,96 @@ async function send({ to, subject, text, html, bcc, cc, attachments }) {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Back-compat helpers expected by legacy routes/adminUsers.js         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * sendAdminInvite(to, name)
+ * If no token is present, issues a token for the Admin by email and sends the invite link.
+ */
+async function sendAdminInvite(to, name) {
+  const base = getBaseUrl();
+  let token = null;
+
+  try {
+    // Lazy-load to avoid circular deps at module load time
+    const Admin = require('../models/adminModel');
+    const admin = await Admin.findOne({ email: String(to).toLowerCase().trim() });
+    if (!admin) {
+      console.warn('[MAIL] sendAdminInvite: admin not found for', to);
+      return;
+    }
+    token = admin.issuePasswordResetToken();
+    await admin.save();
+  } catch (e) {
+    console.warn('[MAIL] sendAdminInvite: could not issue token (continuing only if route passed one):', e?.message || e);
+  }
+
+  const link = `${base}/admin/set-password?token=${encodeURIComponent(token || '')}`;
+  const subject = 'You’ve been granted HotelPennies admin access';
+
+  const html = `
+    <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6;">
+      <p>Hi ${name || 'Admin'},</p>
+      <p>You now have admin access to HotelPennies.</p>
+      <p><a href="${link}" style="display:inline-block;background:#0b5;color:#fff;padding:.7rem 1rem;border-radius:6px;text-decoration:none;">Click here to set your password</a></p>
+      <p>This link is valid for 60 minutes.</p>
+      <p>If you didn’t expect this, ignore this email.</p>
+    </div>
+  `;
+
+  await send({ to, subject, html });
+}
+
+/**
+ * sendAdminReset(to, name, token?)
+ * Uses provided token if given; otherwise issues a new token for the admin and sends reset link.
+ */
+async function sendAdminReset(to, name, token) {
+  const base = getBaseUrl();
+  let raw = token;
+
+  if (!raw) {
+    try {
+      const Admin = require('../models/adminModel');
+      const admin = await Admin.findOne({ email: String(to).toLowerCase().trim() });
+      if (!admin) {
+        console.warn('[MAIL] sendAdminReset: admin not found for', to);
+        return;
+      }
+      raw = admin.issuePasswordResetToken();
+      await admin.save();
+    } catch (e) {
+      console.error('[MAIL] sendAdminReset: failed to issue token:', e?.message || e);
+      throw e;
+    }
+  }
+
+  const link = `${base}/admin/set-password?token=${encodeURIComponent(raw)}`;
+  const subject = 'Reset your Admin password - HotelPennies';
+  const html = `
+    <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6;">
+      <h2>Admin Password Reset</h2>
+      <p>Hi ${name || 'Admin'},</p>
+      <p>Click the button below to reset your password:</p>
+      <p><a href="${link}" style="display:inline-block;background:#0b5;color:#fff;padding:.7rem 1rem;border-radius:6px;text-decoration:none;">Reset Password</a></p>
+      <p>If the button doesn't work, copy and paste this link:</p>
+      <p><a href="${link}">${link}</a></p>
+      <hr/>
+      <p style="color:#666;font-size:.9rem;">From: ${FROM_EMAIL}</p>
+    </div>
+  `;
+
+  await send({ to, subject, html });
+}
+
 module.exports = {
   transporter,
   FROM_EMAIL,
   ADMIN_EMAIL,
   send,
+  // back-compat exports for legacy routers:
+  sendAdminInvite,
+  sendAdminReset,
 };
