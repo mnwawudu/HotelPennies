@@ -1,8 +1,7 @@
 // routes/adminAccountsRoutes.js
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-// ❌ removed: const nodemailer = require('nodemailer');
+const bcrypt = require('bcryptjs'); // (unused here but harmless)
 const Admin = require('../models/adminModel');
 const adminAuth = require('../middleware/adminAuth');
 const adminRole = require('../middleware/adminRole'); // gate by role
@@ -41,7 +40,7 @@ async function sendInviteEmail(to, name, token) {
     console.log('📧 About to send admin invite/reset email to', to, 'link:', link);
     await send({
       to,
-      from: FROM_EMAIL,                 // consistent with your working mail sender
+      from: FROM_EMAIL, // consistent with your working mail sender
       ...(replyTo ? { replyTo } : {}),
       subject: 'You’ve been granted HotelPennies admin access',
       html: `
@@ -98,9 +97,20 @@ router.post('/admin-users', adminAuth, adminRole(['superadmin']), async (req, re
 router.post('/admin-users/:id/reset-password', adminAuth, adminRole(['manager','superadmin']), async (req, res) => {
   const admin = await Admin.findById(req.params.id);
   if (!admin) return res.status(404).json({ message: 'Admin not found' });
+
+  console.log('🔐 Admin reset requested for', admin.email);
+
   const raw = admin.issuePasswordResetToken();
   await admin.save();
-  await sendInviteEmail(admin.email, admin.name, raw);
+
+  try {
+    console.log('📧 Pre-send for', admin.email);
+    await sendInviteEmail(admin.email, admin.name, raw);
+    console.log('✅ Post-send for', admin.email);
+  } catch (err) {
+    console.error('❌ Reset email error for', admin.email, err?.message || err);
+  }
+
   res.json({ ok: true });
 });
 
