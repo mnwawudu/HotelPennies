@@ -9,6 +9,9 @@ const adminRole = require('../middleware/adminRole'); // gate by role
 // ✅ reuse the shared mailer used everywhere else
 const { send, FROM_EMAIL } = require('../services/mailer');
 
+// ✅ startup banner so we know these routes are loaded in this service
+console.log('ADMIN-ACCOUNTS ROUTES LOADED ✅');
+
 const ROLES = ['staff','manager','superadmin'];
 const isStrong = (pwd='') =>
   pwd.length >= 8 && /[A-Z]/.test(pwd) && /[a-z]/.test(pwd) && /\d/.test(pwd);
@@ -56,8 +59,7 @@ async function sendInviteEmail(to, name, token) {
     console.log('✅ Admin invite/reset email sent to', to);
   } catch (e) {
     console.error('❌ Invite/reset email failed:', e?.message || e);
-    // let caller decide what to do; we already logged
-    throw e;
+    throw e; // bubble so caller can log traceId context
   }
 }
 
@@ -92,7 +94,7 @@ router.post('/admin-users', adminAuth, adminRole(['superadmin']), async (req, re
     try {
       await sendInviteEmail(admin.email, admin.name, raw);
     } catch (_) {
-      // already logged inside sendInviteEmail; do not fail creation because of email
+      // already logged; do not fail creation because of email
     }
   }
 
@@ -101,30 +103,37 @@ router.post('/admin-users', adminAuth, adminRole(['superadmin']), async (req, re
 
 // RESET password email (manager/superadmin)
 router.post('/admin-users/:id/reset-password', adminAuth, adminRole(['manager','superadmin']), async (req, res) => {
+  // 👇 add a traceId for this request so UI ↔ server logs match perfectly
+  const traceId = `RST-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
+  console.log(`[${traceId}] 🔔 Hit reset-password route`, { id: req.params.id, by: req?.admin?.email });
+
   const admin = await Admin.findById(req.params.id);
-  if (!admin) return res.status(404).json({ message: 'Admin not found' });
+  if (!admin) {
+    console.warn(`[${traceId}] Admin not found`);
+    return res.status(404).json({ ok: false, message: 'Admin not found', traceId });
+  }
 
-  console.log('🔐 Admin reset requested for', admin.email);
-
+  console.log(`[${traceId}] 🔐 Admin reset requested for ${admin.email}`);
   const raw = admin.issuePasswordResetToken();
   await admin.save();
 
   try {
-    console.log('📧 Pre-send for', admin.email);
+    console.log(`[${traceId}] 📧 Pre-send for ${admin.email}`);
     await sendInviteEmail(admin.email, admin.name, raw);
-    console.log('✅ Post-send for', admin.email);
+    console.log(`[${traceId}] ✅ Post-send for ${admin.email}`);
   } catch (err) {
-    console.error('❌ Reset email error for', admin.email, {
+    console.error(`[${traceId}] ❌ Reset email error for ${admin.email}`, {
       message: err?.message,
       code: err?.code,
       command: err?.command,
       responseCode: err?.responseCode,
       response: err?.response,
     });
-    // we still return ok to avoid email enumeration; UI can show generic success
+    // still return ok to avoid user enumeration, but include traceId for debugging
   }
 
-  res.json({ ok: true });
+  const debug = String(process.env.MAIL_DEBUG || '').toLowerCase() === 'true';
+  return res.json(debug ? { ok: true, traceId } : { ok: true });
 });
 
 // DELETE admin (superadmin only, cannot delete self)

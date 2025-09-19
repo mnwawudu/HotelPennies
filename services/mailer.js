@@ -39,7 +39,10 @@ function buildTransport() {
     });
 
     transporter.verify()
-      .then(() => console.log('📬 SMTP transport verified'))
+      .then(() => {
+        console.log('📬 SMTP transport verified');
+        console.log('[MAIL] SMTP READY ✅', { host, port, secure, user });
+      })
       .catch(err => console.warn('⚠️  SMTP verify warning:', err?.message || err));
 
     if (MAIL_DEBUG) {
@@ -64,7 +67,10 @@ function buildTransport() {
     });
 
     transporter.verify()
-      .then(() => console.log('📬 Gmail transport verified'))
+      .then(() => {
+        console.log('📬 Gmail transport verified');
+        console.log('[MAIL] SMTP READY ✅', { host: 'smtp.gmail.com', port: 465, secure: true, user: (process.env.GMAIL_USER || '').trim() });
+      })
       .catch(err => console.warn('⚠️  Gmail verify warning:', err?.message || err));
 
     if (MAIL_DEBUG) {
