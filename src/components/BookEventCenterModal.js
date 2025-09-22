@@ -1,13 +1,12 @@
 // 📄 src/components/BookEventCenterModal.js
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import axios from '../utils/axiosConfig';
 import './BookEventCenterModal.css';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const BookEventCenterModal = ({ eventCenter, onClose }) => {
-  const navigate = useNavigate();
+ 
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,6 +18,9 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [unavailableDates, setUnavailableDates] = useState([]);
+
+  // ✅ NEW: capture referral code like shortlet modal
+  const [referralCode, setReferralCode] = useState(null);
 
   // ---- helpers for stable date handling ----
   const toYMD = (d) => {
@@ -46,6 +48,10 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
   const reference = 'EVT-' + Math.floor(Math.random() * 1000000000);
 
   useEffect(() => {
+    // ✅ mirror shortlet: read referral code (if any)
+    const stored = localStorage.getItem('referralCode');
+    if (stored) setReferralCode(stored);
+
     const fetchEventCenterDetails = async () => {
       try {
         const res = await axios.get(`/api/eventcenters/public/${eventCenter._id}?t=${Date.now()}`);
@@ -92,19 +98,28 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
     setShowPaymentOptions(true);
   };
 
+  // ✅ ONLY change: send JWT header + referredByUserId (from referralCode)
   const handleBookingSave = async (paymentRef, method) => {
     try {
-      await axios.post(`/api/eventcenters/bookings`, {
-        eventCenterId: eventCenter._id,
-        fullName,
-        email,
-        phone,
-        eventDate: toYMD(eventDate), // ← send local date-only (prevents off-by-one)
-        guests,
-        paymentRef,
-        paymentMethod: method,
-        amount,
-      });
+      const token = localStorage.getItem('token');
+
+      await axios.post(
+        `/api/eventcenters/bookings`,
+        {
+          eventCenterId: eventCenter._id,
+          fullName,
+          email,
+          phone,
+          eventDate: toYMD(eventDate), // send local date-only
+          guests,
+          paymentRef,
+          paymentMethod: method,
+          amount,
+          // mirror shortlet contract
+          referredByUserId: referralCode || undefined,
+        },
+        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
+      );
 
       setSuccessMsg('✅ Booking confirmed!');
       setTimeout(() => {
@@ -119,6 +134,7 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
     }
   };
 
+  // ✅ ONLY change: include referral in Paystack metadata (backend also resolves from verify->metadata)
   const payWithPaystack = () => {
     setPaying(true);
     const handler = window.PaystackPop.setup({
@@ -127,6 +143,13 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
       amount: amount * 100,
       currency: 'NGN',
       ref: reference,
+      metadata: {
+        referralCode: referralCode || null,
+        custom_fields: [
+          { display_name: 'referralCode', variable_name: 'referral_code', value: referralCode || '' },
+          { display_name: 'buyerEmail', variable_name: 'buyer_email', value: (email || '').toLowerCase() },
+        ],
+      },
       callback: function (response) {
         handleBookingSave(response.reference, 'Paystack');
       },
@@ -150,8 +173,8 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
           <form className="booking-form" onSubmit={handleBookingSubmit} autoComplete="on">
             <input
               type="text"
-              name="name"               // ✅ autofill
-              autoComplete="name"       // ✅ autofill
+              name="name"
+              autoComplete="name"
               placeholder="Full Name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -159,8 +182,8 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
             />
             <input
               type="email"
-              name="email"              // ✅ autofill
-              autoComplete="email"      // ✅ autofill
+              name="email"
+              autoComplete="email"
               placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -168,8 +191,8 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
             />
             <input
               type="tel"
-              name="tel"                // ✅ autofill
-              autoComplete="tel"        // ✅ autofill
+              name="tel"
+              autoComplete="tel"
               placeholder="Phone Number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -180,7 +203,6 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
               selected={eventDate}
               onChange={(date) => setEventDate(date)}
               minDate={today}
-              // Keep excludeDates to match your UI, but these are normalized at local noon
               excludeDates={unavailableDates}
               placeholderText="Select Event Date"
               className="date-picker-input"
