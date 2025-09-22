@@ -1,3 +1,4 @@
+// routes/adminSettings.js
 const express = require('express');
 const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
@@ -5,31 +6,43 @@ const Setting = require('../models/settingModel');
 const configService = require('../services/configService');
 
 /**
- * KNOBS — keep list SHORT and validated.
- * We store FRACTIONS (e.g., 0.02 for 2%) to avoid confusion.
- * If an admin submits 2 or "2", we normalize to 0.02.
+ * FRACTIONS in DB (0..1). If admin submits 15, we store 0.15.
  */
 const KNOBS = {
-  cashbackPctHotel:          { type: 'fraction', min: 0, max: 0.5 },  // 0..50%
+  // lodging (hotels & shortlets)
+  cashbackPctHotel:          { type: 'fraction', min: 0, max: 0.5 },
   referralPctHotel:          { type: 'fraction', min: 0, max: 0.5 },
   platformPctLodging:        { type: 'fraction', min: 0, max: 0.5 },
+
+  // default (other)
   platformPctDefault:        { type: 'fraction', min: 0, max: 0.5 },
+
+  // event center (NEW)
+  cashbackPctEventCenter:    { type: 'fraction', min: 0, max: 0.5 },
+  referralPctEventCenter:    { type: 'fraction', min: 0, max: 0.5 },
+  platformPctEventCenter:    { type: 'fraction', min: 0, max: 0.5 },
+
+  // flags
   platformMaturesWithVendor: { type: 'boolean' },
 };
 
-// 👉 NEW: discoverable metadata endpoint (used by some UIs)
+// Discoverable metadata for UIs
 router.get('/knobs', adminAuth, async (_req, res) => {
   const cache = await configService.load(true);
   const pct = (f) => Number.isFinite(f) ? Math.round(f * 10000) / 100 : null; // to 2dp
 
   res.json({
     knobs: KNOBS,
-    values: cache,               // fractions in DB units
-    percents: {                  // handy for UIs
-      cashbackPctHotel: pct(cache.cashbackPctHotel),
-      referralPctHotel: pct(cache.referralPctHotel),
-      platformPctLodging: pct(cache.platformPctLodging),
-      platformPctDefault: pct(cache.platformPctDefault),
+    values: cache, // raw fractions in DB units
+    percents: {
+      cashbackPctHotel:       pct(cache.cashbackPctHotel),
+      referralPctHotel:       pct(cache.referralPctHotel),
+      platformPctLodging:     pct(cache.platformPctLodging),
+      platformPctDefault:     pct(cache.platformPctDefault),
+
+      cashbackPctEventCenter: pct(cache.cashbackPctEventCenter),
+      referralPctEventCenter: pct(cache.referralPctEventCenter),
+      platformPctEventCenter: pct(cache.platformPctEventCenter),
     },
   });
 });
@@ -52,7 +65,7 @@ router.put('/', adminAuth, async (req, res) => {
       if (!Number.isFinite(num)) {
         return res.status(400).json({ message: `Invalid number for ${key}` });
       }
-      if (num > 1) num = num / 100; // allow 2 → 0.02
+      if (num > 1) num = num / 100; // allow 15 → 0.15
       if (num < spec.min || num > spec.max) {
         return res.status(400).json({ message: `${key} out of range (${spec.min}..${spec.max} as fraction)` });
       }

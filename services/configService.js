@@ -16,6 +16,11 @@ const ALIASES = new Map([
   // default non-lodging
   ['platform_pct_default',        ['platformPctDefault']],
 
+  // event center (NEW)
+  ['platform_pct_event_center',   ['platformPctEventCenter']],
+  ['cashback_pct_event_center',   ['cashbackPctEventCenter']],
+  ['referral_pct_event_center',   ['referralPctEventCenter']],
+
   // flags
   ['platform_matures_with_vendor',['platformMaturesWithVendor']],
 ]);
