@@ -1,4 +1,3 @@
-// 📄 src/components/BookEventCenterModal.js
 import React, { useState, useEffect, useMemo } from 'react';
 import DatePicker from 'react-datepicker';
 import axios from '../utils/axiosConfig';
@@ -6,8 +5,6 @@ import './BookEventCenterModal.css';
 import 'react-datepicker/dist/react-datepicker.css';
 
 const BookEventCenterModal = ({ eventCenter, onClose }) => {
- 
-
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -19,10 +16,11 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
   const [errorMsg, setErrorMsg] = useState('');
   const [unavailableDates, setUnavailableDates] = useState([]);
 
-  // ✅ NEW: capture referral code like shortlet modal
-  const [referralCode, setReferralCode] = useState(null);
+  // ✅ match Hotels: carry IDs, not codes
+  const [referredByUserId, setReferredByUserId] = useState(null);
+  const [buyerUserId, setBuyerUserId] = useState(null);
 
-  // ---- helpers for stable date handling ----
+  // helpers
   const toYMD = (d) => {
     if (!d) return '';
     const x = new Date(d);
@@ -32,7 +30,6 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
     return `${y}-${m}-${day}`;
   };
 
-  // Build a local Date at *noon* to avoid timezone rollbacks (DST/UTC drift)
   const ymdToLocalNoonDate = (s) => {
     const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0, 0);
@@ -48,32 +45,51 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
   const reference = 'EVT-' + Math.floor(Math.random() * 1000000000);
 
   useEffect(() => {
-    // ✅ mirror shortlet: read referral code (if any)
-    const stored = localStorage.getItem('referralCode');
-    if (stored) setReferralCode(stored);
-
+    // preload unavailable dates
     const fetchEventCenterDetails = async () => {
       try {
         const res = await axios.get(`/api/eventcenters/public/${eventCenter._id}?t=${Date.now()}`);
         const eventDetails = res.data;
-
-        // Normalize unavailable dates to *local noon* Date objects (stable in picker)
         const formatted = (eventDetails.unavailableDates || []).map((dateStr) =>
           ymdToLocalNoonDate(dateStr)
         );
-
         setUnavailableDates(formatted);
       } catch (err) {
         console.error('❌ Failed to fetch event center details:', err);
       }
     };
 
+    // preload user (for buyerUserId + autofill)
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const parsed = JSON.parse(userData);
+        if (parsed?._id) setBuyerUserId(parsed._id);
+        if (parsed?.email) {
+          setEmail(parsed.email);
+          setFullName(parsed.name || '');
+        }
+      } catch {/* ignore */}
+    }
+
+    // match Hotels: map referralCode -> userId once
+    const fetchReferralUser = async () => {
+      const referralCode = localStorage.getItem('referralCode');
+      if (!referralCode) return;
+      try {
+        const res = await axios.get(`/api/user/code/${referralCode}`);
+        setReferredByUserId(res.data.userId || null);
+      } catch {
+        setReferredByUserId(null);
+      }
+    };
+
     if (eventCenter?._id) {
       fetchEventCenterDetails();
+      fetchReferralUser();
     }
   }, [eventCenter?._id]);
 
-  // Fast lookup set of YYYY-MM-DD for unavailable dates
   const unavailableSet = useMemo(
     () => new Set(unavailableDates.map((d) => toYMD(d))),
     [unavailableDates]
@@ -88,7 +104,6 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
       return;
     }
 
-    // Compare using YYYY-MM-DD keys to avoid timezone mismatches
     const selectedKey = toYMD(eventDate);
     if (unavailableSet.has(selectedKey)) {
       setErrorMsg('❌ This date has already been booked. Please choose another date.');
@@ -98,7 +113,6 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
     setShowPaymentOptions(true);
   };
 
-  // ✅ ONLY change: send JWT header + referredByUserId (from referralCode)
   const handleBookingSave = async (paymentRef, method) => {
     try {
       const token = localStorage.getItem('token');
@@ -110,16 +124,22 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
           fullName,
           email,
           phone,
-          eventDate: toYMD(eventDate), // send local date-only
+          eventDate: toYMD(eventDate),
           guests,
           paymentRef,
           paymentMethod: method,
           amount,
-          // mirror shortlet contract
-          referredByUserId: referralCode || undefined,
+          buyerUserId: buyerUserId || undefined,
+          referredByUserId: referredByUserId || undefined, // ✅ mirror Hotels
         },
         token ? { headers: { Authorization: `Bearer ${token}` } } : {}
       );
+
+      // optional: clear used referral code so it won’t silently affect later bookings
+      if (referredByUserId) {
+        localStorage.removeItem('referralCode');
+        setReferredByUserId(null);
+      }
 
       setSuccessMsg('✅ Booking confirmed!');
       setTimeout(() => {
@@ -134,7 +154,7 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
     }
   };
 
-  // ✅ ONLY change: include referral in Paystack metadata (backend also resolves from verify->metadata)
+  // Paystack (no referral metadata — same as Hotels)
   const payWithPaystack = () => {
     setPaying(true);
     const handler = window.PaystackPop.setup({
@@ -144,9 +164,7 @@ const BookEventCenterModal = ({ eventCenter, onClose }) => {
       currency: 'NGN',
       ref: reference,
       metadata: {
-        referralCode: referralCode || null,
         custom_fields: [
-          { display_name: 'referralCode', variable_name: 'referral_code', value: referralCode || '' },
           { display_name: 'buyerEmail', variable_name: 'buyer_email', value: (email || '').toLowerCase() },
         ],
       },
