@@ -5,14 +5,13 @@ const Ledger = require('../models/ledgerModel');
 const Vendor = require('../models/vendorModel');
 const config = require('./configService'); // DB + cache-backed settings
 
-// ────────────────────────── Debug helper ──────────────────────────
+// ────────────────────────── Debug helpers ──────────────────────────
 const LEDGER_DEBUG = String(process.env.LEDGER_DEBUG || '0') === '1';
-const dlog = (...a) => { if (LEDGER_DEBUG) console.log(...a); };
+const dlog  = (...a) => { if (LEDGER_DEBUG) console.log('[ledger]', ...a); };
+const dwarn = (...a) => { if (LEDGER_DEBUG) console.warn('[ledger]', ...a); };
+const derr  = (...a) => { if (LEDGER_DEBUG) console.error('[ledger]', ...a); };
 
 // ─────────────────────── Runtime config helpers ────────────────────
-// Read from DB knob; if unset, fall back to ENV; else default
-// DB stores FRACTIONS (0..1), but split math needs PERCENTS (0..100)
-// → if DB value in (0,1], multiply by 100.
 function getPct(knobKey, envKey, fallback) {
   const fromDb = config.getNumber(knobKey, undefined);
   if (typeof fromDb === 'number' && !Number.isNaN(fromDb)) {
@@ -30,11 +29,14 @@ function getBool(knobKey, envKey, fallback) {
   return Boolean(fallback);
 }
 
-// “Live” getters (cheap—reads from in-memory cache primed at boot, hot-reloads when Admin updates)
+// Live getters (use cached DB values; fall back to env/default)
 function LIVE_PLATFORM_PCT_LODGING()     { return getPct('platform_pct_lodging',        'PLATFORM_PCT_LODGING', 15); }
 function LIVE_CASHBACK_PCT_LODGING()     { return getPct('cashback_pct_lodging',        'CASHBACK_PCT_LODGING', 3); }
 function LIVE_REFERRAL_PCT_LODGING()     { return getPct('referral_pct_lodging',        'REFERRAL_PCT_LODGING', 3); }
 function LIVE_PLATFORM_PCT_DEFAULT()     { return getPct('platform_pct_default',        'PLATFORM_PCT_DEFAULT', 15); }
+function LIVE_PLATFORM_PCT_EVENT()       { return getPct('platform_pct_event_center',   'PLATFORM_PCT_EVENT', 15); }
+function LIVE_CASHBACK_PCT_EVENT()       { return getPct('cashback_pct_event_center',   'CASHBACK_PCT_EVENT', 0); }
+function LIVE_REFERRAL_PCT_EVENT()       { return getPct('referral_pct_event_center',   'REFERRAL_PCT_EVENT', 0); }
 function LIVE_MATURES_WITH_VENDOR_FLAG() { return getBool('platform_matures_with_vendor','PLATFORM_MATURES_WITH_VENDOR', false); }
 
 // ───────────────────────── Category helpers ───────────────────────
@@ -65,11 +67,6 @@ function computeSplit(gross, { splitKind = 'none', category = 'hotel' } = {}) {
 
   if (cat === 'chops_gifts') {
     admin = amt; // platform-only
-  } else if (['event_center', 'restaurant', 'tour_guide'].includes(cat)) {
-    const platformPct = LIVE_PLATFORM_PCT_DEFAULT();
-    const vendorPct   = 100 - platformPct;
-    vendor = Math.round((vendorPct / 100) * amt);
-    admin  = Math.round((platformPct / 100) * amt);
   } else if (cat === 'lodging') {
     const platformPct = LIVE_PLATFORM_PCT_LODGING();
     const vendorPct   = 100 - platformPct;
@@ -84,6 +81,20 @@ function computeSplit(gross, { splitKind = 'none', category = 'hotel' } = {}) {
     } else {
       admin = Math.round((platformPct / 100) * amt);
     }
+  } else if (cat === 'event_center') {
+    const platformPct = LIVE_PLATFORM_PCT_EVENT();
+    const vendorPct   = 100 - platformPct;
+    vendor = Math.round((vendorPct / 100) * amt);
+
+    if (splitKind === 'cashback' && LIVE_CASHBACK_PCT_EVENT() > 0) {
+      user  = Math.round((LIVE_CASHBACK_PCT_EVENT() / 100) * amt);
+      admin = Math.round((platformPct / 100) * amt);
+    } else if (splitKind === 'referral' && LIVE_REFERRAL_PCT_EVENT() > 0) {
+      user  = Math.round((LIVE_REFERRAL_PCT_EVENT() / 100) * amt);
+      admin = Math.round((platformPct / 100) * amt);
+    } else {
+      admin = Math.round((platformPct / 100) * amt);
+    }
   } else {
     const platformPct = LIVE_PLATFORM_PCT_DEFAULT();
     const vendorPct   = 100 - platformPct;
@@ -91,7 +102,6 @@ function computeSplit(gross, { splitKind = 'none', category = 'hotel' } = {}) {
     admin  = Math.round((platformPct / 100) * amt);
   }
 
-  // keep totals consistent
   const diff = amt - (vendor + user + admin);
   if (diff !== 0) admin += diff;
 
@@ -112,135 +122,6 @@ function computeReleaseDate(
 
 function oid(v) { try { return new mongoose.Types.ObjectId(String(v)); } catch { return undefined; } }
 
-// ─────────────────────────── Core: booking → ledger ───────────────────────────
-/**
- * booking: {
- *   _id, vendorId, totalCost, userId?,
- *   checkInDate?, checkOutDate?,    // or checkIn?, checkOut?
- *   cashbackEligible?, referralUserId?, type?
- * }
- * options: { category?, bufferHours? }
- */
-async function recordBookingLedger(booking, options = {}) {
-  const {
-    _id: bookingId,
-    userId,
-    vendorId,
-    totalCost,
-    checkInDate, checkOutDate,
-    checkIn, checkOut,
-    cashbackEligible,
-    referralUserId,
-    type,
-  } = booking;
-
-  if (!vendorId) throw new Error('recordBookingLedger: booking must have vendorId');
-
-  const category = (options.category || type || 'hotel');
-  const catNorm  = normalizeCategory(category);
-
-  // Normalize dates from either set of fields
-  const ci = checkInDate || checkIn || null;
-  const co = checkOutDate || checkOut || null;
-
-  // Decide who gets the user share
-  let splitKind = 'none';
-  let recipientUserId = null;
-  if (catNorm === 'lodging') {
-    const isSelfReferral = referralUserId && userId && String(referralUserId) === String(userId);
-    if (referralUserId && !isSelfReferral) {
-      splitKind = 'referral';
-      recipientUserId = referralUserId;
-    } else if (cashbackEligible && userId) {
-      splitKind = 'cashback';
-      recipientUserId = userId;
-    }
-  }
-
-  const { vendor, user, admin } = computeSplit(totalCost, { splitKind, category });
-
-  // Vendor payout policy (optional vendor override)
-  let vendorPolicy = 'checkout';
-  try {
-    const v = await Vendor.findById(vendorId).select('payoutPolicy').lean();
-    if (v?.payoutPolicy === 'checkin') vendorPolicy = 'checkin';
-  } catch { /* ignore */ }
-
-  const vendorReleaseOn = computeReleaseDate({ checkInDate: ci, checkOutDate: co }, { policy: vendorPolicy, bufferHours: 48 });
-  const userReleaseOn   = computeReleaseDate({ checkInDate: ci, checkOutDate: co }, { policy: 'checkout',    bufferHours: 48 });
-
-  const PLATFORM_MATURES_WITH_VENDOR = LIVE_MATURES_WITH_VENDOR_FLAG();
-  const releaseWithVendor = PLATFORM_MATURES_WITH_VENDOR ? vendorReleaseOn : null;
-
-  // Capture the *fractions* we used (for debugging / audits)
-  const metaFractions = {
-    platformPctLodging: LIVE_PLATFORM_PCT_LODGING() / 100,
-    platformPctDefault: LIVE_PLATFORM_PCT_DEFAULT() / 100,
-    cashbackPctHotel:   LIVE_CASHBACK_PCT_LODGING() / 100,
-    referralPctHotel:   LIVE_REFERRAL_PCT_LODGING() / 100,
-  };
-
-  const rows = [
-    vendor > 0 ? {
-      accountType: 'vendor',
-      accountModel: 'Vendor',
-      accountId: oid(vendorId),
-      sourceType: 'booking',
-      sourceModel: 'Booking',
-      sourceId: bookingId,
-      bookingId: bookingId,
-      direction: 'credit',
-      amount: vendor,
-      currency: 'NGN',
-      status: 'pending',
-      releaseOn: vendorReleaseOn,
-      reason: 'vendor_share',
-      meta: { splitKind, category: catNorm, fractions: metaFractions },
-    } : null,
-
-    {
-      accountType: 'platform',
-      sourceType: 'booking',
-      sourceModel: 'Booking',
-      sourceId: bookingId,
-      bookingId: bookingId,
-      direction: 'credit',
-      amount: admin,
-      currency: 'NGN',
-      status: PLATFORM_MATURES_WITH_VENDOR ? 'pending' : 'available',
-      releaseOn: PLATFORM_MATURES_WITH_VENDOR ? releaseWithVendor : null,
-      reason: 'platform_commission',
-      meta: { splitKind, category: catNorm, fractions: metaFractions },
-    },
-  ].filter(Boolean);
-
-  if (recipientUserId && user > 0) {
-    rows.push({
-      accountType: 'user',
-      accountModel: 'User',
-      accountId: oid(recipientUserId),
-      sourceType: 'booking',
-      sourceModel: 'Booking',
-      sourceId: bookingId,
-      bookingId: bookingId,
-      direction: 'credit',
-      amount: user,
-      currency: 'NGN',
-      status: 'pending',
-      releaseOn: userReleaseOn,
-      reason: splitKind === 'cashback' ? 'user_cashback' : 'user_referral_commission',
-      meta: { splitKind, category: catNorm, fractions: metaFractions },
-    });
-  }
-
-  dlog('📝 [ledgerService] split=%s | cat=%s | totals=', splitKind, catNorm, { vendor, user, admin });
-  dlog('🧾 [ledgerService] inserting %d rows for booking=%s', rows.length, String(bookingId));
-  const inserted = await Ledger.insertMany(rows);
-  dlog('✅ [ledgerService] inserted _ids = %o', inserted.map(d => String(d._id)));
-
-  return { vendor, user, admin };
-}
-
 // ─────────────────────────── Release helpers ───────────────────────────
 async function releasePendingForBooking(bookingOrId) {
   const bookingId = typeof bookingOrId === 'object' && bookingOrId !== null
@@ -252,40 +133,227 @@ async function releasePendingForBooking(bookingOrId) {
     { bookingId, status: 'pending', releaseOn: { $lte: now } },
     { $set: { status: 'available' } }
   );
+  dlog('releasePendingForBooking booking=%s → matured=%d', String(bookingId), res.modifiedCount || 0);
   return res.modifiedCount || 0;
 }
 
+// ─────────────────────── booking → ledger (TRACE ADDED) ───────────────────────
+async function recordBookingLedger(booking, options = {}) {
+  try {
+    const {
+      _id: bookingId,
+      userId,
+      vendorId,
+      totalCost,
+      checkInDate, checkOutDate,
+      checkIn, checkOut,
+      cashbackEligible,
+      referralUserId,
+      type,
+    } = booking;
+
+    if (!vendorId) {
+      dwarn('recordBookingLedger: missing vendorId; booking=%o', {
+        bookingId, userId, vendorId, totalCost, type
+      });
+      throw new Error('recordBookingLedger: booking must have vendorId');
+    }
+
+    const category = (options.category || type || 'hotel');
+    const catNorm  = normalizeCategory(category);
+
+    const ci = checkInDate || checkIn || null;
+    const co = checkOutDate || checkOut || null;
+
+    // Decide who gets the user share
+    let splitKind = 'none';
+    let recipientUserId = null;
+
+    if (catNorm === 'lodging' || catNorm === 'event_center') {
+      const isSelfReferral = referralUserId && userId && String(referralUserId) === String(userId);
+      if (referralUserId && !isSelfReferral) {
+        splitKind = 'referral';
+        recipientUserId = referralUserId;
+      } else if (cashbackEligible && userId) {
+        splitKind = 'cashback';
+        recipientUserId = userId;
+      }
+    }
+
+    // Snapshot the knob values used
+    const knobSnapshot = {
+      catNorm,
+      platformPct: (catNorm === 'lodging')     ? LIVE_PLATFORM_PCT_LODGING()
+                   : (catNorm === 'event_center') ? LIVE_PLATFORM_PCT_EVENT()
+                   : LIVE_PLATFORM_PCT_DEFAULT(),
+      cashbackPct: (catNorm === 'lodging') ? LIVE_CASHBACK_PCT_LODGING()
+                   : (catNorm === 'event_center') ? LIVE_CASHBACK_PCT_EVENT() : 0,
+      referralPct: (catNorm === 'lodging') ? LIVE_REFERRAL_PCT_LODGING()
+                   : (catNorm === 'event_center') ? LIVE_REFERRAL_PCT_EVENT() : 0,
+      platformMaturesWithVendor: LIVE_MATURES_WITH_VENDOR_FLAG(),
+    };
+
+    console.log('[ledger:recordBookingLedger:req]', {
+      bookingId: String(bookingId),
+      vendorId: String(vendorId),
+      userId: userId ? String(userId) : null,
+      totalCost: Number(totalCost),
+      category: category, catNorm,
+      cashbackEligible: !!cashbackEligible,
+      referralUserId: referralUserId ? String(referralUserId) : null,
+      splitKind,
+      recipientUserId: recipientUserId ? String(recipientUserId) : null,
+      ci, co,
+      knobs: knobSnapshot,
+    });
+
+    const { vendor, user, admin } = computeSplit(totalCost, { splitKind, category });
+
+    // Vendor release policy
+    let vendorPolicy = 'checkout';
+    try {
+      const v = await Vendor.findById(vendorId).select('payoutPolicy').lean();
+      if (v?.payoutPolicy === 'checkin') vendorPolicy = 'checkin';
+    } catch (e) { dwarn('vendor payoutPolicy lookup failed:', e?.message || e); }
+
+    const vendorReleaseOn = computeReleaseDate({ checkInDate: ci, checkOutDate: co }, { policy: vendorPolicy, bufferHours: 48 });
+    const userReleaseOn   = computeReleaseDate({ checkInDate: ci, checkOutDate: co }, { policy: 'checkout',    bufferHours: 48 });
+
+    const PLATFORM_MATURES_WITH_VENDOR = LIVE_MATURES_WITH_VENDOR_FLAG();
+    const releaseWithVendor = PLATFORM_MATURES_WITH_VENDOR ? vendorReleaseOn : null;
+
+    const metaFractions = {
+      platformPctLodging:    LIVE_PLATFORM_PCT_LODGING() / 100,
+      platformPctDefault:    LIVE_PLATFORM_PCT_DEFAULT() / 100,
+      cashbackPctHotel:      LIVE_CASHBACK_PCT_LODGING() / 100,
+      referralPctHotel:      LIVE_REFERRAL_PCT_LODGING() / 100,
+      platformPctEvent:      LIVE_PLATFORM_PCT_EVENT() / 100,
+      cashbackPctEvent:      LIVE_CASHBACK_PCT_EVENT() / 100,
+      referralPctEvent:      LIVE_REFERRAL_PCT_EVENT() / 100,
+    };
+
+    const rows = [
+      vendor > 0 ? {
+        accountType: 'vendor',
+        accountModel: 'Vendor',
+        accountId: oid(vendorId),
+        sourceType: 'booking',
+        sourceModel: 'Booking',
+        sourceId: bookingId,
+        bookingId: bookingId,
+        direction: 'credit',
+        amount: vendor,
+        currency: 'NGN',
+        status: 'pending',
+        releaseOn: vendorReleaseOn,
+        reason: 'vendor_share',
+        meta: { splitKind, category: catNorm, fractions: metaFractions },
+      } : null,
+
+      {
+        accountType: 'platform',
+        sourceType: 'booking',
+        sourceModel: 'Booking',
+        sourceId: bookingId,
+        bookingId: bookingId,
+        direction: 'credit',
+        amount: admin,
+        currency: 'NGN',
+        status: PLATFORM_MATURES_WITH_VENDOR ? 'pending' : 'available',
+        releaseOn: PLATFORM_MATURES_WITH_VENDOR ? releaseWithVendor : null,
+        reason: 'platform_commission',
+        meta: { splitKind, category: catNorm, fractions: metaFractions },
+      },
+    ].filter(Boolean);
+
+    if (recipientUserId && user > 0) {
+      rows.push({
+        accountType: 'user',
+        accountModel: 'User',
+        accountId: oid(recipientUserId),
+        sourceType: 'booking',
+        sourceModel: 'Booking',
+        sourceId: bookingId,
+        bookingId: bookingId,
+        direction: 'credit',
+        amount: user,
+        currency: 'NGN',
+        status: 'pending',
+        releaseOn: userReleaseOn,
+        reason: splitKind === 'cashback' ? 'user_cashback' : 'user_referral_commission',
+        meta: { splitKind, category: catNorm, fractions: metaFractions },
+      });
+    } else if (splitKind !== 'none') {
+      dwarn('splitKind=%s but no user row created (recipient=%s, userAmt=%s)', splitKind, recipientUserId, user);
+    }
+
+    dlog('assemble rows', { count: rows.length, vendor, user, admin, splitKind });
+
+    const inserted = await Ledger.insertMany(rows);
+    console.log('[ledger:recordBookingLedger:ok]', {
+      bookingId: String(bookingId),
+      insertedIds: inserted.map(d => String(d._id)),
+      counts: { vendor, user, admin },
+      splitKind,
+    });
+
+    // Post-insert sanity: count by bookingId
+    try {
+      const c = await Ledger.countDocuments({ bookingId });
+      dlog('post-insert ledger count for booking=%s → %d', String(bookingId), c);
+    } catch (e) { dwarn('post-insert count failed:', e?.message || e); }
+
+    return { vendor, user, admin };
+  } catch (e) {
+    derr('recordBookingLedger error:', e?.message || e);
+    throw e;
+  }
+}
+
+// ─────────────────────────── Minimal platform-only revenue helper ───────────────────────────
+// Keeps parity with previous exports. Creates a single platform credit row.
+// Use for categories where the full amount is platform revenue (e.g., chops/gifts).
+async function recordPlatformOnlyRevenue({ bookingId = null, amount, category = 'other', currency = 'NGN', meta = {} }) {
+  const catNorm = normalizeCategory(category);
+  const amt = Math.max(0, Number(amount || 0));
+  if (!amt) return null;
+
+  const doc = await Ledger.create({
+    accountType: 'platform',
+    sourceType: 'booking',
+    sourceModel: 'Booking',
+    sourceId: bookingId || null,
+    bookingId: bookingId || null,
+    direction: 'credit',
+    amount: amt,
+    currency,
+    status: 'available',
+    releaseOn: null,
+    reason: 'platform_commission',
+    meta: { category: catNorm, ...meta },
+  });
+
+  dlog('recordPlatformOnlyRevenue → _id=%s amount=%d category=%s', String(doc._id), amt, catNorm);
+  return doc;
+}
+
+// ─────────────────────────── Other helpers (unchanged except logs) ───────────────────────────
 async function releaseDueForVendor(vendorId) {
   const id = oid(vendorId);
   if (!id) return 0;
   const now = new Date();
 
-  // legacy: releaseOn == null
   const a = await Ledger.updateMany(
-    {
-      accountType: 'vendor',
-      accountId: id,
-      reason: 'vendor_share',
-      status: 'pending',
-      releaseOn: null,
-    },
+    { accountType: 'vendor', accountId: id, reason: 'vendor_share', status: 'pending', releaseOn: null },
     { $set: { status: 'available', releaseOn: now } }
   );
-
-  // normal path: releaseOn ≤ now
   const b = await Ledger.updateMany(
-    {
-      accountType: 'vendor',
-      accountId: id,
-      reason: 'vendor_share',
-      status: 'pending',
-      releaseOn: { $lte: now },
-    },
+    { accountType: 'vendor', accountId: id, reason: 'vendor_share', status: 'pending', releaseOn: { $lte: now } },
     { $set: { status: 'available' } }
   );
 
   const matured = (a.modifiedCount || 0) + (b.modifiedCount || 0);
-  dlog('⏳ [ledgerService] releaseDueForVendor %s → %d matured', String(id), matured);
+  dlog('releaseDueForVendor %s → %d', String(id), matured);
   return matured;
 }
 
@@ -293,33 +361,19 @@ async function releaseDueForUser(userId) {
   const id = oid(userId);
   if (!id) return 0;
   const now = new Date();
-
   const REASONS = ['user_cashback', 'user_referral_commission'];
 
   const a = await Ledger.updateMany(
-    {
-      accountType: 'user',
-      accountId: id,
-      reason: { $in: REASONS },
-      status: 'pending',
-      releaseOn: null,
-    },
+    { accountType: 'user', accountId: id, reason: { $in: REASONS }, status: 'pending', releaseOn: null },
     { $set: { status: 'available', releaseOn: now } }
   );
-
   const b = await Ledger.updateMany(
-    {
-      accountType: 'user',
-      accountId: id,
-      reason: { $in: REASONS },
-      status: 'pending',
-      releaseOn: { $lte: now },
-    },
+    { accountType: 'user', accountId: id, reason: { $in: REASONS }, status: 'pending', releaseOn: { $lte: now } },
     { $set: { status: 'available' } }
   );
 
   const matured = (a.modifiedCount || 0) + (b.modifiedCount || 0);
-  dlog('⏳ [ledgerService] releaseDueForUser %s → %d matured', String(id), matured);
+  dlog('releaseDueForUser %s → %d', String(id), matured);
   return matured;
 }
 
@@ -344,11 +398,10 @@ async function releaseAllDue() {
   );
 
   const matured = (a.modifiedCount||0)+(b.modifiedCount||0)+(c.modifiedCount||0)+(d.modifiedCount||0);
-  dlog('⏳ [ledgerService] releaseAllDue → %d matured', matured);
+  dlog('releaseAllDue → %d matured', matured);
   return matured;
 }
 
-// ─────────────────────────── Payout debit ───────────────────────────
 async function recordPayoutDebit({ accountType, accountId, amount, payoutId, currency = 'NGN' }) {
   if (!accountType || !accountId || !amount) {
     throw new Error('recordPayoutDebit: accountType, accountId, and amount are required');
@@ -366,45 +419,11 @@ async function recordPayoutDebit({ accountType, accountId, amount, payoutId, cur
     status: 'available',
     releaseOn: null,
     reason: 'payout',
-    meta: payoutId ? { payoutId } : {},
+    meta: { payoutId: payoutId || null },
   });
 }
 
-// ───────────────────── Platform-only revenue (e.g., chops/gifts) ─────────────────────
-async function recordPlatformOnlyRevenue({
-  amount,
-  bookingId = null,
-  currency = 'NGN',
-  meta = {},
-}) {
-  if (!amount) throw new Error('recordPlatformOnlyRevenue: amount is required');
-
-  const PLATFORM_MATURES_WITH_VENDOR = LIVE_MATURES_WITH_VENDOR_FLAG();
-
-  let status = 'available';
-  let releaseOn = null;
-  if (PLATFORM_MATURES_WITH_VENDOR) {
-    status = 'pending';
-    // (if ever needed, a releaseOn may be derived later)
-  }
-
-  return Ledger.create({
-    accountType: 'platform',
-    sourceType: 'booking',
-    sourceModel: 'Booking',
-    sourceId: bookingId || null,
-    bookingId: bookingId || null,
-    direction: 'credit',
-    amount: Number(amount),
-    currency,
-    status,
-    releaseOn,
-    reason: 'platform_commission',
-    meta,
-  });
-}
-
-// ───────────────────── CANCELLATION / REVERSALS ─────────────────────
+// Reversal helpers (unchanged)
 async function mirrorCreditsAsReversalDebits(rows, { kind }) {
   if (!rows?.length) return 0;
   const docs = rows.map(r => ({
@@ -425,69 +444,41 @@ async function mirrorCreditsAsReversalDebits(rows, { kind }) {
     createdAt: new Date(),
   }));
   const res = await Ledger.insertMany(docs);
-  dlog('↩️  [ledgerService] inserted %d reversal debits (kind=%s)', res.length, kind);
+  dlog('inserted %d reversal debits (kind=%s)', res.length, kind);
   return res.length;
 }
-
 async function reverseCashbackForBooking(bookingId) {
-  const rows = await Ledger.find({
-    bookingId,
-    accountType: 'user',
-    direction: 'credit',
-    reason: 'user_cashback',
-  }).lean();
+  const rows = await Ledger.find({ bookingId, accountType: 'user', direction: 'credit', reason: 'user_cashback' }).lean();
   return mirrorCreditsAsReversalDebits(rows, { kind: 'cashback' });
 }
-
 async function reverseReferralForBooking(bookingId) {
-  const rows = await Ledger.find({
-    bookingId,
-    accountType: 'user',
-    direction: 'credit',
-    reason: 'user_referral_commission',
-  }).lean();
+  const rows = await Ledger.find({ bookingId, accountType: 'user', direction: 'credit', reason: 'user_referral_commission' }).lean();
   return mirrorCreditsAsReversalDebits(rows, { kind: 'referral' });
 }
-
 async function reverseUserIncentivesForBooking(bookingId) {
   const a = await reverseCashbackForBooking(bookingId);
   const b = await reverseReferralForBooking(bookingId);
   return a + b;
 }
-
 async function reverseVendorShareForBooking(bookingId) {
-  const rows = await Ledger.find({
-    bookingId,
-    accountType: 'vendor',
-    direction: 'credit',
-    reason: 'vendor_share',
-  }).lean();
+  const rows = await Ledger.find({ bookingId, accountType: 'vendor', direction: 'credit', reason: 'vendor_share' }).lean();
   return mirrorCreditsAsReversalDebits(rows, { kind: 'vendor_share' });
 }
-
 async function reversePlatformCommissionForBooking(bookingId) {
-  const rows = await Ledger.find({
-    bookingId,
-    accountType: 'platform',
-    direction: 'credit',
-    reason: 'platform_commission',
-  }).lean();
+  const rows = await Ledger.find({ bookingId, accountType: 'platform', direction: 'credit', reason: 'platform_commission' }).lean();
   return mirrorCreditsAsReversalDebits(rows, { kind: 'platform_commission' });
 }
-
 async function undoLedgerForBooking(bookingId, opts = {}) {
   const { user = true, vendor = true, platform = false } = opts;
-
   let total = 0;
   if (user)     total += await reverseUserIncentivesForBooking(bookingId);
   if (vendor)   total += await reverseVendorShareForBooking(bookingId);
   if (platform) total += await reversePlatformCommissionForBooking(bookingId);
-
-  dlog('🧹 [ledgerService] undoLedgerForBooking booking=%s → inserted %d reversal debits', String(bookingId), total);
+  dlog('undoLedgerForBooking booking=%s → inserted %d reversal debits', String(bookingId), total);
   return total;
 }
 
-// ───────────────────── USER SUMMARY (for widgets) ─────────────────────
+// Summary (unchanged)
 async function getUserEarningsSummary(userId) {
   const id = oid(userId);
   if (!id) return {
@@ -520,11 +511,7 @@ async function getUserEarningsSummary(userId) {
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]),
     Ledger.aggregate([
-      { $match: {
-        accountType: 'user', accountId: id,
-        direction: 'debit', reason: 'adjustment',
-        'meta.kind': 'cashback', 'meta.cancelOf': { $exists: true },
-      }},
+      { $match: { accountType: 'user', accountId: id, direction: 'debit', reason: 'adjustment', 'meta.kind': 'cashback', 'meta.cancelOf': { $exists: true } } },
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]),
     Ledger.aggregate([
@@ -532,18 +519,13 @@ async function getUserEarningsSummary(userId) {
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]),
     Ledger.aggregate([
-      { $match: {
-        accountType: 'user', accountId: id,
-        direction: 'debit', reason: 'adjustment',
-        'meta.kind': 'referral', 'meta.cancelOf': { $exists: true },
-      }},
+      { $match: { accountType: 'user', accountId: id, direction: 'debit', reason: 'adjustment', 'meta.kind': 'referral', 'meta.cancelOf': { $exists: true } } },
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]),
   ]);
 
   const pending   = Number(pendingAgg[0]?.amount || 0);
   const available = Number(availableAgg[0]?.amount || 0);
-
   const cbGross = Number(cbGrossAgg[0]?.total || 0);
   const cbRev   = Number(cbRevAgg[0]?.total || 0);
   const rfGross = Number(rfGrossAgg[0]?.total || 0);
@@ -556,31 +538,23 @@ async function getUserEarningsSummary(userId) {
   };
 }
 
-// ─────────────────────────── Exports ───────────────────────────
 module.exports = {
   normalizeCategory,
   computeSplit,
   computeReleaseDate,
   recordBookingLedger,
   releasePendingForBooking,
-
-  // NEW:
   releaseDueForVendor,
   releaseDueForUser,
   releaseAllDue,
-
   creditOnPayment: recordBookingLedger,
   recordPayoutDebit,
-  recordPlatformOnlyRevenue,
-
-  // Reversals
+  recordPlatformOnlyRevenue, // ← now defined
   reverseCashbackForBooking,
   reverseReferralForBooking,
   reverseUserIncentivesForBooking,
   reverseVendorShareForBooking,
   reversePlatformCommissionForBooking,
   undoLedgerForBooking,
-
-  // User summary for dashboard
   getUserEarningsSummary,
 };
