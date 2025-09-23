@@ -152,7 +152,8 @@ const BookShortletModal = ({ shortlet, onClose }) => {
     reference: new Date().getTime().toString(),
     email: bookingInfo.email,
     amount: totalPrice * 100,
-    publicKey: 'pk_test_f4e7df49f0ea642233e1f0a4ea62acb526f166e3',
+    publicKey: (process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || localStorage.getItem('PAYSTACK_PUBLIC_KEY') || '').trim(),
+
   };
 
   return (

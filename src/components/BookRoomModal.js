@@ -5,9 +5,15 @@ import './BookRoomModal.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-const PAYSTACK_PUBLIC_KEY = process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || '';
+// 🔑 Resolve Paystack key at call-time: localStorage → env → fallback (complete the fallback)
+const resolvePaystackKey = () =>
+  (
+    localStorage.getItem('PAYSTACK_PUBLIC_KEY') ||
+    process.env.REACT_APP_PAYSTACK_PUBLIC_KEY ||
+    'pk_test_f4e7df49f0ea642233e1f0a4ea62acb526f166e3' // 
+  ).trim();
 
-// ✅ ADDED: normalize any picked date to local *noon* to avoid timezone rollbacks
+// ✅ normalize any picked date to local *noon* to avoid timezone rollbacks
 const stripToNoon = (d) => {
   if (!d) return null;
   const x = new Date(d);
@@ -15,7 +21,7 @@ const stripToNoon = (d) => {
   return x;
 };
 
-// ✅ ADDED: helper for YYYY-MM-DD string expected by backend
+// ✅ helper for YYYY-MM-DD string expected by backend
 const toYMD = (d) => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -23,7 +29,7 @@ const toYMD = (d) => {
   return `${y}-${m}-${day}`;
 };
 
-// ✅ ADDED: lazy-load Paystack inline script once
+// ✅ lazy-load Paystack inline script once
 const ensurePaystack = () =>
   new Promise((resolve, reject) => {
     if (window.PaystackPop) return resolve(true);
@@ -76,7 +82,7 @@ const BookRoomModal = ({ room, onClose }) => {
         const res = await axios.get(`/api/hotel-rooms/${room._id}/unavailable-dates`);
         const formatted = (res.data.unavailableDates || []).map((dateStr) => {
           const d = new Date(dateStr);
-          d.setHours(12, 0, 0, 0); // ✅ ADDED: normalize to noon to match picker normalization
+          d.setHours(12, 0, 0, 0); // ✅ noon to match picker normalization
           return d;
         });
         setUnavailableDates(formatted);
@@ -155,7 +161,11 @@ const BookRoomModal = ({ room, onClose }) => {
     if (new Date(checkOut) <= new Date(checkIn)) return 'Check-out must be after check-in.';
     if (Number(guests) < 1 || Number(rooms) < 1) return 'Guests and rooms must be at least 1.';
     if (!/^\S+@\S+\.\S+$/.test(email)) return 'Please enter a valid email.';
-    if (!PAYSTACK_PUBLIC_KEY) return 'Paystack key is not configured.';
+
+    // 🔑 check key at call-time (dev/prod safe)
+    const pk = resolvePaystackKey();
+    if (!pk) return 'Paystack key is not configured.';
+
     return '';
   };
 
@@ -211,13 +221,12 @@ const BookRoomModal = ({ room, onClose }) => {
           buyerUserId: buyerUserId || undefined,
           referredByUserId: referredByUserId || undefined,
 
-          // ✅ ADDED: harmless hints so backend can trigger our branded email
+          // ✅ harmless hints so backend can trigger our branded email
           sendEmail: true,
           category: 'Hotel',
           titleHint: room?.hotel?.name || room?.name || 'Hotel booking',
         });
 
-        // ✅ ADDED: friendlier confirmation that includes email notice
         alert('✅ Booking successful. A confirmation email has been sent to you.');
         setShowGatewayModal(false);
         onClose();
@@ -228,14 +237,21 @@ const BookRoomModal = ({ room, onClose }) => {
     };
 
     try {
-      await ensurePaystack(); // ✅ ADDED: lazy-load Paystack if needed
+      await ensurePaystack(); // ✅ lazy-load Paystack if needed
     } catch (e) {
       alert(e.message || 'Paystack could not be initialized.');
       return;
     }
 
+    // 🔑 use resolved key at the moment of opening Paystack
+    const pk = resolvePaystackKey();
+    if (!pk) {
+      alert('Paystack key is not configured.');
+      return;
+    }
+
     const handler = window.PaystackPop.setup({
-      key: PAYSTACK_PUBLIC_KEY,
+      key: pk,
       email: bookingInfo.email,
       amount: amountKobo,
       currency: 'NGN',
@@ -292,7 +308,7 @@ const BookRoomModal = ({ room, onClose }) => {
         <DatePicker
           selected={bookingInfo.checkIn}
           onChange={(date) =>
-            setBookingInfo((prev) => ({ ...prev, checkIn: stripToNoon(date) })) // ✅ ADDED: noon-anchor
+            setBookingInfo((prev) => ({ ...prev, checkIn: stripToNoon(date) })) // ✅ noon-anchor
           }
           minDate={today}
           excludeDates={unavailableDates}
@@ -305,7 +321,7 @@ const BookRoomModal = ({ room, onClose }) => {
         <DatePicker
           selected={bookingInfo.checkOut}
           onChange={(date) =>
-            setBookingInfo((prev) => ({ ...prev, checkOut: stripToNoon(date) })) // ✅ ADDED: noon-anchor
+            setBookingInfo((prev) => ({ ...prev, checkOut: stripToNoon(date) })) // ✅ noon-anchor
           }
           minDate={today}
           excludeDates={unavailableDates}
