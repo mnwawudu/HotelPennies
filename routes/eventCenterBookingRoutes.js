@@ -146,7 +146,7 @@ router.post('/', async (req, res) => {
     // ————————————————————————
     let commissionPaid = false;
     let commissionRefUserId = null;
-    let commissionAmount = 0;
+    
 
     if (referredByUserId && eventReferralFrac > 0) {
       try {
@@ -168,7 +168,7 @@ router.post('/', async (req, res) => {
           if (hit) {
             commissionPaid = true;
             commissionRefUserId = referredByUserId;
-            commissionAmount = Number(hit.amount || 0);
+            
           }
         }
       } catch (e) {
@@ -258,18 +258,219 @@ router.post('/:id/check-out', async (req, res) => {
 
 router.patch('/:id/cancel', async (req, res) => {
   try {
-    const { email } = req.body;
+    // Resolve caller email (prefer JWT like Hotels; falls back to body.email)
+    let authEmail = '';
+    try {
+      const token = req.headers.authorization?.split(' ')[1];
+      if (token) {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded?.id) {
+          const u = await User.findById(decoded.id).lean();
+          if (u?.email) authEmail = String(u.email).toLowerCase();
+        }
+      }
+    } catch {}
+
+    const emailFromBody = String(req.body?.email || '').trim().toLowerCase();
+    const candidateEmail = authEmail || emailFromBody;
+
+    if (!candidateEmail) {
+      return res.status(400).json({ error: 'Email is required or sign in to cancel.' });
+    }
+
     const booking = await EventCenterBooking.findById(req.params.id).populate('eventCenterId').exec();
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
     if (booking.canceled) return res.status(400).json({ error: 'Booking already canceled' });
-    if (!email || String(booking.email || '').toLowerCase() !== String(email).toLowerCase()) {
+
+    if (String(booking.email || '').toLowerCase() !== candidateEmail) {
       return res.status(403).json({ error: 'Email does not match booking owner' });
     }
+
     const now = new Date();
     const dateOnly = new Date(booking.eventDate);
     if (dateOnly <= now) return res.status(400).json({ error: 'Cannot cancel on/after event date' });
 
-    // Vendor reversal on cancel (unchanged)
+    /* ────────────────────────────────────────────────────────────
+       ✅ Reverse buyer cashback (user doc + ledger adjustment)
+       Mirrors hotels: source === 'transaction' with sourceId = booking._id
+       ──────────────────────────────────────────────────────────── */
+    try {
+      const user = await User.findOne({ email: candidateEmail }).exec();
+      if (user) {
+        user.earnings = Array.isArray(user.earnings)
+          ? user.earnings
+          : (user.earnings ? [user.earnings] : []);
+        user.payoutStatus = user.payoutStatus || {};
+
+        let reversed = 0;
+        let changed = false;
+
+        user.earnings.forEach((e) => {
+          const sid = String(e?.sourceId || '');
+          const src = String(e?.source || '').toLowerCase();
+          if (sid === String(booking._id) && e?.status !== 'reversed' && src === 'transaction') {
+            reversed += Number(e?.amount || 0);
+            e.status = 'reversed';
+            e.reversalReason = 'booking_cancelled';
+            e.reversalDate = new Date();
+            changed = true;
+          }
+        });
+
+        const hasNeg = user.earnings.some(
+          (e) =>
+            String(e?.sourceId || '') === String(booking._id) &&
+            String(e?.source || '') === 'transaction_reversal'
+        );
+        if (changed && reversed > 0 && !hasNeg) {
+          user.earnings.push({
+            amount: -reversed,
+            source: 'transaction_reversal',
+            sourceId: booking._id,
+            status: 'posted',
+            createdAt: new Date(),
+          });
+        }
+
+        if (changed && reversed > 0) {
+          user.payoutStatus.totalEarned = Math.max(
+            0,
+            Number(user.payoutStatus.totalEarned || 0) - reversed
+          );
+          user.payoutStatus.currentBalance = Math.max(
+            0,
+            Number(user.payoutStatus.currentBalance || 0) - reversed
+          );
+          await user.save();
+
+          // Ledger debit (enum-safe)
+          try {
+            await Ledger.create({
+              accountType: 'user',
+              accountId: user._id,
+              sourceType: 'booking',
+              sourceModel: 'Booking',
+              sourceId: booking._id,
+              bookingId: booking._id,
+              direction: 'debit',
+              amount: reversed,
+              reason: 'adjustment',
+              status: 'pending',
+              currency: 'NGN',
+              meta: { category: 'event_center', kind: 'user_cashback_reversal' },
+              createdAt: new Date(),
+            });
+          } catch (_) { /* optional */ }
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ [eventcenter/cancel] Cashback reversal failed softly:', e.message);
+    }
+
+    /* ────────────────────────────────────────────────────────────
+       ✅ Reverse any referrer commission (user doc + ledger)
+       Mirrors hotels: source === 'booking' with sourceId = booking._id
+       ──────────────────────────────────────────────────────────── */
+    try {
+      const refCredits = await Ledger.find({
+        reason: 'user_referral_commission',
+        bookingId: booking._id,
+        accountType: 'user',
+        direction: 'credit',
+      }).lean();
+
+      const handledReferrers = new Set();
+      const processReverseForUser = async (refUser, amountFromLedger = 0) => {
+        if (!refUser || handledReferrers.has(String(refUser._id))) return;
+        handledReferrers.add(String(refUser._id));
+
+        refUser.earnings = Array.isArray(refUser.earnings)
+          ? refUser.earnings
+          : (refUser.earnings ? [refUser.earnings] : []);
+        refUser.payoutStatus = refUser.payoutStatus || {};
+
+        let reversedCommission = 0;
+        let changed = false;
+
+        refUser.earnings.forEach((e) => {
+          const sid = String(e?.sourceId || '');
+          const src = String(e?.source || '').toLowerCase();
+          if (sid === String(booking._id) && e?.status !== 'reversed' && src === 'booking') {
+            reversedCommission += Number(e?.amount || 0);
+            e.status = 'reversed';
+            e.reversalReason = 'booking_cancelled';
+            e.reversalDate = new Date();
+            changed = true;
+          }
+        });
+
+        const finalCommission = reversedCommission || Number(amountFromLedger || 0);
+
+        const hasNeg = refUser.earnings.some(
+          (e) =>
+            String(e?.sourceId || '') === String(booking._id) &&
+            String(e?.source || '') === 'referral_reversal'
+        );
+        if ((changed || finalCommission > 0) && !hasNeg && finalCommission > 0) {
+          refUser.earnings.push({
+            amount: -finalCommission,
+            source: 'referral_reversal',
+            sourceId: booking._id,
+            status: 'posted',
+            createdAt: new Date(),
+          });
+        }
+
+        if ((changed || finalCommission > 0) && finalCommission > 0) {
+          refUser.payoutStatus.totalEarned = Math.max(
+            0,
+            Number(refUser.payoutStatus.totalEarned || 0) - finalCommission
+          );
+          refUser.payoutStatus.currentBalance = Math.max(
+            0,
+            Number(refUser.payoutStatus.currentBalance || 0) - finalCommission
+          );
+          await refUser.save();
+
+          // Ledger debit (enum-safe)
+          try {
+            await Ledger.create({
+              accountType: 'user',
+              accountId: refUser._id,
+              sourceType: 'booking',
+              sourceModel: 'Booking',
+              sourceId: booking._id,
+              bookingId: booking._id,
+              direction: 'debit',
+              amount: finalCommission,
+              reason: 'adjustment',
+              status: 'pending',
+              currency: 'NGN',
+              meta: { category: 'event_center', kind: 'user_referral_reversal' },
+              createdAt: new Date(),
+            });
+          } catch (_) { /* optional */ }
+        }
+      };
+
+      if (Array.isArray(refCredits) && refCredits.length) {
+        for (const credit of refCredits) {
+          const refUser = await User.findById(credit.accountId).exec();
+          await processReverseForUser(refUser, Number(credit.amount || 0));
+        }
+      } else {
+        const refUser = await User.findOne({
+          earnings: { $elemMatch: { sourceId: booking._id, source: 'booking' } },
+        }).exec();
+        await processReverseForUser(refUser, 0);
+      }
+    } catch (e) {
+      console.warn('⚠️ [eventcenter/cancel] Referral commission reversal failed softly:', e.message);
+    }
+
+    /* ────────────────────────────────────────────────────────────
+       ✅ Reverse vendor share in ledger (as an adjustment) — existing
+       ──────────────────────────────────────────────────────────── */
     try {
       const vendorCredits = await Ledger.find({
         sourceType: 'booking',
@@ -320,8 +521,9 @@ router.patch('/:id/cancel', async (req, res) => {
       console.warn('⚠️ [eventcenter/cancel] Vendor reversal posting failed (soft):', e.message);
     }
 
+    // ✅ Mark canceled
     booking.canceled = true;
-    booking.cancellationDate = now;
+    booking.cancellationDate = new Date();
     await booking.save();
 
     return res.status(200).json({ message: 'Booking canceled successfully' });
@@ -330,5 +532,6 @@ router.patch('/:id/cancel', async (req, res) => {
     res.status(500).json({ error: 'Failed to cancel booking' });
   }
 });
+
 
 module.exports = router;
