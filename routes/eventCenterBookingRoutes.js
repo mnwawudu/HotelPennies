@@ -1,4 +1,3 @@
-// routes/eventCenterBookingRoutes.js
 const express = require('express');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
@@ -19,136 +18,11 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
 const asFrac = (v) => Number(v || 0);
 const pctOf = (amount, frac) => Math.round(Number(amount) * Number(frac || 0));
-const looksLikeId = (s) => typeof s === 'string' && /^[0-9a-fA-F]{24}$/.test(s);
-const escapeRegex = (s) => String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 function formatDateOnly(date) {
   const d = new Date(date);
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 }
-
-function val(v) {
-  if (v == null) return undefined;
-  if (typeof v === 'string' && v.trim() === '') return undefined;
-  return v;
-}
-
-async function findUserByAny({ id, code, email }) {
-  if (looksLikeId(id)) {
-    const u = await User.findById(id).select('_id').lean();
-    if (u) return { id: String(u._id), matchedBy: 'id' };
-  }
-  if (val(code)) {
-    const u = await User.findOne({ userCode: String(code).trim() }).select('_id').lean();
-    if (u) return { id: String(u._id), matchedBy: 'code' };
-  }
-  if (val(email)) {
-    const u = await User.findOne({ email: String(email).trim().toLowerCase() }).select('_id').lean();
-    if (u) return { id: String(u._id), matchedBy: 'email' };
-  }
-  return { id: null, matchedBy: null };
-}
-
-async function resolveReferrer({ body = {}, query = {}, buyerUser = null, buyerEmail = '', paystackMeta = null }) {
-  // 1) Direct objectId-ish from body/query
-  const directIds = [
-    body.referredByUserId, body.referrerId, body.referralUserId,
-    body.referredBy, body.refId, query?.referrerId, query?.referredByUserId,
-  ].filter(Boolean);
-
-  for (const candidate of directIds) {
-    const found = await findUserByAny({ id: candidate });
-    if (found.id) return { ...found, matchedBy: 'body_or_query_id' };
-  }
-
-  // 2) Codes from body/query
-  const codeCandidates = [
-    body.referralCode, body.refCode, body.referredByCode,
-    query?.referralCode, query?.ref,
-  ].filter(Boolean);
-
-  for (const code of codeCandidates) {
-    const found = await findUserByAny({ code });
-    if (found.id) return { ...found, matchedBy: 'body_or_query_code' };
-  }
-
-  // 3) Emails from body/query
-  const emailCandidates = [
-    body.referrerEmail, body.referredByEmail, query?.referrerEmail,
-  ].filter(Boolean);
-
-  for (const em of emailCandidates) {
-    const found = await findUserByAny({ email: em });
-    if (found.id) return { ...found, matchedBy: 'body_or_query_email' };
-  }
-
-  // 4) buyerUser.referredBy (not self)
-  if (looksLikeId(buyerUser?.referredBy) && String(buyerUser.referredBy) !== String(buyerUser?._id || '')) {
-    return { id: String(buyerUser.referredBy), matchedBy: 'buyerUser.referredBy' };
-  }
-
-  // 5) someone whose referredEmails[] contains buyerEmail (case-insensitive)
-  if (buyerEmail) {
-    const inviter = await User.findOne({
-      referredEmails: { $elemMatch: { $regex: new RegExp(`^${escapeRegex(buyerEmail)}$`, 'i') } },
-    }).select('_id').lean();
-    if (inviter) return { id: String(inviter._id), matchedBy: 'referredEmails' };
-  }
-
-  // 6) Paystack metadata (flat + custom_fields)
-  let meta = paystackMeta;
-  if (typeof meta === 'string') {
-    try { meta = JSON.parse(meta); } catch { meta = null; }
-  }
-
-  if (meta && typeof meta === 'object') {
-    // 6a) flat keys
-    const fromMeta = {
-      id:    meta.referrerId || meta.referredByUserId || meta.referralUserId || meta.refUserId,
-      code:  meta.referralCode || meta.ref || meta.refCode || meta.referredByCode,
-      email: meta.referrerEmail || meta.referredByEmail,
-    };
-    const foundMeta = await findUserByAny(fromMeta);
-    if (foundMeta.id) return { ...foundMeta, matchedBy: 'paystack.meta' };
-
-    // 6b) custom_fields
-    const cf = Array.isArray(meta.custom_fields) ? meta.custom_fields : [];
-    if (cf.length) {
-      const kvs = {};
-      for (const item of cf) {
-        const k = String(item?.key || item?.display_name || '').trim().toLowerCase();
-        const v = item?.value ?? item?.text ?? item?.value_text ?? null;
-        if (!k || v == null) continue;
-        kvs[k] = v;
-      }
-      const viaCustom = {
-        id:
-          kvs['referrerid'] ||
-          kvs['referredbyuserid'] ||
-          kvs['referraluserid'] ||
-          kvs['refuserid'] ||
-          kvs['referrer_id'] ||
-          kvs['referred_by_user_id'] ||
-          kvs['referral_user_id'],
-        code:
-          kvs['referralcode'] ||
-          kvs['ref'] ||
-          kvs['refcode'] ||
-          kvs['referredbycode'] ||
-          kvs['referral_code'],
-        email:
-          kvs['referreremail'] ||
-          kvs['referredbyemail'] ||
-          kvs['referrer_email'],
-      };
-      const foundCustom = await findUserByAny(viaCustom);
-      if (foundCustom.id) return { ...foundCustom, matchedBy: 'paystack.meta.custom_fields' };
-    }
-  }
-
-  return { id: null, matchedBy: null };
-}
-
 
 router.post('/', async (req, res) => {
   try {
@@ -162,6 +36,7 @@ router.post('/', async (req, res) => {
       paymentRef,
       paymentMethod,
       amount,
+      referredByUserId,        // ✅ like Hotels: only accept explicit ID
       buyerUserId: buyerUserIdFromBody,
     } = req.body;
 
@@ -169,36 +44,29 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Load live knobs
+    // Load percents (use Event Center knobs where available)
     const cfg = await configService.load();
     const eventCashbackFrac = asFrac(cfg.cashbackPctEventCenter ?? cfg.cashbackPctEvent ?? 0);
     const eventReferralFrac = asFrac(cfg.referralPctEventCenter ?? cfg.referralPctEvent ?? 0);
     const platformFrac      = asFrac(cfg.platformPctEventCenter ?? cfg.platformPctDefault ?? 0.15);
 
-    // Event center
+    // Event center existence + availability
     const eventCenter = await EventCenter.findById(eventCenterId);
     if (!eventCenter) return res.status(404).json({ error: 'Event center not found' });
 
-    // Availability
     const formattedEventDate = formatDateOnly(eventDate);
     const normalizedUnavailable = (eventCenter.unavailableDates || []).map(formatDateOnly);
     if (normalizedUnavailable.includes(formattedEventDate)) {
       return res.status(400).json({ error: 'Selected date is unavailable. Please choose another date.' });
     }
 
-    // Verify payment (Paystack) — do not change this endpoint/shape
+    // Verify payment with Paystack (keep existing verification)
     const verifyUrl = `https://api.paystack.co/transaction/verify/${paymentRef}`;
     const verifyRes = await axios.get(verifyUrl, { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } });
     const { status, data } = verifyRes.data || {};
     if (!status || data?.status !== 'success') {
       return res.status(400).json({ error: 'Payment not verified or failed' });
     }
-
-   let paystackMeta = data?.metadata || null;
-if (typeof paystackMeta === 'string') {
-  try { paystackMeta = JSON.parse(paystackMeta); } catch { /* ignore */ }
-}
-
 
     // Save booking
     const buyerEmail = String(email || '').trim().toLowerCase();
@@ -217,7 +85,7 @@ if (typeof paystackMeta === 'string') {
     });
     await newBooking.save();
 
-    // Emails
+    // Emails (user + vendor + admin)
     try {
       let vendorEmail = null;
       try {
@@ -234,10 +102,9 @@ if (typeof paystackMeta === 'string') {
         adminEmail: process.env.BOOKINGS_ADMIN_EMAIL,
         fullName, phone, guests, amount, paymentReference: paymentRef, eventDate,
       });
-      console.log('✅ Booking email sent.');
     } catch (_) {}
 
-    // Legacy vendor payout list
+    // Legacy vendor payout list (platform covers incentives)
     try {
       const vendor = eventCenter.vendorId ? await Vendor.findById(eventCenter.vendorId).exec() : null;
       if (vendor) {
@@ -245,13 +112,12 @@ if (typeof paystackMeta === 'string') {
         vendor.payoutHistory = vendor.payoutHistory || [];
         vendor.payoutHistory.push({ amount: vendorShare, account: {}, status: 'pending', date: new Date() });
         await vendor.save();
-        console.log(`🏦 Vendor credited (pending) ${vendor.email} +${vendorShare}`);
       }
     } catch (e) {
       console.warn('⚠️ Vendor payout failed:', e?.message || e);
     }
 
-    // Resolve buyer (JWT → body → email)
+    // Resolve buyer account (JWT → body → email)
     let authUser = null;
     const token = req.headers.authorization?.split(' ')[1];
     if (token) {
@@ -267,39 +133,53 @@ if (typeof paystackMeta === 'string') {
     if (!buyerUser) buyerUser = await User.findOne({ email: buyerEmail }).exec();
 
     const buyerAccountEmail = (buyerUser?.email || buyerEmail).toLowerCase();
+
+    // Count buyer's paid Event Center bookings (category-specific, like Hotels)
     const buyerPaidCount = await EventCenterBooking.countDocuments({
       email: buyerAccountEmail, paymentStatus: 'paid', canceled: { $ne: true },
     });
 
-    // **ROOT-CAUSE FIX** — resolve referrer from BODY/QUERY/**PAYSTACK METADATA**
-    const { id: refCandidateUserId, matchedBy } =
-      await resolveReferrer({ body: req.body, query: req.query, buyerUser, buyerEmail, paystackMeta });
+    // ————————————————————————
+    // REFERRAL (Hotels pattern)
+    // Only act if client sent an explicit referredByUserId AND referral pct > 0
+    // Then call rewardReferral, and detect if commission actually posted.
+    // ————————————————————————
+    let commissionPaid = false;
+    let commissionRefUserId = null;
+    let commissionAmount = 0;
 
-    const selfReferral = buyerUser && refCandidateUserId && String(refCandidateUserId) === String(buyerUser._id);
-    const referralEligible = !!refCandidateUserId && !selfReferral && eventReferralFrac > 0;
-
-    console.log('🎯 [event] referrer resolution:', {
-      matchedBy,
-      refCandidateUserId: refCandidateUserId || null,
-      referralEligible,
-      knobs: { referralPct: eventReferralFrac * 100 }
-    });
-
-    // Try to post referral earning (best-effort)
-    if (referralEligible) {
+    if (referredByUserId && eventReferralFrac > 0) {
       try {
         await rewardReferral({
           buyerEmail: buyerAccountEmail,
           bookingId: newBooking._id,
           price: Number(amount),
-          referrerId: refCandidateUserId,
+          referrerId: referredByUserId,
         });
+
+        // Inspect referrer earnings to confirm commission actually got posted
+        const refUser = await User.findById(referredByUserId).select('earnings email').lean();
+        if (refUser && Array.isArray(refUser.earnings)) {
+          const hit = refUser.earnings.find(
+            e =>
+              String(e?.sourceId || '') === String(newBooking._id) &&
+              String(e?.source || '').toLowerCase() === 'booking'
+          );
+          if (hit) {
+            commissionPaid = true;
+            commissionRefUserId = referredByUserId;
+            commissionAmount = Number(hit.amount || 0);
+          }
+        }
       } catch (e) {
-        console.warn('⚠️ rewardReferral failed softly:', e?.message || e);
+        console.warn('⚠️ rewardReferral (event center) failed softly:', e?.message || e);
       }
     }
 
-    // Cashback (block first booking if already referred by someone)
+    // ————————————————————————
+    // CASHBACK (Hotels pattern)
+    // Block if this is the first paid booking AND buyerUser was referred by someone else.
+    // ————————————————————————
     let cashbackApplied = false;
     if (buyerUser && eventCashbackFrac > 0) {
       const referredById = buyerUser.referredBy ? String(buyerUser.referredBy) : null;
@@ -322,23 +202,12 @@ if (typeof paystackMeta === 'string') {
       }
     }
 
-    // LEDGER — pass referralUserId **iff we actually resolved it** (that’s what creates the user commission row)
+    // ————————————————————————
+    // LEDGER — mirror what actually happened (Hotels pattern)
+    // referralUserId only if a commission really posted.
+    // cashbackEligible only if we actually credited cashback.
+    // ————————————————————————
     try {
-      const ledgerCashbackEligible = cashbackApplied;
-      const ledgerReferralUserId   = referralEligible ? refCandidateUserId : null;
-
-      console.log('[ledger:recordBookingLedger:req]', {
-        bookingId: String(newBooking._id),
-        vendorId: eventCenter.vendorId ? String(eventCenter.vendorId) : null,
-        userId: buyerUser ? String(buyerUser._id) : null,
-        totalCost: Number(amount),
-        category: 'event_center',
-        catNorm: 'event_center',
-        cashbackEligible: ledgerCashbackEligible,
-        referralUserId: ledgerReferralUserId,
-        splitKind: ledgerReferralUserId ? 'referral' : (ledgerCashbackEligible ? 'cashback' : 'none'),
-      });
-
       await recordBookingLedger(
         {
           _id: newBooking._id,
@@ -347,15 +216,18 @@ if (typeof paystackMeta === 'string') {
           totalCost: Number(amount),
           checkInDate: eventDate ? new Date(eventDate) : null,
           checkOutDate: eventDate ? new Date(eventDate) : null,
-          cashbackEligible: ledgerCashbackEligible,
-          referralUserId: ledgerReferralUserId,   // ← THIS is what triggers user commission in ledger
+          cashbackEligible: cashbackApplied,
+          referralUserId: commissionPaid ? commissionRefUserId : null,
           type: 'event_center',
         },
         { category: 'event_center' }
       );
 
-      const count = await Ledger.countDocuments({ bookingId: newBooking._id });
-      console.log('[ledger:recordBookingLedger:ok]', { bookingId: String(newBooking._id), count });
+      // optional sanity log
+      try {
+        const count = await Ledger.countDocuments({ bookingId: newBooking._id });
+        console.log('[ledger:event_center] rows recorded =', count);
+      } catch {}
     } catch (e) {
       console.error('⚠️ recordBookingLedger failed (booking continues):', e.message);
     }
@@ -368,7 +240,7 @@ if (typeof paystackMeta === 'string') {
   }
 });
 
-/* lifecycle endpoints */
+/* lifecycle endpoints unchanged */
 router.post('/:id/check-in', async (req, res) => {
   const b = await EventCenterBooking.findById(req.params.id);
   if (!b) return res.status(404).json({ error: 'Booking not found' });
@@ -397,6 +269,7 @@ router.patch('/:id/cancel', async (req, res) => {
     const dateOnly = new Date(booking.eventDate);
     if (dateOnly <= now) return res.status(400).json({ error: 'Cannot cancel on/after event date' });
 
+    // Vendor reversal on cancel (unchanged)
     try {
       const vendorCredits = await Ledger.find({
         sourceType: 'booking',
