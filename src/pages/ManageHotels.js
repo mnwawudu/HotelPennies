@@ -124,14 +124,19 @@ const ManageHotels = () => {
       )}
 
       {showDeleteModal && selectedHotel && (
-        <DeleteModal
-          itemId={selectedHotel._id}
-          itemType="hotel"
-          onClose={() => setShowDeleteModal(false)}
-          onDeleted={handleHotelDeleted}
-          title="Delete Hotel"
-          message={`Are you sure you want to delete "${selectedHotel.name}"?`}
-        />
+  <DeleteModal
+    itemId={selectedHotel._id}
+    itemType="hotel"
+    onCancel={() => setShowDeleteModal(false)}   // ✅ works now
+    onDeleted={(id) => {                         // keep your list in sync
+      handleHotelDeleted(id);
+      setShowDeleteModal(false);
+    }}
+    title="Delete Hotel"
+    message={`Are you sure you want to delete "${selectedHotel.name}"?`}
+  />
+)}
+
       )}
     </div>
   );
