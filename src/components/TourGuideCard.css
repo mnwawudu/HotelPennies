@@ -1,42 +1,58 @@
-/* 📁 componentss/TourGuideCard.css */
-.tour-guide-wrapper {
-  width: 48%;
-  margin: 1%;
+/* 📁 components/TourGuideCard.css  — mobile-first, responsive */
+
+/* Optional grid container (use if your page has a wrapper) */
+.tour-guide-grid {
+  display: grid;
+  grid-template-columns: 1fr;              /* 1 col on phones */
+  gap: 16px;
+}
+@media (min-width: 600px) {
+  .tour-guide-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .tour-guide-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+/* Wrapper: full width by default — no hard 48% */
+.tour-guide-wrapper {
+  width: 100%;
+  margin: 0;                                /* grid handles spacing */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card */
 .tour-guide-card {
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 8px rgba(0,0,0,.1);
   overflow: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Image (responsive heights) */
 .tour-guide-img {
   width: 100%;
-  height: 220px;
+  height: 170px;                            /* phones */
   object-fit: cover;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
 }
+@media (min-width: 600px) { .tour-guide-img { height: 210px; } }
+@media (min-width: 1024px){ .tour-guide-img { height: 240px; } }
 
-.tour-guide-info {
-  padding: 15px;
-}
+.tour-guide-info { padding: 15px; }
+.tour-guide-info h3 { margin: 0 0 5px; }
+.tour-guide-info p  { margin: 4px 0; font-size: 14px; }
 
-.tour-guide-info h3 {
-  margin-top: 0;
-  margin-bottom: 5px;
-}
-
-.tour-guide-info p {
-  margin: 4px 0;
-  font-size: 14px;
-}
-
+/* Inline buttons inside the card body */
 .tour-guide-btns {
   display: flex;
   gap: 10px;
   margin-top: 10px;
+  flex-wrap: wrap;                           /* prevent overflow on tiny screens */
 }
 
 .btn-dark {
@@ -49,10 +65,22 @@
   cursor: pointer;
 }
 
+/* Vendor actions area under each card */
 .tour-guide-actions {
-  display: flex;
-  justify-content: flex-start;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));  /* 2 per row on phones */
+  gap: 8px;
   margin: 10px 0;
-  flex-wrap: wrap;
+  padding: 10px;
+  border-top: 1px solid #eef2f7;
+  background: #f7f9fc;
+}
+@media (min-width: 600px) { .tour-guide-actions { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) { .tour-guide-actions { grid-template-columns: repeat(4, 1fr); } }
+
+.tour-guide-actions .btn-dark {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
 }

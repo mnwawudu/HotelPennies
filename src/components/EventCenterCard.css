@@ -1,76 +1,97 @@
+/* ===== Event Center Card + Manage Grid (mobile-first) ===== */
+
+/* GRID CONTAINER (replaces your flex wrap) */
+.event-center-grid {
+  display: grid;
+  grid-template-columns: 1fr;           /* 1 col on phones */
+  gap: 16px;
+}
+
+/* 2 cols on tablets */
+@media (min-width: 600px) {
+  .event-center-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* 3 cols on desktop */
+@media (min-width: 1024px) {
+  .event-center-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* CARD WRAPPER BECOMES FULL-WIDTH INSIDE GRID (no fixed 48%) */
+.event-card-wrapper {
+  width: 100%;
+  margin: 0;                            /* grid handles spacing */
+  display: flex;
+  flex-direction: column;
+}
+
+/* CARD */
 .event-card {
-  width: 48%;
-  background: white;
+  width: 100%;                          /* remove 48% */
+  background: #fff;
   border-radius: 8px;
   overflow: hidden;
-  margin: 1%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  display: flex;
+  flex-direction: column;
 }
 
+/* IMAGE */
 .event-image {
   width: 100%;
-  height: 260px;
+  height: 180px;                        /* friendlier on phones */
   object-fit: cover;
 }
+@media (min-width: 600px) { .event-image { height: 220px; } }
+@media (min-width: 1024px){ .event-image { height: 260px; } }
 
-.event-info {
-  padding: 1rem;
-}
+/* BODY */
+.event-info { padding: 1rem; }
 
-.event-price {
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-}
+.event-price { font-size: 1rem; margin-bottom: .5rem; }
+.line-through { text-decoration: line-through; color: #999; margin-right: 5px; }
+.text-navy { color: #001f5b; font-weight: 700; }
 
-.line-through {
-  text-decoration: line-through;
-  color: #999;
-  margin-right: 5px;
-}
-
-.text-navy {
-  color: #001f5b;
-  font-weight: bold;
-}
-
+/* INLINE CTA ROW INSIDE CARD */
 .btn-row {
   display: flex;
   gap: 10px;
   margin-top: 14px;
+  flex-wrap: wrap;                      /* prevent overflow on narrow phones */
 }
-
 .btn-blue {
   background-color: #001f5b;
-  color: white;
+  color: #fff;
   padding: 6px 12px;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: .875rem;
   border: none;
   cursor: pointer;
 }
 
+/* VENDOR ACTION FOOTER UNDER EACH CARD */
 .vendor-controls {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 per row on phones */
+  gap: 8px;
   margin-top: 8px;
-  padding-left: 4px;
+  padding: 10px;
+  border-top: 1px solid #eef2f7;
+  background: #f7f9fc;
 }
+@media (min-width: 600px) { .vendor-controls { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) { .vendor-controls { grid-template-columns: repeat(4, 1fr); } }
 
 .vendor-controls button {
+  width: 100%;
+  display: inline-flex;                 /* override any global block buttons */
+  justify-content: center;
+  align-items: center;
   background-color: #001f5b;
-  color: white;
+  color: #fff;
   border: none;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: .85rem;
   cursor: pointer;
 }
-.event-card-wrapper {
-  width: 48%;
-  margin-bottom: 3rem; /* increased space between cards */
-}
-.event-center-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
+.vendor-controls button:last-child { background-color: #d32f2f; } /* Delete */

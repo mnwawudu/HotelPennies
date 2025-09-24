@@ -5,13 +5,25 @@ import './BookRoomModal.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-// 🔑 Resolve Paystack key at call-time: localStorage → env → fallback (complete the fallback)
-const resolvePaystackKey = () =>
-  (
-    localStorage.getItem('PAYSTACK_PUBLIC_KEY') ||
-    process.env.REACT_APP_PAYSTACK_PUBLIC_KEY ||
-    'pk_test_f4e7df49f0ea642233e1f0a4ea62acb526f166e3' // 
-  ).trim();
+/**
+ * 🔑 Resolve Paystack key at call-time.
+ * Order of precedence:
+ *   1) localStorage.PAYSTACK_PUBLIC_KEY (handy for dev testing)
+ *   2) process.env.REACT_APP_PAYSTACK_PUBLIC_KEY (normal prod/dev config)
+ *   3) DEV-ONLY fallback test key (never used on non-localhost)
+ */
+const resolvePaystackKey = () => {
+  const fromStorage = (typeof window !== 'undefined' && localStorage.getItem('PAYSTACK_PUBLIC_KEY')) || '';
+  if (fromStorage && fromStorage.trim()) return fromStorage.trim();
+
+  const fromEnv = (process.env.REACT_APP_PAYSTACK_PUBLIC_KEY || '').trim();
+  if (fromEnv) return fromEnv;
+
+  const host = (typeof window !== 'undefined' && window.location && window.location.hostname) || '';
+  const isLocalhost = /^localhost$|^127\.0\.0\.1$/i.test(host);
+  // If truly local dev, allow a test key fallback; otherwise return empty to fail fast in prod
+  return isLocalhost ? 'pk_test_f4e7df49f0ea642233e1f0a4ea62acb526f166e3' : '';
+};
 
 // ✅ normalize any picked date to local *noon* to avoid timezone rollbacks
 const stripToNoon = (d) => {
@@ -67,6 +79,16 @@ const BookRoomModal = ({ room, onClose }) => {
   const [referredByUserId, setReferredByUserId] = useState(null);
   const [buyerUserId, setBuyerUserId] = useState(null);
 
+  // 🔗 Absorb ?ref, ?referral, or ?code into localStorage on first render
+  useEffect(() => {
+    try {
+      const qs = new URLSearchParams(window.location.search);
+      const refParam = qs.get('ref') || qs.get('referral') || qs.get('code');
+      if (refParam) localStorage.setItem('referralCode', refParam);
+    } catch {}
+  }, []);
+
+  // ⚙️ Main bootstrap (pickup options, room unavailable dates, referral lookups, logged-in user)
   useEffect(() => {
     const fetchPickup = async () => {
       try {
@@ -92,6 +114,13 @@ const BookRoomModal = ({ room, onClose }) => {
     };
 
     const fetchReferralUser = async () => {
+      // 1) Direct dev override: localStorage.hp_ref_user_id
+      const directRefId = localStorage.getItem('hp_ref_user_id');
+      if (directRefId) {
+        setReferredByUserId(directRefId);
+        return;
+      }
+      // 2) Referral code flow
       const referralCode = localStorage.getItem('referralCode');
       if (!referralCode) return;
       try {
@@ -102,6 +131,7 @@ const BookRoomModal = ({ room, onClose }) => {
       }
     };
 
+    // Prefill buyer if logged in
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
@@ -176,7 +206,7 @@ const BookRoomModal = ({ room, onClose }) => {
       return;
     }
 
-    // Build YYYY-MM-DD list for selected range (inclusive of both ends for overlap check)
+    // Build YYYY-MM-DD list for selected range (inclusive) and check overlap
     const dateRange = [];
     let current = new Date(bookingInfo.checkIn);
     const end = new Date(bookingInfo.checkOut);
@@ -208,8 +238,17 @@ const BookRoomModal = ({ room, onClose }) => {
 
     const verifyAndSaveBooking = async () => {
       try {
+        // 🚫 prevent self-referral
+        const refIdToSend =
+          referredByUserId && buyerUserId && String(referredByUserId) === String(buyerUserId)
+            ? undefined
+            : referredByUserId || undefined;
+
         await axios.post('/api/bookings/hotel/verified', {
           ...bookingInfo,
+          fullName: String(bookingInfo.fullName || '').trim(),
+          email: String(bookingInfo.email || '').trim().toLowerCase(),
+          phone: String(bookingInfo.phone || '').trim(),
           checkIn: toYMD(bookingInfo.checkIn),
           checkOut: toYMD(bookingInfo.checkOut),
           hotelId,
@@ -219,7 +258,7 @@ const BookRoomModal = ({ room, onClose }) => {
           paymentReference: reference,
           paymentProvider: 'paystack',
           buyerUserId: buyerUserId || undefined,
-          referredByUserId: referredByUserId || undefined,
+          referredByUserId: refIdToSend,
 
           // ✅ harmless hints so backend can trigger our branded email
           sendEmail: true,

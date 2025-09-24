@@ -1,5 +1,5 @@
 // 📄 src/pages/MyBookings.js
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import axios from '../utils/axiosConfig';
 import { jsPDF } from 'jspdf';
 import { PaystackButton } from 'react-paystack';
@@ -8,10 +8,139 @@ import './MyBookings.css';
 
 const NG_TZ = 'Africa/Lagos';
 const PAGE_SIZE = 20;
-
-// consider an order “old” after this many days (eligible for removal from history)
 const OLD_ORDER_DAYS = 14;
 
+// 🔧 single source of truth for the orders endpoint
+const ORDERS_API = '/api/my/orders';
+
+/* =========================
+   Helpers (top-level, stable)
+   ========================= */
+const getAuthHeaders = () => {
+  const tk =
+    localStorage.getItem('userToken') ||
+    localStorage.getItem('token') ||
+    localStorage.getItem('authToken') ||
+    sessionStorage.getItem('userToken') ||
+    '';
+  return tk ? { Authorization: `Bearer ${tk}` } : {};
+};
+
+const normalizeUICategory = (raw) => {
+  const v = String(raw || '').toLowerCase().trim();
+  if (v === 'eventcenter' || v === 'event_center' || v === 'event centre') return 'event';
+  if (v === 'tourguide' || v === 'tour_guide' || v === 'tour guide') return 'tour';
+  if (v === 'gift' || v === 'gifts') return 'gifts';
+  return v || 'hotel';
+};
+
+const parseAmount = (val) => {
+  if (val === undefined || val === null) return NaN;
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    const cleaned = val.replace(/,/g, '').replace(/[^\d.-]/g, '');
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : NaN;
+  }
+  return NaN;
+};
+
+const pickAmountFromRow = (r) => {
+  const candidates = [
+    r.amount,
+    r.amountPaid,
+    r.totalAmount,
+    r.paidAmount,
+    r.bookingAmount,
+    r.total,
+    r.totalPrice,
+    r.price,
+  ];
+  for (const c of candidates) {
+    const n = parseAmount(c);
+    if (Number.isFinite(n)) return n;
+  }
+  return 0;
+};
+
+const normalizeRow = (r) => {
+  const id = r._id || r.id || r.bookingId;
+
+  const rawCat =
+    r.category ||
+    r.categoryLabel ||
+    (r.meta && r.meta.category) ||
+    '';
+  const category = normalizeUICategory(rawCat);
+
+  const title =
+    r.title ||
+    r.listingName ||
+    r.hotelName ||
+    r.roomName ||
+    r.shortletName ||
+    r.eventCenterName ||
+    r.restaurantName ||
+    r.guideName ||
+    'Booking';
+
+  const subTitle = r.subTitle || r.roomName || r.detail || '';
+
+  const amount = pickAmountFromRow(r);
+
+  const checkIn = r.checkIn || r.startDate || null;
+  const checkOut = r.checkOut || r.endDate || null;
+  const reservationTime = r.reservationTime || null;
+  const eventDate = r.eventDate || null;
+  const tourDate = r.tourDate || null;
+
+  const paymentStatus =
+    r.paymentStatus || (r.status === 'paid' ? 'paid' : r.paymentStatus) || 'paid';
+  const canceled = Boolean(r.canceled || r.status === 'cancelled' || r.status === 'canceled');
+
+  return {
+    _id: id,
+    category,
+    title,
+    subTitle,
+    amount,
+    checkIn,
+    checkOut,
+    reservationTime,
+    eventDate,
+    tourDate,
+    paymentStatus,
+    canceled,
+    createdAt: r.createdAt || r.created_at || r.bookedAt || null,
+    paymentReference: r.paymentReference || r.reference || null,
+    paymentProvider: r.paymentProvider || null,
+    email: r.email || null,
+  };
+};
+
+const sameOrders = (a, b) => {
+  if (a === b) return true;
+  if (!Array.isArray(a) || !Array.isArray(b)) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i];
+    const y = b[i];
+    if (
+      x._id !== y._id ||
+      x.category !== y.category ||
+      x.amount !== y.amount ||
+      x.paymentStatus !== y.paymentStatus ||
+      (x.createdAt || '') !== (y.createdAt || '')
+    ) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/* =========================
+   Component
+   ========================= */
 const MyBookings = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,131 +178,6 @@ const MyBookings = () => {
     const now = new Date();
     const start = isDateOnly ? anchorNoonLocal(date) : new Date(date);
     return (start - now) / (1000 * 60 * 60);
-  };
-
-  const normalizeUICategory = (raw) => {
-    const v = String(raw || '').toLowerCase().trim();
-    if (v === 'eventcenter' || v === 'event_center' || v === 'event centre') return 'event';
-    if (v === 'tourguide' || v === 'tour_guide' || v === 'tour guide') return 'tour';
-    if (v === 'gift' || v === 'gifts') return 'gifts';
-    return v || 'hotel';
-  };
-
-  const getAuthHeaders = () => {
-    const tk =
-      localStorage.getItem('userToken') ||
-      localStorage.getItem('token') ||
-      localStorage.getItem('authToken') ||
-      sessionStorage.getItem('userToken') ||
-      '';
-    return tk ? { Authorization: `Bearer ${tk}` } : {};
-  };
-
-  // Robust amount parser for strings like "₦480,000" or "480,000.00"
-  const parseAmount = (val) => {
-    if (val === undefined || val === null) return NaN;
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string') {
-      const cleaned = val.replace(/,/g, '').replace(/[^\d.-]/g, '');
-      const n = Number(cleaned);
-      return Number.isFinite(n) ? n : NaN;
-    }
-    return NaN;
-  };
-
-  // Pick the first valid amount across common fields
-  const pickAmountFromRow = (r) => {
-    const candidates = [
-      r.amount,
-      r.amountPaid,
-      r.totalAmount,
-      r.paidAmount,
-      r.bookingAmount,
-      r.total,
-      r.totalPrice,
-      r.price,
-    ];
-    for (const c of candidates) {
-      const n = parseAmount(c);
-      if (Number.isFinite(n)) return n;
-    }
-    return 0;
-  };
-
-  // Normalize a backend row into a UI row
-  const normalizeRow = (r) => {
-    const id = r._id || r.id || r.bookingId;
-
-    const rawCat =
-      r.category ||
-      r.categoryLabel ||
-      (r.meta && r.meta.category) ||
-      '';
-    const category = normalizeUICategory(rawCat);
-
-    const title =
-      r.title ||
-      r.listingName ||
-      r.hotelName ||
-      r.roomName ||
-      r.shortletName ||
-      r.eventCenterName ||
-      r.restaurantName ||
-      r.guideName ||
-      'Booking';
-
-    const subTitle = r.subTitle || r.roomName || r.detail || '';
-
-    const amount = pickAmountFromRow(r);
-
-    const checkIn = r.checkIn || r.startDate || null;
-    const checkOut = r.checkOut || r.endDate || null;
-    const reservationTime = r.reservationTime || null;
-    const eventDate = r.eventDate || null;
-    const tourDate = r.tourDate || null;
-
-    const paymentStatus =
-      r.paymentStatus || (r.status === 'paid' ? 'paid' : r.paymentStatus) || 'paid';
-    const canceled = Boolean(r.canceled || r.status === 'cancelled' || r.status === 'canceled');
-
-    return {
-      _id: id,
-      category,
-      title,
-      subTitle,
-      amount,
-      checkIn,
-      checkOut,
-      reservationTime,
-      eventDate,
-      tourDate,
-      paymentStatus,
-      canceled,
-      createdAt: r.createdAt || r.created_at || r.bookedAt || null,
-      paymentReference: r.paymentReference || r.reference || null,
-      paymentProvider: r.paymentProvider || null,
-      email: r.email || null,
-    };
-  };
-
-  const sameOrders = (a, b) => {
-    if (a === b) return true;
-    if (!Array.isArray(a) || !Array.isArray(b)) return false;
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      const x = a[i];
-      const y = b[i];
-      if (
-        x._id !== y._id ||
-        x.category !== y.category ||
-        x.amount !== y.amount ||
-        x.paymentStatus !== y.paymentStatus ||
-        (x.createdAt || '') !== (y.createdAt || '')
-      ) {
-        return false;
-      }
-    }
-    return true;
   };
 
   const orderStatus = (item) => {
@@ -280,41 +284,24 @@ const MyBookings = () => {
   // ---------- data fetch ----------
   const latestOrdersRef = useRef([]);
 
-  const fetchOrders = async (setInitialDone = false) => {
+  const fetchOrders = useCallback(async (setInitialDone = false) => {
     try {
-      // Preferred unified route
-      const res1 = await axios.get('/api/user/bookings', { headers: getAuthHeaders() });
-      const list1 = Array.isArray(res1.data) ? res1.data : [];
-      if (list1.length) {
-        const normalized = list1.map(normalizeRow);
-        if (!sameOrders(normalized, latestOrdersRef.current)) {
-          latestOrdersRef.current = normalized;
-          setOrders(normalized);
-          setPage(1);
-        }
-        if (setInitialDone) setLoading(false);
-        return;
-      }
-    } catch {
-      // ignore, try fallback below
-    }
+      const res = await axios.get(ORDERS_API, { headers: getAuthHeaders() });
+      const list = Array.isArray(res.data) ? res.data : [];
+      const normalized = list.map(normalizeRow);
 
-    try {
-      // Legacy fallback
-      const res2 = await axios.get('/api/my/orders', { headers: getAuthHeaders() });
-      const list2 = Array.isArray(res2.data) ? res2.data : [];
-      const normalized = list2.map(normalizeRow);
       if (!sameOrders(normalized, latestOrdersRef.current)) {
         latestOrdersRef.current = normalized;
         setOrders(normalized);
         setPage(1);
       }
-    } catch {
+    } catch (err) {
+      console.error('MyBookings fetch error:', err?.response?.data || err?.message || err);
       if (setInitialDone) setOrders([]);
     } finally {
       if (setInitialDone) setLoading(false);
     }
-  };
+  }, []);
 
   // Initial load + gentle one-minute poll
   useEffect(() => {
@@ -340,7 +327,7 @@ const MyBookings = () => {
       stop = true;
       if (intervalId) clearInterval(intervalId);
     };
-  }, []);
+  }, [fetchOrders]);
 
   // keep page in range if list shrinks
   const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE));
@@ -418,7 +405,6 @@ const MyBookings = () => {
     }
   };
 
-  // Helper: is older than N days?
   const isOlderThan = (d, days) => {
     if (!d) return false;
     const t = new Date(d).getTime();
@@ -426,7 +412,6 @@ const MyBookings = () => {
     return (Date.now() - t) / (1000 * 60 * 60 * 24) >= days;
   };
 
-  // Show delete-from-history for Completed/Cancelled OR older orders
   const canRemoveFromHistory = (item) => {
     const s = orderStatus(item);
     return s === 'Completed' || s === 'Cancelled' || isOlderThan(item.createdAt, OLD_ORDER_DAYS);
@@ -436,11 +421,9 @@ const MyBookings = () => {
     if (!window.confirm('Remove this booking from your history? This will not affect the booking itself.')) return;
     try {
       await axios.delete(`/api/my/orders/${item.category}/${item._id}`, { headers: getAuthHeaders() });
-      // optimistic update
       const next = orders.filter(o => !(o._id === item._id && o.category === item.category));
       setOrders(next);
 
-      // set undo
       if (undo?.timeoutId) clearTimeout(undo.timeoutId);
       const timeoutId = setTimeout(() => setUndo(null), 8000);
       setUndo({ category: item.category, id: item._id, title: item.title, timeoutId });
