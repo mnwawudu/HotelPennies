@@ -68,18 +68,20 @@ const isLocalDevOrigin = (o) =>
 app.use(
   cors({
     origin: (origin, cb) => {
-      // No origin = native apps/Postman/etc.
       if (!origin) return cb(null, true);
-      // Allow explicit allowlist, any localhost:*, and Capacitor WebView
       if (allowedOrigins.has(origin) || isLocalDevOrigin(origin)) return cb(null, true);
       return cb(new Error('CORS blocked'), false);
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    // Best practice: include all verbs you use today + OPTIONS
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    // Best practice: allow the headers you actually send (Auth + JSON)
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
 app.options('*', cors());
+
 
 // --- Trust proxy + security/compression/limits ---
 app.set('trust proxy', 1);
@@ -167,7 +169,6 @@ const adminSettingsRoutes = require('./routes/adminSettingsRoutes');
 const contentWriteGate = require('./middleware/contentWriteGate');
 const adminUsersRoutes = require('./routes/adminUsers');
 
-
 const myOrdersRoutes = require('./routes/myOrdersRoutes');
 const adminAuditRoutes = require('./routes/adminAuditRoutes');
 const adminLedgerRoutes = require('./routes/adminLedgerRoutes');
@@ -179,7 +180,6 @@ const adminAnalyticsRoutes = require('./routes/adminAnalyticsRoutes');
 const hotelPublicTopRoutes = require('./routes/hotelPublicTopRoutes');
 const vendorAgreementRoutes = require('./routes/vendorAgreement');
 const adminVendorAgreementRoutes = require('./routes/adminVendorAgreement');
-
 
 
 // --- Route mounts ---
@@ -222,16 +222,34 @@ app.use('/api/bookings/hotel', hotelBookingRoutes);
 app.use('/api/shortlet-bookings', shortletBookingRoutes);
 app.use('/api/paystack', paystackRoutes);
 app.use('/api/restaurant-bookings', restaurantBookingRoutes);
+
+// Your original event center mount
 app.use('/api/eventcenters/bookings', eventCenterBookingRoutes);
+// ✅ Optional alias to match FE variants like "/api/event-center-bookings"
+app.use('/api/event-center-bookings', eventCenterBookingRoutes);
+
 app.use('/api/featured', publicFeaturedRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/cruise-inquiries', cruiseInquiryRoutes);
 app.use('/api/payouts', payoutRequestRoutes);
+
+// ✅ DEBUG shim to confirm routing (remove later)
+app.use(['/api/bookings/guest', '/api/guest'], (req, _res, next) => {
+  console.log(`[router-watch] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// ✅ Mount guest cancel routes BEFORE the generic /api/bookings router
+app.use('/api/guest', guestCancelRoutes);              // alias that cannot be shadowed
+app.use('/api/bookings/guest', guestCancelRoutes);     // legacy/FE path
+
+// Generic bookings router (cancel, refund-preview, etc.)
 app.use('/api/bookings', bookingCancelRoutes);
+
 app.use('/api/my', myOrdersRoutes);
+app.use('/api/user', myOrdersRoutes);
 app.use('/api/admin', adminAuditRoutes);
 app.use('/api/admin/ledger', adminLedgerRoutes);
-app.use('/api/bookings/guest', guestCancelRoutes);
 app.use('/api/auth', authPasswordRoutes);
 app.use('/api/admin/features', adminFeatureRoutes);
 app.use('/api/admin', adminVendorApprovalRoutes);
@@ -243,6 +261,7 @@ app.use('/api', vendorAgreementRoutes);
 app.use('/api/admin', adminVendorAgreementRoutes);
 app.use(contentWriteGate());
 app.use('/api/admin', adminUsersRoutes);
+
 
 // --- Health & API 404 ---
 app.get('/api/test', (_req, res) => {

@@ -220,12 +220,18 @@ function sumAmounts(rows) {
 }
 
 async function getAvailableBalanceUser(userId) {
-  const [credits, debits] = await Promise.all([
+  const [credits, debitsRaw] = await Promise.all([
     findUserCredits({ userId, status: 'available' }),
     findUserDebits({ userId, status: 'available', includePayout: true }),
   ]);
-  return sumAmounts(credits) - sumAmounts(debits);
+
+  // ✅ Do NOT subtract adjustment debits (they are just the audit mirror of reversals)
+  const debits = debitsRaw.filter(r => String(r.reason || '') !== 'adjustment');
+
+  // Optional safety: prevent tiny negatives from rounding
+  return Math.max(0, sumAmounts(credits) - sumAmounts(debits));
 }
+
 
 async function getPendingBalanceUser(userId) {
   const [credits, debits] = await Promise.all([

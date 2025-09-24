@@ -47,6 +47,12 @@ const auth = async (req, res, next) => {
   }
 };
 
+// ---------- tiny safety wrapper so one failing block can't 500 everything ----------
+const safe = async (fn, label = '') => {
+  try { return await fn(); }
+  catch (e) { console.warn('[myOrders] block failed:', label, e?.message || e); return []; }
+};
+
 // ---------- Helpers ----------
 const nn = (v) => (v === undefined || v === null ? '' : v);
 const toN = (v) => Number(v || 0);
@@ -203,7 +209,7 @@ async function mapBookingToOrder(category, r) {
       return baseMap(r, {
         category: 'event',
         title: eName || 'Event Center',
-        // ✅ robust amount calculation for event centers
+        // robust amount calculation for event centers
         amount: pickMoney(r.total, r.totalAmount, r.totalPrice, r.price, r.amount, r.amountPaid, r.paidAmount),
         eventDate: r.eventDate || r.reservationTime,
       });
@@ -316,8 +322,10 @@ async function findBookingByReferenceAcross(reference) {
   return null;
 }
 
-// ---------- GET /api/my/orders ----------
-router.get('/orders', auth, async (req, res) => {
+/* ===========================
+   GET handler (reusable)
+   =========================== */
+async function listOrders(req, res) {
   try {
     const user = req.user;
     const match = buildSmartMatch(user);
@@ -325,86 +333,91 @@ router.get('/orders', auth, async (req, res) => {
     const tasks = [];
 
     if (HotelBooking) {
-      tasks.push((async () => {
+      tasks.push(safe(async () => {
         const rows = await HotelBooking.find(match).sort({ createdAt: -1 }).lean();
         return Promise.all(rows.map(r => mapBookingToOrder('hotel', r)));
-      })());
+      }, 'hotel'));
     }
     if (ShortletBooking) {
-      tasks.push((async () => {
+      tasks.push(safe(async () => {
         const rows = await ShortletBooking.find(match).sort({ createdAt: -1 }).lean();
         return Promise.all(rows.map(r => mapBookingToOrder('shortlet', r)));
-      })());
+      }, 'shortlet'));
     }
     if (EventBooking) {
-      tasks.push((async () => {
+      tasks.push(safe(async () => {
         const rows = await EventBooking.find(match).sort({ createdAt: -1 }).lean();
         return Promise.all(rows.map(r => mapBookingToOrder('event', r)));
-      })());
+      }, 'event'));
     }
     if (RestaurantBooking) {
-      tasks.push((async () => {
+      tasks.push(safe(async () => {
         const rows = await RestaurantBooking.find(match).sort({ createdAt: -1 }).lean();
         return Promise.all(rows.map(r => mapBookingToOrder('restaurant', r)));
-      })());
+      }, 'restaurant'));
     }
     if (TourBooking) {
-      tasks.push((async () => {
+      tasks.push(safe(async () => {
         const rows = await TourBooking.find(match).sort({ createdAt: -1 }).lean();
         return Promise.all(rows.map(r => mapBookingToOrder('tour', r)));
-      })());
+      }, 'tour'));
     }
     if (ChopsBooking) {
-      tasks.push((async () => {
+      tasks.push(safe(async () => {
         const rows = await ChopsBooking.find(match).sort({ createdAt: -1 }).lean();
         return Promise.all(rows.map(r => mapBookingToOrder('chops', r)));
-      })());
+      }, 'chops'));
     }
     if (GiftBooking) {
-      tasks.push((async () => {
+      tasks.push(safe(async () => {
         const rows = await GiftBooking.find(match).sort({ createdAt: -1 }).lean();
         return Promise.all(rows.map(r => mapBookingToOrder('gifts', r)));
-      })());
+      }, 'gifts'));
     }
 
     const chunks = await Promise.all(tasks);
     let orders = chunks.flat();
 
-    // Ledger fallback
-    if (Ledger) {
-      const ledgerRows = await Ledger.find({
-        accountType: 'user',
-        accountId: user._id,
-        direction: 'credit',
-        reason: { $in: ['user_cashback', 'user_referral_commission'] },
-      }).select('bookingId amount createdAt meta').lean();
+    // Ledger fallback (protected)
+    let ledgerRows = [];
+    try {
+      if (Ledger) {
+        ledgerRows = await Ledger.find({
+          accountType: 'user',
+          accountId: user._id,
+          direction: 'credit',
+          reason: { $in: ['user_cashback', 'user_referral_commission'] },
+        }).select('bookingId amount createdAt meta').lean();
+      }
+    } catch (e) {
+      console.warn('[myOrders] ledger query failed:', e?.message || e);
+      ledgerRows = [];
+    }
 
-      const ids = dedupe(ledgerRows.map(r => String(r.bookingId || '')).filter(Boolean));
-
-      for (const bid of ids) {
-        const found = await findBookingByIdAcross(bid);
-        if (found) {
-          const mapped = await mapBookingToOrder(found.category, found.doc);
-          orders.push(mapped);
-        } else {
-          const l = ledgerRows.find(x => String(x.bookingId) === bid);
-          orders.push({
-            _id: bid,
-            email: '', // unknown from ledger only
-            paymentReference: nn(l?.meta?.paymentReference),
-            category: (l?.meta?.category || 'order').toString(),
-            title: (l?.meta?.title || 'Order').toString(),
-            subTitle: nn(l?.meta?.subTitle),
-            amount: parseMoney(l?.amount),
-            createdAt: l?.createdAt || new Date(),
-            paymentStatus: 'paid',
-            canceled: false,
-          });
-        }
+    const ids = dedupe(ledgerRows.map(r => String(r.bookingId || '')).filter(Boolean));
+    for (const bid of ids) {
+      const found = await findBookingByIdAcross(bid);
+      if (found) {
+        const mapped = await mapBookingToOrder(found.category, found.doc);
+        orders.push(mapped);
+      } else {
+        const l = ledgerRows.find(x => String(x.bookingId) === bid);
+        orders.push({
+          _id: bid,
+          email: '',
+          paymentReference: nn(l?.meta?.paymentReference),
+          category: (l?.meta?.category || 'order').toString(),
+          title: (l?.meta?.title || 'Order').toString(),
+          subTitle: nn(l?.meta?.subTitle),
+          amount: parseMoney(l?.amount),
+          createdAt: l?.createdAt || new Date(),
+          paymentStatus: 'paid',
+          canceled: false,
+        });
       }
     }
 
-    // de-dupe
+    // de-dupe and sort
     const seen = new Set();
     const deduped = [];
     for (const o of orders.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))) {
@@ -412,12 +425,22 @@ router.get('/orders', auth, async (req, res) => {
       if (!seen.has(key)) { seen.add(key); deduped.push(o); }
     }
 
-    res.json(deduped);
+    return res.json(deduped);
   } catch (err) {
     console.error('myOrdersRoutes /orders error:', err);
-    res.status(500).json({ message: 'Failed to fetch orders' });
+    return res.status(500).json({ message: 'Failed to fetch orders' });
   }
-});
+}
+
+/* ===========================
+   Routes
+   =========================== */
+
+// Old path (kept)
+router.get('/orders',   auth, listOrders);
+
+// New alias used by MyBookings.js
+router.get('/bookings', auth, listOrders);
 
 // ---------- POST /api/my/link-booking ----------
 router.post('/link-booking', async (req, res) => {
