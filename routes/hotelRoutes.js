@@ -1,161 +1,105 @@
-﻿// routes/hotelRoutes.js
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Hotel = require('../models/hotelModel');
 const auth = require('../middleware/auth');
-const upload = require('../middleware/upload'); // Cloudinary upload middleware
+const upload = require('../middleware/upload'); // âœ… Cloudinary upload middleware
 
-// ---- Image fallback helper ------------------------------------
-const FALLBACK_IMG = 'https://via.placeholder.com/800x600?text=Hotel';
 
-function resolveDocImages(doc) {
-  // Ensure images is an array
-  const images = Array.isArray(doc.images) ? doc.images : [];
-  // Prefer explicit mainImage, else first image, else placeholder
-  const resolvedMain =
-    (doc.mainImage && String(doc.mainImage)) ||
-    (images[0] && String(images[0])) ||
-    FALLBACK_IMG;
 
-  // Mutate a shallow copy to avoid side effects on mongoose docs
-  return {
-    ...doc,
-    images,
-    mainImage: resolvedMain,
-  };
-}
-
-// 🔒 Vendor guard
-const requireVendor = (req, res, next) => {
-  if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-  if (String(req.user.role || '').toLowerCase() !== 'vendor') {
-    return res.status(403).json({ message: 'Access denied: vendors only' });
-  }
-  next();
-};
-
-/**
- * ✅ Safe wrapper around multer so we see real errors
- *    and allow 0 files gracefully.
- */
-const safeImagesUpload = (req, res, next) => {
-  const cn = process.env.CLOUDINARY_CLOUD_NAME;
-  const ck = process.env.CLOUDINARY_API_KEY;
-  const cs = process.env.CLOUDINARY_API_SECRET;
-  if (!cn || !ck || !cs) {
-    const err = new Error('Cloudinary is not configured on this environment');
-    err.status = 500;
-    err.code = 'CLOUDINARY_CONFIG_MISSING';
-    console.error('[Upload][config]', { cn: !!cn, ck: !!ck, cs: !!cs });
-    return next(err);
-  }
-
-  return upload.array('images')(req, res, (err) => {
-    if (err) {
-      const e = err instanceof Error ? err : new Error(String(err));
-      if (!e.status) e.status = 400;
-      console.error('[Upload][images] Multer/Cloudinary error:', {
-        name: e.name,
-        message: e.message,
-        code: e.code,
-        stack: e.stack,
-      });
-      return next(e);
-    }
-    if (!req.files) req.files = [];
-    return next();
-  });
-};
-
-// ---------------------------------------------------------------
-// Public: hotels with rooms, ranked by quality
-// ---------------------------------------------------------------
+// âœ… Public access: only hotels that actually have rooms, ranked by quality
 router.get('/all-public', async (req, res) => {
   try {
-    const hotels = await Hotel.find({ roomsCount: { $gt: 0 } })
+    const hotels = await Hotel.find(
+      {
+        // isPublished: true,    // â† Uncomment if you use a publish flag
+        roomsCount: { $gt: 0 },  // hide hotels with no rooms
+      }
+    )
       .sort({
-        averageRating: -1,
-        bookingsCount: -1,
-        ctr: -1,
-        createdAt: -1,
+        averageRating: -1,  // â­ highest rated first
+        bookingsCount: -1,  // ðŸ§¾ then most booked
+        ctr: -1,            // ðŸ‘€ then highest CTR (if present)
+        createdAt: -1,      // â±ï¸ newest as final tiebreak
       })
-      .select(
-        'name location city state mainImage images minPrice maxPrice averageRating bookingsCount ctr roomsCount createdAt'
-      )
+      // keep payload lean; include fields your card needs
+      .select('name location city state mainImage images minPrice maxPrice averageRating bookingsCount ctr roomsCount createdAt')
       .lean();
 
-    const payload = (hotels || []).map(resolveDocImages);
-    res.json(payload);
+    res.json(hotels);
   } catch (err) {
-    console.error('❌ Failed to fetch hotels:', err);
+    console.error('âŒ Failed to fetch hotels:', err);
     res.status(500).json({ error: 'Failed to fetch public hotels' });
   }
 });
 
-// ---------------------------------------------------------------
-// Public: hotel details
-// ---------------------------------------------------------------
+
+// âœ… Public access to hotel details (for image viewing)
 router.get('/public/:hotelId', async (req, res) => {
   try {
-    const hotel = await Hotel.findById(req.params.hotelId).lean();
+    const hotel = await Hotel.findById(req.params.hotelId);
     if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
-    res.json(resolveDocImages(hotel));
+    res.json(hotel);
   } catch (err) {
     res.status(500).json({ error: 'Failed to get hotel' });
   }
 });
 
-// ---------------------------------------------------------------
-// Public: by city
-// ---------------------------------------------------------------
+// GET hotels by city (public) â€” ranked by quality & only hotels that have rooms
 router.get('/public/city/:city', async (req, res) => {
   try {
     const rawCity = (req.params.city || '').trim();
     if (!rawCity) return res.status(400).json({ error: 'City is required' });
 
+    // Base filter: exact city (case-insensitive) + must have rooms
     const filter = {
       city: new RegExp(`^${rawCity}$`, 'i'),
       roomsCount: { $gt: 0 },
     };
 
+    // If your schema has isPublished, apply it
     if (Hotel.schema.path('isPublished')) filter.isPublished = true;
 
-    const page = Math.max(parseInt(req.query.page || '1', 10), 1);
+    // Optional pagination (safe defaults)
+    const page  = Math.max(parseInt(req.query.page  || '1', 10), 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit || '12', 10), 1), 50);
-    const skip = (page - 1) * limit;
+    const skip  = (page - 1) * limit;
 
     const hotels = await Hotel.find(filter)
       .sort({
-        averageRating: -1,
-        bookingsCount: -1,
-        ctr: -1,
-        createdAt: -1,
+        averageRating: -1,  // â­ highest rated
+        bookingsCount: -1,  // ðŸ§¾ most booked
+        ctr: -1,            // ðŸ‘€ highest CTR
+        createdAt: -1,      // â±ï¸ newest as tiebreak
       })
       .select(
-        'name location city state mainImage images minPrice maxPrice averageRating bookingsCount ctr roomsCount createdAt'
+        'name location city state mainImage images minPrice maxPrice ' +
+        'averageRating bookingsCount ctr roomsCount createdAt'
       )
       .skip(skip)
       .limit(limit)
       .lean();
 
-    const payload = (hotels || []).map(resolveDocImages);
-    res.json(payload);
+    res.json(hotels);
   } catch (err) {
-    console.error('❌ Failed to fetch hotels by city:', err);
+    console.error('âŒ Failed to fetch hotels by city:', err);
     res.status(500).json({ error: 'Failed to fetch hotels by city' });
   }
 });
 
-// ---------------------------------------------------------------
-// Public: popular cities
-// ---------------------------------------------------------------
+
+// âœ… Get top cities by number of hotels (for Popular Cities section)
 router.get('/public/popular-cities', async (req, res) => {
   try {
     const result = await Hotel.aggregate([
-      { $match: { isPublished: true } },
-      { $group: { _id: '$city', hotelCount: { $sum: 1 } } },
+      { $match: { isPublished: true } }, // Optional filter
+      {
+        $group: {
+          _id: '$city',
+          hotelCount: { $sum: 1 },
+        },
+      },
       { $sort: { hotelCount: -1 } },
-      { $limit: 6 },
+      { $limit: 6 }, // or 12, if you want to show more
     ]);
 
     res.json(result);
@@ -164,136 +108,72 @@ router.get('/public/popular-cities', async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------------
-// Public: featured
-// ---------------------------------------------------------------
+// âœ… Get featured hotels for homepage
 router.get('/public/featured', async (req, res) => {
   try {
     const featuredHotels = await Hotel.find({ isFeatured: true })
       .sort({ createdAt: -1 })
-      .limit(8)
-      .select(
-        'name location city state mainImage images minPrice maxPrice averageRating bookingsCount ctr roomsCount createdAt'
-      )
-      .lean();
+      .limit(8);
 
-    const payload = (featuredHotels || []).map(resolveDocImages);
-    res.json(payload);
+    res.json(featuredHotels);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch featured hotels' });
   }
 });
 
-// ---------------------------------------------------------------
-// Vendor: my hotels
-// ---------------------------------------------------------------
+
+// âœ… Only vendors can access these routes
+const requireVendor = (req, res, next) => {
+  if (req.user.role !== 'vendor') {
+    return res.status(403).json({ message: 'Access denied: vendors only' });
+  }
+  next();
+};
+
+// âœ… Get Vendor's Hotels (â« moved ABOVE the dynamic route)
 router.get('/my-hotels', auth, requireVendor, async (req, res) => {
   try {
-    const hotels = await Hotel.find({ vendorId: req.user._id })
-      .select(
-        'name location city state mainImage images minPrice maxPrice averageRating bookingsCount ctr roomsCount createdAt vendorId'
-      )
-      .lean();
-
-    const payload = (hotels || []).map(resolveDocImages);
-    res.json(payload);
+    const hotels = await Hotel.find({ vendorId: req.user._id });
+    res.json(hotels);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch hotels' });
   }
 });
 
-// ---------------------------------------------------------------
-// Vendor: hotel by id
-// ---------------------------------------------------------------
+// âœ… Get Hotel by ID (vendor only)
 router.get('/:hotelId', auth, requireVendor, async (req, res) => {
   try {
     const hotel = await Hotel.findOne({
       _id: req.params.hotelId,
       vendorId: req.user._id,
-    }).lean();
-
+    });
     if (!hotel) return res.status(404).json({ error: 'Hotel not found' });
-    res.json(resolveDocImages(hotel));
+    res.json(hotel);
   } catch (err) {
     res.status(500).json({ error: 'Failed to get hotel' });
   }
 });
 
-// ---------------------------------------------------------------
-// Vendor: create (with Cloudinary upload)
-// ---------------------------------------------------------------
-router.post('/create', auth, requireVendor, safeImagesUpload, async (req, res) => {
+// âœ… Create Hotel with image upload
+router.post('/create', auth, requireVendor, upload.array('images'), async (req, res) => {
   try {
-    // Cloudinary secure URLs
-    const imageUrls = (req.files || []).map((f) => f.path);
+    const imageUrls = req.files.map(file => file.path); // Cloudinary returns secure URLs as `path`
 
-    // Normalize + coerce
-    const b = req.body || {};
-    const num = (v) => (v === '' || v == null ? undefined : Number(v));
-
-    // Amenities can arrive as amenities[], or JSON string "amenities"
-    let amenities = [];
-    if (Array.isArray(b['amenities[]'])) {
-      amenities = b['amenities[]'];
-    } else if (b['amenities[]']) {
-      amenities = [b['amenities[]']];
-    } else if (b.amenities) {
-      try {
-        const parsed = JSON.parse(b.amenities);
-        if (Array.isArray(parsed)) amenities = parsed;
-      } catch (_) {}
-    }
-
-    const required = ['name', 'location', 'city', 'state', 'description'];
-    const missing = required.filter((k) => !String(b[k] || '').trim());
-    if (missing.length) {
-      return res.status(400).json({
-        ok: false,
-        error: { message: `Missing required fields: ${missing.join(', ')}` },
-      });
-    }
-
-    const doc = new Hotel({
-      ...b,
-      name: String(b.name).trim(),
-      location: String(b.location).trim(),
-      city: String(b.city).trim(),
-      state: String(b.state).trim(),
-      description: String(b.description).trim(),
-      minPrice: num(b.minPrice),
-      maxPrice: num(b.maxPrice),
-      amenities,
-      images: imageUrls,
+    const hotel = new Hotel({
+      ...req.body,
       vendorId: req.user._id,
+      images: imageUrls,
     });
 
-    await doc.save();
-
-    // Ensure the response has a valid mainImage
-    const plain = doc.toObject ? doc.toObject() : doc;
-    return res.status(201).json(resolveDocImages(plain));
+    await hotel.save();
+    res.status(201).json(hotel);
   } catch (err) {
-    const status = err?.name === 'ValidationError' ? 400 : 500;
-    console.error('[Hotels/Create][ERROR]', {
-      name: err?.name,
-      message: err?.message,
-      code: err?.code,
-      stack: err?.stack,
-    });
-    return res.status(status).json({
-      ok: false,
-      error: {
-        name: err?.name || 'Error',
-        message: err?.message || 'Failed to create hotel',
-        code: err?.code || null,
-      },
-    });
+    console.error('âŒ Error creating hotel:', err);
+    res.status(500).json({ error: 'Failed to create hotel' });
   }
 });
 
-// ---------------------------------------------------------------
-// Vendor: update
-// ---------------------------------------------------------------
+// âœ… Update hotel (mainImage, details, append images)
 router.put('/:hotelId', auth, requireVendor, async (req, res) => {
   try {
     let updated;
@@ -306,28 +186,26 @@ router.put('/:hotelId', auth, requireVendor, async (req, res) => {
           ...(req.body.mainImage && { mainImage: req.body.mainImage }),
         },
         { new: true }
-      ).lean();
+      );
     } else {
       updated = await Hotel.findOneAndUpdate(
         { _id: req.params.hotelId, vendorId: req.user._id },
         req.body,
         { new: true }
-      ).lean();
+      );
     }
 
     if (!updated) {
       return res.status(404).json({ error: 'Hotel not found or unauthorized' });
     }
 
-    res.json(resolveDocImages(updated));
+    res.json(updated);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update hotel' });
   }
 });
 
-// ---------------------------------------------------------------
-// Vendor: delete
-// ---------------------------------------------------------------
+// âœ… Delete Hotel
 router.delete('/:hotelId', auth, requireVendor, async (req, res) => {
   try {
     const hotel = await Hotel.findOneAndDelete({
@@ -335,8 +213,7 @@ router.delete('/:hotelId', auth, requireVendor, async (req, res) => {
       vendorId: req.user._id,
     });
 
-    if (!hotel)
-      return res.status(404).json({ error: 'Hotel not found or unauthorized' });
+    if (!hotel) return res.status(404).json({ error: 'Hotel not found or unauthorized' });
 
     res.json({ message: 'Hotel deleted successfully' });
   } catch (err) {
@@ -345,3 +222,4 @@ router.delete('/:hotelId', auth, requireVendor, async (req, res) => {
 });
 
 module.exports = router;
+

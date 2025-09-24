@@ -267,8 +267,6 @@ app.use('/api/admin', adminUsersRoutes);
 app.get('/api/test', (_req, res) => {
   res.send('✅ HotelPennies API is running and reachable');
 });
-
-// 404 for unknown API routes
 app.use('/api', (_req, res) => res.status(404).json({ message: 'Route not found' }));
 
 // --- Static uploads ---
@@ -277,47 +275,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7
 // --- Root ping ---
 app.get('/', (_req, res) => res.send('HotelPennies API is running...'));
 
-// --- SPA fallback (only if serving FE from this service) ---
-const clientBuildPath = path.join(__dirname, 'client', 'build');
-if (process.env.SERVE_SPA === 'true' && fs.existsSync(clientBuildPath)) {
-  app.use(express.static(clientBuildPath));
-  app.get('*', (_req, res) => res.sendFile(path.join(clientBuildPath, 'index.html')));
-}
-
-/* ============================
-   SINGLE global error handler
-   (leave this LAST)
-   ============================ */
-app.use((err, req, res, _next) => {
-  const status = err?.status || err?.statusCode || 500;
-  const payload = {
-    ok: false,
-    error: {
-      name: err?.name || 'Error',
-      message: err?.message || 'Internal server error',
-      code: err?.code || null,
-    },
-  };
-
-  // Loud server-side log so Render shows the real cause
-  console.error('[ERROR]', {
-    method: req.method,
-    url: req.originalUrl,
-    headers: {
-      'content-type': req.headers['content-type'],
-      'user-agent': req.headers['user-agent'],
-      origin: req.headers['origin'],
-      referer: req.headers['referer'],
-    },
-    body: req.body,
-    user: req.user || req.vendor || null,
-    name: err?.name,
-    message: err?.message,
-    code: err?.code,
-    stack: err?.stack,
-  });
-
-  res.status(status).json(payload);
+// --- Global error handler ---
+app.use((err, _req, res, _next) => {
+  console.error(err.stack);
+  res.status(500).send('Something went wrong!');
 });
 
 // --- Graceful shutdown ---
@@ -328,6 +289,13 @@ process.on('SIGINT', async () => {
 });
 process.on('unhandledRejection', (reason) => console.error('Unhandled Rejection:', reason));
 process.on('uncaughtException', (err) => console.error('Uncaught Exception:', err));
+
+// --- SPA fallback (only if serving FE from this service) ---
+const clientBuildPath = path.join(__dirname, 'client', 'build');
+if (process.env.SERVE_SPA === 'true' && fs.existsSync(clientBuildPath)) {
+  app.use(express.static(clientBuildPath));
+  app.get('*', (_req, res) => res.sendFile(path.join(clientBuildPath, 'index.html')));
+}
 
 // --- Start server ---
 const PORT = process.env.PORT || 10000;
