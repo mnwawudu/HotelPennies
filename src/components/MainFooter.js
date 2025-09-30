@@ -32,6 +32,8 @@ const MainFooter = () => {
         <Link to="/management-services">Management Services</Link>
         <Link to="/blogs">Travel Blog</Link>
         <Link to="/about">About HotelPennies</Link>
+        {/* Affiliate link added here */}
+        <Link to="/affiliate" aria-label="Affiliate Program">Affiliate Program</Link>
       </div>
 
       <div style={column}>
@@ -39,7 +41,6 @@ const MainFooter = () => {
         <a href="https://facebook.com/HotelPennies" target="_blank" rel="noopener noreferrer">Facebook</a>
         <a href="https://instagram.com/HotelPennies" target="_blank" rel="noopener noreferrer">Instagram</a>
         <a href="https://x.com/HotelPennies" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
-        
       </div>
 
       <div style={bottomBar}>
@@ -76,5 +77,3 @@ const bottomBar = {
 };
 
 export default MainFooter;
-
-

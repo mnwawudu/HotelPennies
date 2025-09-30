@@ -95,6 +95,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import UserChangePassword from './pages/UserChangePassword';
 import MyBookings from './pages/MyBookings';
+import AffiliatePage from './pages/AffiliatePage';
 
 // ---------- Dashboard layout wrapper ----------
 const DashboardLayout = ({ children }) => {
@@ -159,6 +160,7 @@ function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/cruise" element={<CityCruise />} />
         <Route path="/manage-booking/cancel" element={<ManageBookingCancel />} />
+		<Route path="/affiliate" element={<AffiliatePage />} />
 
         {/* Search */}
         <Route path="/search" element={<SearchResults />} />
