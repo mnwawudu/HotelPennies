@@ -171,7 +171,7 @@ const Home = () => {
             { icon: '💳', title: 'Secure Payments', desc: 'Pay online with confidence through trusted gateways.' },
             { icon: '📍', title: 'Nationwide Coverage', desc: 'Book hotels, shortlets & venues across all major cities.' },
             { icon: '💰', title: 'Best Deals', desc: 'Access local & international promotions and exclusive rates.' },
-            { icon: '🎁', title: '5% Cashback & Commissions', desc: 'Earn instant cashback and referral commissions on every booking.' },
+            { icon: '🎁', title: '2% Cashback & Commissions', desc: 'Earn instant cashback and referral commissions on every booking.' },
             { icon: '📲', title: 'Everything in One Platform', desc: 'Book hotels, shortlets, event venues, restaurants, tours, and transport—all in one place.' },
           ].map((item, i) => (
             <div className="why-card" key={i}>
